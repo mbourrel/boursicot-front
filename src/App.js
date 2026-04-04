@@ -3,21 +3,19 @@ import { createChart, CandlestickSeries, LineSeries } from 'lightweight-charts';
 
 function App() {
   const chartContainerRef = useRef();
-  const chartInstanceRef = useRef(null); // Permet de garder le contrôle sur le graphique (pour le zoom)
-  const currentDataRef = useRef([]); // Garde en mémoire les données actuelles pour le zoom
+  const chartInstanceRef = useRef(null);
+  const currentDataRef = useRef([]);
   
   const [selectedSymbol, setSelectedSymbol] = useState('AAPL');
   const [viewMode, setViewMode] = useState('chart');
   const [fundamentalsData, setFundamentalsData] = useState([]);
   const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma365: null });
 
-  // Nouveaux états pour nos échelles
-  const [timeRange, setTimeRange] = useState('ALL'); // 1M, 3M, 6M, 1Y, ALL
-  const [candleInterval, setCandleInterval] = useState('1D'); // 1D, 1W, 1M
+  const [timeRange, setTimeRange] = useState('ALL');
+  const [candleInterval, setCandleInterval] = useState('1D');
 
   // 1. Récupération des fondamentaux
   useEffect(() => {
-    // MODIFICATION ICI : Utilisation de la variable d'environnement
     fetch(`${process.env.REACT_APP_API_URL}/api/fundamentals`)
       .then(res => res.json())
       .then(data => { if (!data.error) setFundamentalsData(data); });
@@ -33,11 +31,11 @@ function App() {
       let key;
       
       if (interval === '1W') {
-        const day = date.getDay() || 7; // 1 (Lundi) à 7 (Dimanche)
-        date.setDate(date.getDate() - day + 1); // Retourne au Lundi de la semaine
+        const day = date.getDay() || 7;
+        date.setDate(date.getDate() - day + 1);
         key = date.toISOString().split('T')[0];
       } else if (interval === '1M') {
-        key = d.time.substring(0, 7) + '-01'; // Premier jour du mois (YYYY-MM-01)
+        key = d.time.substring(0, 7) + '-01';
       }
       
       if (!grouped[key]) {
@@ -46,7 +44,6 @@ function App() {
         grouped[key].high = Math.max(grouped[key].high, d.high);
         grouped[key].low = Math.min(grouped[key].low, d.low);
         grouped[key].close = d.close;
-        // On garde les dernières moyennes mobiles de la période
         grouped[key].ma10 = d.ma10 || grouped[key].ma10;
         grouped[key].ma100 = d.ma100 || grouped[key].ma100;
         grouped[key].ma365 = d.ma365 || grouped[key].ma365;
@@ -79,7 +76,7 @@ function App() {
     });
   };
 
-  // 2. Gestion du graphique (Recréé si on change de symbole ou d'intervalle de bougies)
+  // 2. Gestion du graphique
   useEffect(() => {
     if (viewMode !== 'chart' || !chartContainerRef.current) return;
 
@@ -98,7 +95,6 @@ function App() {
     const ma100Series = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 2, crosshairMarkerVisible: false });
     const ma365Series = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false });
 
-    // MODIFICATION ICI : Utilisation de la variable d'environnement
     fetch(`${process.env.REACT_APP_API_URL}/api/prices`)
       .then(res => res.json())
       .then(data => {
@@ -106,7 +102,6 @@ function App() {
           const rawData = data.filter(i => i.symbol === selectedSymbol).sort((a, b) => new Date(a.time) - new Date(b.time));
           
           if (rawData.length > 0) {
-            // On aggrège les données selon le choix (1D, 1W, 1M)
             const processedData = aggregateData(rawData, candleInterval);
             currentDataRef.current = processedData;
 
@@ -115,7 +110,6 @@ function App() {
             ma100Series.setData(processedData.filter(d => d.ma100 !== null).map(d => ({ time: d.time, value: d.ma100 })));
             ma365Series.setData(processedData.filter(d => d.ma365 !== null).map(d => ({ time: d.time, value: d.ma365 })));
             
-            // On applique le zoom sélectionné
             applyTimeRange(timeRange, chart, processedData);
           }
         }
@@ -135,7 +129,10 @@ function App() {
     const handleResize = () => chart.applyOptions({ width: chartContainerRef.current.clientWidth });
     window.addEventListener('resize', handleResize);
     return () => { window.removeEventListener('resize', handleResize); chart.remove(); };
-  }, [selectedSymbol, viewMode, candleInterval]); // On relance l'effet si candleInterval change
+    
+    // LA LIGNE MAGIQUE POUR VERCEL EST JUSTE EN DESSOUS :
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSymbol, viewMode, candleInterval]);
 
   // Style des boutons de filtres
   const filterBtnStyle = (isActive) => ({
@@ -172,10 +169,8 @@ function App() {
       {viewMode === 'chart' ? (
         <div style={{ backgroundColor: '#131722', padding: '15px', borderRadius: '12px', border: '1px solid #2B2B43' }}>
           
-          {/* BARRE D'OUTILS DU GRAPHIQUE */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #2B2B43', paddingBottom: '15px' }}>
             
-            {/* Echelle des bougies */}
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '10px' }}>BOUGIES :</span>
               {['1D', '1W', '1M'].map(interval => (
@@ -185,7 +180,6 @@ function App() {
               ))}
             </div>
 
-            {/* Echelle de temps (Zoom) */}
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '10px' }}>ZOOM :</span>
               {['1M', '3M', '6M', '1Y', 'ALL'].map(range => (
@@ -201,7 +195,6 @@ function App() {
           </div>
 
           <div style={{ position: 'relative' }}>
-            {/* LÉGENDE DU GRAPHIQUE */}
             <div style={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', gap: '15px', backgroundColor: 'rgba(19, 23, 34, 0.8)', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold' }}>
               <span style={{ color: '#d1d4dc' }}>{selectedSymbol} {legendData.close && `$${legendData.close}`}</span>
               <span style={{ color: '#00bcd4' }}>MM 10 {legendData.ma10 && `: ${legendData.ma10}`}</span>
