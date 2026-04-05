@@ -14,7 +14,7 @@ function App() {
   const [timeRange, setTimeRange] = useState('ALL');
   const [candleInterval, setCandleInterval] = useState('1D');
 
-  const API_URL = 'http://127.0.0.1:8000';
+const API_URL = 'https://boursicot-api.onrender.com';
 
   // 1. Récupération des fondamentaux
   useEffect(() => {
