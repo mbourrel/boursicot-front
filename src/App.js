@@ -9,7 +9,7 @@ function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('');
   const [viewMode, setViewMode] = useState('chart');
   const [fundamentalsData, setFundamentalsData] = useState([]);
-  const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma200: null });
+  const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma365: null });
 
   const [timeRange, setTimeRange] = useState('ALL');
   const [candleInterval, setCandleInterval] = useState('1D');
@@ -29,48 +29,34 @@ function App() {
       .catch(err => console.error("Erreur fondamentaux:", err));
   }, [API_URL]);
 
-  const aggregateData = (data, interval) => {
-    if (interval === '1D') return data;
-    const grouped = {};
-    data.forEach(d => {
-      const date = new Date(d.time);
-      let key;
-      if (interval === '1W') {
-        const day = date.getDay() || 7;
-        date.setDate(date.getDate() - day + 1);
-        key = date.toISOString().split('T')[0];
-      } else if (interval === '1M') {
-        key = d.time.substring(0, 7) + '-01';
-      }
-      if (!grouped[key]) {
-        grouped[key] = { ...d, time: key };
-      } else {
-        grouped[key].high = Math.max(grouped[key].high, d.high);
-        grouped[key].low = Math.min(grouped[key].low, d.low);
-        grouped[key].close = d.close;
-        grouped[key].ma10 = d.ma10 || grouped[key].ma10;
-        grouped[key].ma100 = d.ma100 || grouped[key].ma100;
-        grouped[key].ma200 = d.ma200 || grouped[key].ma200;
-      }
-    });
-    return Object.values(grouped).sort((a, b) => new Date(a.time) - new Date(b.time));
-  };
-
   const applyTimeRange = (range, chart = chartInstanceRef.current, data = currentDataRef.current) => {
     if (!chart || data.length === 0) return;
     if (range === 'ALL') {
       chart.timeScale().fitContent();
       return;
     }
-    const lastDate = new Date(data[data.length - 1].time);
+    
+    // Pour gérer à la fois les timestamps UNIX (1h) et les strings (1D, 1W)
+    const getLastDate = (item) => typeof item.time === 'number' ? new Date(item.time * 1000) : new Date(item.time);
+    
+    const lastDate = getLastDate(data[data.length - 1]);
     let fromDate = new Date(lastDate);
+    
     if (range === '1M') fromDate.setMonth(fromDate.getMonth() - 1);
     else if (range === '3M') fromDate.setMonth(fromDate.getMonth() - 3);
     else if (range === '6M') fromDate.setMonth(fromDate.getMonth() - 6);
     else if (range === '1Y') fromDate.setFullYear(fromDate.getFullYear() - 1);
 
+    // Formatage de la date 'from' selon le type d'intervalle
+    let fromStr;
+    if (candleInterval === '1h') {
+        fromStr = Math.floor(fromDate.getTime() / 1000);
+    } else {
+        fromStr = fromDate.toISOString().split('T')[0];
+    }
+
     chart.timeScale().setVisibleRange({
-      from: fromDate.toISOString().split('T')[0],
+      from: fromStr,
       to: data[data.length - 1].time
     });
   };
@@ -84,7 +70,7 @@ function App() {
       grid: { vertLines: { color: '#2B2B43' }, horzLines: { color: '#2B2B43' } },
       width: chartContainerRef.current.clientWidth,
       height: 550,
-      timeScale: { timeVisible: true },
+      timeScale: { timeVisible: true }, // Indispensable pour voir l'heure en intraday
     });
     
     chartInstanceRef.current = chart;
@@ -92,29 +78,40 @@ function App() {
     const candleSeries = chart.addSeries(CandlestickSeries, { upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350' });
     const ma10Series = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 2, crosshairMarkerVisible: false });
     const ma100Series = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 2, crosshairMarkerVisible: false });
-    const ma200Series = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false });
+    const ma365Series = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false });
 
-    // GARDE-FOU REACT
     let isMounted = true;
 
-    fetch(`${API_URL}/api/prices`)
+    // Appel API optimisé : on ne demande que l'intervalle et le ticker souhaités
+    fetch(`${API_URL}/api/prices?ticker=${selectedSymbol}&interval=${candleInterval}`)
       .then(res => res.json())
       .then(data => {
-        // Si le graphique a été détruit entre temps, on stoppe tout
         if (!isMounted) return;
 
         if (!data.error && Array.isArray(data)) {
           let rawData = data
-            .filter(i => i.ticker === selectedSymbol)
-            // CORRECTION DE LA DATE ICI
-            .map(i => ({ 
-                time: i.date.split('T')[0].split(' ')[0], 
-                open: i.open, 
-                high: i.high, 
-                low: i.low, 
-                close: i.close 
-            }))
-            .sort((a, b) => new Date(a.time) - new Date(b.time));
+            .map(i => {
+                let formattedTime;
+                if (candleInterval === '1h') {
+                    // Intraday : Timestamp UNIX
+                    formattedTime = Math.floor(new Date(i.date).getTime() / 1000);
+                } else {
+                    // Journalier/Hebdo : String YYYY-MM-DD
+                    formattedTime = i.date.split('T')[0].split(' ')[0];
+                }
+
+                return { 
+                    time: formattedTime, 
+                    open: i.open, 
+                    high: i.high, 
+                    low: i.low, 
+                    close: i.close 
+                };
+            })
+            .sort((a, b) => {
+                if (candleInterval === '1h') return a.time - b.time;
+                return new Date(a.time) - new Date(b.time);
+            });
           
           rawData = rawData.map((d, index, arr) => {
               const calcMA = (period) => {
@@ -123,17 +120,18 @@ function App() {
                   for (let j = 0; j < period; j++) sum += arr[index - j].close;
                   return sum / period;
               };
-              return { ...d, ma10: calcMA(10), ma100: calcMA(100), ma200: calcMA(200) };
+              return { ...d, ma10: calcMA(10), ma100: calcMA(100), ma365: calcMA(365) };
           });
           
           if (rawData.length > 0) {
-            const processedData = aggregateData(rawData, candleInterval);
-            currentDataRef.current = processedData;
-            candleSeries.setData(processedData.map(d => ({ time: d.time, open: d.open, high: d.high, low: d.low, close: d.close })));
-            ma10Series.setData(processedData.filter(d => d.ma10 !== null).map(d => ({ time: d.time, value: d.ma10 })));
-            ma100Series.setData(processedData.filter(d => d.ma100 !== null).map(d => ({ time: d.time, value: d.ma100 })));
-            ma200Series.setData(processedData.filter(d => d.ma200 !== null).map(d => ({ time: d.time, value: d.ma200 })));
-            applyTimeRange(timeRange, chart, processedData);
+            currentDataRef.current = rawData;
+            candleSeries.setData(rawData.map(d => ({ time: d.time, open: d.open, high: d.high, low: d.low, close: d.close })));
+            ma10Series.setData(rawData.filter(d => d.ma10 !== null).map(d => ({ time: d.time, value: d.ma10 })));
+            ma100Series.setData(rawData.filter(d => d.ma100 !== null).map(d => ({ time: d.time, value: d.ma100 })));
+            ma365Series.setData(rawData.filter(d => d.ma365 !== null).map(d => ({ time: d.time, value: d.ma365 })));
+            
+            // On applique le zoom automatiquement
+            applyTimeRange(timeRange, chart, rawData);
           }
         }
       })
@@ -145,7 +143,7 @@ function App() {
           close: param.seriesData.get(candleSeries)?.close?.toFixed(2),
           ma10: param.seriesData.get(ma10Series)?.value?.toFixed(2),
           ma100: param.seriesData.get(ma100Series)?.value?.toFixed(2),
-          ma200: param.seriesData.get(ma200Series)?.value?.toFixed(2),
+          ma365: param.seriesData.get(ma365Series)?.value?.toFixed(2),
         });
       }
     });
@@ -175,7 +173,6 @@ function App() {
 
   const currentData = Array.isArray(fundamentalsData) ? fundamentalsData.find(f => f.ticker === selectedSymbol) : null;
 
-  // --- FONCTION DE RENDU DES CARTES ---
   const renderCategory = (title, dataArray) => {
     if (!dataArray || dataArray.length === 0) return null;
     return (
@@ -188,7 +185,6 @@ function App() {
               <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '10px' }}>
                 <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{formatVal(metric.val, metric.unit)}</span>
                 
-                {/* Affiche la moyenne seulement si elle est différente de 0 */}
                 {metric.avg !== 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                     <span style={{ fontSize: '11px', color: '#8a919e' }}>Moy. Secteur</span>
@@ -230,8 +226,11 @@ function App() {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #2B2B43', paddingBottom: '15px' }}>
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '10px' }}>BOUGIES :</span>
-              {['1D', '1W', '1M'].map(interval => (
-                <button key={interval} style={filterBtnStyle(candleInterval === interval)} onClick={() => setCandleInterval(interval)}>{interval === '1D' ? 'Jour' : interval === '1W' ? 'Semaine' : 'Mois'}</button>
+              {/* BOUTONS MIS À JOUR ICI */}
+              {['1h', '1D', '1W'].map(interval => (
+                <button key={interval} style={filterBtnStyle(candleInterval === interval)} onClick={() => setCandleInterval(interval)}>
+                    {interval === '1h' ? '1 Heure' : interval === '1D' ? 'Jour' : 'Semaine'}
+                </button>
               ))}
             </div>
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
@@ -246,8 +245,7 @@ function App() {
               <span style={{ color: '#d1d4dc' }}>{selectedSymbol} {legendData.close && `$${legendData.close}`}</span>
               <span style={{ color: '#00bcd4' }}>MM 10 {legendData.ma10 && `: ${legendData.ma10}`}</span>
               <span style={{ color: '#ff9800' }}>MM 100 {legendData.ma100 && `: ${legendData.ma100}`}</span>
-              {/* CORRECTION AFFICHAGE LÉGENDE MM200 */}
-              <span style={{ color: '#9c27b0' }}>MM 200 {legendData.ma200 && `: ${legendData.ma200}`}</span>
+              <span style={{ color: '#9c27b0' }}>MM 365 {legendData.ma365 && `: ${legendData.ma365}`}</span>
             </div>
             {selectedSymbol && <div ref={chartContainerRef} style={{ width: '100%', height: '500px' }} />}
           </div>
