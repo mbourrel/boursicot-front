@@ -228,7 +228,7 @@ const API_URL = 'https://boursicot-api.onrender.com';
               <span style={{ color: '#d1d4dc' }}>{selectedSymbol} {legendData.close && `$${legendData.close}`}</span>
               <span style={{ color: '#00bcd4' }}>MM 10 {legendData.ma10 && `: ${legendData.ma10}`}</span>
               <span style={{ color: '#ff9800' }}>MM 100 {legendData.ma100 && `: ${legendData.ma100}`}</span>
-              <span style={{ color: '#9c27b0' }}>MM 365 {legendData.ma365 && `: ${legendData.ma365}`}</span>
+              <span style={{ color: '#9c27b0' }}>MM 200 {legendData.ma200 && `: ${legendData.ma200}`}</span>
             </div>
             {selectedSymbol && <div ref={chartContainerRef} style={{ width: '100%', height: '500px' }} />}
           </div>
