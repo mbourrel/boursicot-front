@@ -11,7 +11,8 @@ function App() {
   const [fundamentalsData, setFundamentalsData] = useState([]);
   const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma365: null });
 
-  const [timeRange, setTimeRange] = useState('ALL');
+  // On initialise par défaut sur 1 Jour et 1 An pour une belle vue d'entrée
+  const [timeRange, setTimeRange] = useState('1Y');
   const [candleInterval, setCandleInterval] = useState('1D');
 
   // --- CONFIGURATION DYNAMIQUE DE L'URL ---
@@ -32,6 +33,7 @@ function App() {
       .catch(err => console.error("Erreur fondamentaux:", err));
   }, [API_URL]);
 
+  // --- LOGIQUE DE ZOOM ---
   const applyTimeRange = (range, chart = chartInstanceRef.current, data = currentDataRef.current) => {
     if (!chart || data.length === 0) return;
     if (range === 'ALL') {
@@ -44,10 +46,13 @@ function App() {
     const lastDate = getLastDate(data[data.length - 1]);
     let fromDate = new Date(lastDate);
     
-    if (range === '1M') fromDate.setMonth(fromDate.getMonth() - 1);
+    // Nouveaux calculs pour 1 Semaine et 5 Ans
+    if (range === '1W') fromDate.setDate(fromDate.getDate() - 7);
+    else if (range === '1M') fromDate.setMonth(fromDate.getMonth() - 1);
     else if (range === '3M') fromDate.setMonth(fromDate.getMonth() - 3);
     else if (range === '6M') fromDate.setMonth(fromDate.getMonth() - 6);
     else if (range === '1Y') fromDate.setFullYear(fromDate.getFullYear() - 1);
+    else if (range === '5Y') fromDate.setFullYear(fromDate.getFullYear() - 5);
 
     let fromStr;
     if (candleInterval === '1h') {
@@ -60,6 +65,15 @@ function App() {
       from: fromStr,
       to: data[data.length - 1].time
     });
+  };
+
+  // --- CHANGEMENT INTELLIGENT DE L'INTERVALLE ---
+  const handleIntervalChange = (interval) => {
+    setCandleInterval(interval);
+    // Adapte le zoom automatiquement pour éviter de charger 5 ans de bougies d'1h
+    if (interval === '1h') setTimeRange('1W');
+    else if (interval === '1D') setTimeRange('1Y');
+    else if (interval === '1W') setTimeRange('ALL');
   };
 
   // 2. Gestion du graphique
@@ -224,15 +238,17 @@ function App() {
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '10px' }}>BOUGIES :</span>
               {['1h', '1D', '1W'].map(interval => (
-                <button key={interval} style={filterBtnStyle(candleInterval === interval)} onClick={() => setCandleInterval(interval)}>
+                <button key={interval} style={filterBtnStyle(candleInterval === interval)} onClick={() => handleIntervalChange(interval)}>
                     {interval === '1h' ? '1 Heure' : interval === '1D' ? 'Jour' : 'Semaine'}
                 </button>
               ))}
             </div>
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '10px' }}>ZOOM :</span>
-              {['1M', '3M', '6M', '1Y', 'ALL'].map(range => (
-                <button key={range} style={filterBtnStyle(timeRange === range)} onClick={() => { setTimeRange(range); applyTimeRange(range); }}>{range === 'ALL' ? 'Tout' : range}</button>
+              {['1W', '1M', '3M', '6M', '1Y', '5Y', 'ALL'].map(range => (
+                <button key={range} style={filterBtnStyle(timeRange === range)} onClick={() => { setTimeRange(range); applyTimeRange(range); }}>
+                  {range === 'ALL' ? 'Tout' : range}
+                </button>
               ))}
             </div>
           </div>
