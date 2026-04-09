@@ -9,7 +9,7 @@ function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('');
   const [viewMode, setViewMode] = useState('chart');
   const [fundamentalsData, setFundamentalsData] = useState([]);
-  const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma365: null });
+  const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma200: null });
 
   const [timeRange, setTimeRange] = useState('ALL');
   const [candleInterval, setCandleInterval] = useState('1D');
@@ -50,7 +50,7 @@ function App() {
         grouped[key].close = d.close;
         grouped[key].ma10 = d.ma10 || grouped[key].ma10;
         grouped[key].ma100 = d.ma100 || grouped[key].ma100;
-        grouped[key].ma365 = d.ma365 || grouped[key].ma365;
+        grouped[key].ma200 = d.ma200 || grouped[key].ma200;
       }
     });
     return Object.values(grouped).sort((a, b) => new Date(a.time) - new Date(b.time));
@@ -92,7 +92,7 @@ function App() {
     const candleSeries = chart.addSeries(CandlestickSeries, { upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350' });
     const ma10Series = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 2, crosshairMarkerVisible: false });
     const ma100Series = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 2, crosshairMarkerVisible: false });
-    const ma365Series = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false });
+    const ma200Series = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false });
 
     // GARDE-FOU REACT
     let isMounted = true;
@@ -123,7 +123,7 @@ function App() {
                   for (let j = 0; j < period; j++) sum += arr[index - j].close;
                   return sum / period;
               };
-              return { ...d, ma10: calcMA(10), ma100: calcMA(100), ma365: calcMA(365) };
+              return { ...d, ma10: calcMA(10), ma100: calcMA(100), ma200: calcMA(200) };
           });
           
           if (rawData.length > 0) {
@@ -132,7 +132,7 @@ function App() {
             candleSeries.setData(processedData.map(d => ({ time: d.time, open: d.open, high: d.high, low: d.low, close: d.close })));
             ma10Series.setData(processedData.filter(d => d.ma10 !== null).map(d => ({ time: d.time, value: d.ma10 })));
             ma100Series.setData(processedData.filter(d => d.ma100 !== null).map(d => ({ time: d.time, value: d.ma100 })));
-            ma365Series.setData(processedData.filter(d => d.ma365 !== null).map(d => ({ time: d.time, value: d.ma365 })));
+            ma200Series.setData(processedData.filter(d => d.ma200 !== null).map(d => ({ time: d.time, value: d.ma200 })));
             applyTimeRange(timeRange, chart, processedData);
           }
         }
@@ -145,7 +145,7 @@ function App() {
           close: param.seriesData.get(candleSeries)?.close?.toFixed(2),
           ma10: param.seriesData.get(ma10Series)?.value?.toFixed(2),
           ma100: param.seriesData.get(ma100Series)?.value?.toFixed(2),
-          ma365: param.seriesData.get(ma365Series)?.value?.toFixed(2),
+          ma200: param.seriesData.get(ma200Series)?.value?.toFixed(2),
         });
       }
     });
@@ -246,8 +246,8 @@ function App() {
               <span style={{ color: '#d1d4dc' }}>{selectedSymbol} {legendData.close && `$${legendData.close}`}</span>
               <span style={{ color: '#00bcd4' }}>MM 10 {legendData.ma10 && `: ${legendData.ma10}`}</span>
               <span style={{ color: '#ff9800' }}>MM 100 {legendData.ma100 && `: ${legendData.ma100}`}</span>
-              {/* CORRECTION AFFICHAGE LÉGENDE MM365 */}
-              <span style={{ color: '#9c27b0' }}>MM 365 {legendData.ma365 && `: ${legendData.ma365}`}</span>
+              {/* CORRECTION AFFICHAGE LÉGENDE MM200 */}
+              <span style={{ color: '#9c27b0' }}>MM 200 {legendData.ma200 && `: ${legendData.ma200}`}</span>
             </div>
             {selectedSymbol && <div ref={chartContainerRef} style={{ width: '100%', height: '500px' }} />}
           </div>
