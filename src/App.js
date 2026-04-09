@@ -14,7 +14,10 @@ function App() {
   const [timeRange, setTimeRange] = useState('ALL');
   const [candleInterval, setCandleInterval] = useState('1D');
 
-  const API_URL = 'https://boursicot-api.onrender.com';
+  // --- CONFIGURATION DYNAMIQUE DE L'URL ---
+  const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://127.0.0.1:8000' 
+    : 'https://boursicot-api.onrender.com';
 
   // 1. Récupération des fondamentaux
   useEffect(() => {
@@ -36,7 +39,6 @@ function App() {
       return;
     }
     
-    // Pour gérer à la fois les timestamps UNIX (1h) et les strings (1D, 1W)
     const getLastDate = (item) => typeof item.time === 'number' ? new Date(item.time * 1000) : new Date(item.time);
     
     const lastDate = getLastDate(data[data.length - 1]);
@@ -47,7 +49,6 @@ function App() {
     else if (range === '6M') fromDate.setMonth(fromDate.getMonth() - 6);
     else if (range === '1Y') fromDate.setFullYear(fromDate.getFullYear() - 1);
 
-    // Formatage de la date 'from' selon le type d'intervalle
     let fromStr;
     if (candleInterval === '1h') {
         fromStr = Math.floor(fromDate.getTime() / 1000);
@@ -70,7 +71,7 @@ function App() {
       grid: { vertLines: { color: '#2B2B43' }, horzLines: { color: '#2B2B43' } },
       width: chartContainerRef.current.clientWidth,
       height: 550,
-      timeScale: { timeVisible: true }, // Indispensable pour voir l'heure en intraday
+      timeScale: { timeVisible: true }, 
     });
     
     chartInstanceRef.current = chart;
@@ -82,7 +83,6 @@ function App() {
 
     let isMounted = true;
 
-    // Appel API optimisé : on ne demande que l'intervalle et le ticker souhaités
     fetch(`${API_URL}/api/prices?ticker=${selectedSymbol}&interval=${candleInterval}`)
       .then(res => res.json())
       .then(data => {
@@ -93,10 +93,8 @@ function App() {
             .map(i => {
                 let formattedTime;
                 if (candleInterval === '1h') {
-                    // Intraday : Timestamp UNIX
                     formattedTime = Math.floor(new Date(i.date).getTime() / 1000);
                 } else {
-                    // Journalier/Hebdo : String YYYY-MM-DD
                     formattedTime = i.date.split('T')[0].split(' ')[0];
                 }
 
@@ -130,7 +128,6 @@ function App() {
             ma100Series.setData(rawData.filter(d => d.ma100 !== null).map(d => ({ time: d.time, value: d.ma100 })));
             ma365Series.setData(rawData.filter(d => d.ma365 !== null).map(d => ({ time: d.time, value: d.ma365 })));
             
-            // On applique le zoom automatiquement
             applyTimeRange(timeRange, chart, rawData);
           }
         }
@@ -157,7 +154,7 @@ function App() {
         chart.remove(); 
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSymbol, viewMode, candleInterval]);
+  }, [selectedSymbol, viewMode, candleInterval, API_URL]);
 
   const filterBtnStyle = (isActive) => ({
     padding: '6px 12px', background: isActive ? '#2962FF' : 'transparent', color: isActive ? 'white' : '#8a919e',
@@ -226,7 +223,6 @@ function App() {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #2B2B43', paddingBottom: '15px' }}>
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '10px' }}>BOUGIES :</span>
-              {/* BOUTONS MIS À JOUR ICI */}
               {['1h', '1D', '1W'].map(interval => (
                 <button key={interval} style={filterBtnStyle(candleInterval === interval)} onClick={() => setCandleInterval(interval)}>
                     {interval === '1h' ? '1 Heure' : interval === '1D' ? 'Jour' : 'Semaine'}
