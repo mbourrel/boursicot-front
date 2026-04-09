@@ -9,7 +9,7 @@ function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('');
   const [viewMode, setViewMode] = useState('chart');
   const [fundamentalsData, setFundamentalsData] = useState([]);
-  const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma365: null, volume: null });
+  const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma200: null, volume: null });
 
   const [timeRange, setTimeRange] = useState('1Y');
   const [candleInterval, setCandleInterval] = useState('1D');
