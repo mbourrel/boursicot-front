@@ -14,7 +14,7 @@ function App() {
   const [timeRange, setTimeRange] = useState('ALL');
   const [candleInterval, setCandleInterval] = useState('1D');
 
-const API_URL = 'https://boursicot-api.onrender.com';
+  const API_URL = 'https://boursicot-api.onrender.com';
 
   // 1. Récupération des fondamentaux
   useEffect(() => {
@@ -94,13 +94,26 @@ const API_URL = 'https://boursicot-api.onrender.com';
     const ma100Series = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 2, crosshairMarkerVisible: false });
     const ma365Series = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false });
 
+    // GARDE-FOU REACT
+    let isMounted = true;
+
     fetch(`${API_URL}/api/prices`)
       .then(res => res.json())
       .then(data => {
+        // Si le graphique a été détruit entre temps, on stoppe tout
+        if (!isMounted) return;
+
         if (!data.error && Array.isArray(data)) {
           let rawData = data
             .filter(i => i.ticker === selectedSymbol)
-            .map(i => ({ time: i.date, open: i.open, high: i.high, low: i.low, close: i.close }))
+            // CORRECTION DE LA DATE ICI
+            .map(i => ({ 
+                time: i.date.split('T')[0].split(' ')[0], 
+                open: i.open, 
+                high: i.high, 
+                low: i.low, 
+                close: i.close 
+            }))
             .sort((a, b) => new Date(a.time) - new Date(b.time));
           
           rawData = rawData.map((d, index, arr) => {
@@ -139,7 +152,12 @@ const API_URL = 'https://boursicot-api.onrender.com';
 
     const handleResize = () => chart.applyOptions({ width: chartContainerRef.current.clientWidth });
     window.addEventListener('resize', handleResize);
-    return () => { window.removeEventListener('resize', handleResize); chart.remove(); };
+    
+    return () => { 
+        isMounted = false; 
+        window.removeEventListener('resize', handleResize); 
+        chart.remove(); 
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSymbol, viewMode, candleInterval]);
 
@@ -228,7 +246,8 @@ const API_URL = 'https://boursicot-api.onrender.com';
               <span style={{ color: '#d1d4dc' }}>{selectedSymbol} {legendData.close && `$${legendData.close}`}</span>
               <span style={{ color: '#00bcd4' }}>MM 10 {legendData.ma10 && `: ${legendData.ma10}`}</span>
               <span style={{ color: '#ff9800' }}>MM 100 {legendData.ma100 && `: ${legendData.ma100}`}</span>
-              <span style={{ color: '#9c27b0' }}>MM 200 {legendData.ma200 && `: ${legendData.ma200}`}</span>
+              {/* CORRECTION AFFICHAGE LÉGENDE MM365 */}
+              <span style={{ color: '#9c27b0' }}>MM 365 {legendData.ma365 && `: ${legendData.ma365}`}</span>
             </div>
             {selectedSymbol && <div ref={chartContainerRef} style={{ width: '100%', height: '500px' }} />}
           </div>
@@ -243,7 +262,6 @@ const API_URL = 'https://boursicot-api.onrender.com';
                 <p style={{ color: '#8a919e', maxWidth: '1000px', lineHeight: '1.5' }}>{currentData.description}</p>
               </div>
 
-              {/* APPEL DE NOTRE FONCTION POUR CHAQUE CATÉGORIE */}
               {renderCategory("1. Analyse de Marché", currentData.market_analysis)}
               {renderCategory("2. Santé Financière", currentData.financial_health)}
               {renderCategory("3. Valorisation Avancée", currentData.advanced_valuation)}
