@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, CandlestickSeries, LineSeries } from 'lightweight-charts';
+import { createChart, CandlestickSeries, LineSeries, HistogramSeries } from 'lightweight-charts';
 
 function App() {
   const chartContainerRef = useRef();
@@ -9,18 +9,15 @@ function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('');
   const [viewMode, setViewMode] = useState('chart');
   const [fundamentalsData, setFundamentalsData] = useState([]);
-  const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma365: null });
+  const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma365: null, volume: null });
 
-  // On initialise par défaut sur 1 Jour et 1 An pour une belle vue d'entrée
   const [timeRange, setTimeRange] = useState('1Y');
   const [candleInterval, setCandleInterval] = useState('1D');
 
-  // --- CONFIGURATION DYNAMIQUE DE L'URL ---
   const API_URL = window.location.hostname === 'localhost' 
     ? 'http://127.0.0.1:8000' 
     : 'https://boursicot-api.onrender.com';
 
-  // 1. Récupération des fondamentaux
   useEffect(() => {
     fetch(`${API_URL}/api/fundamentals`)
       .then(res => res.json())
@@ -33,7 +30,6 @@ function App() {
       .catch(err => console.error("Erreur fondamentaux:", err));
   }, [API_URL]);
 
-  // --- LOGIQUE DE ZOOM ---
   const applyTimeRange = (range, chart = chartInstanceRef.current, data = currentDataRef.current) => {
     if (!chart || data.length === 0) return;
     if (range === 'ALL') {
@@ -46,7 +42,6 @@ function App() {
     const lastDate = getLastDate(data[data.length - 1]);
     let fromDate = new Date(lastDate);
     
-    // Nouveaux calculs pour 1 Semaine et 5 Ans
     if (range === '1W') fromDate.setDate(fromDate.getDate() - 7);
     else if (range === '1M') fromDate.setMonth(fromDate.getMonth() - 1);
     else if (range === '3M') fromDate.setMonth(fromDate.getMonth() - 3);
@@ -67,16 +62,13 @@ function App() {
     });
   };
 
-  // --- CHANGEMENT INTELLIGENT DE L'INTERVALLE ---
   const handleIntervalChange = (interval) => {
     setCandleInterval(interval);
-    // Adapte le zoom automatiquement pour éviter de charger 5 ans de bougies d'1h
     if (interval === '1h') setTimeRange('1W');
     else if (interval === '1D') setTimeRange('1Y');
     else if (interval === '1W') setTimeRange('ALL');
   };
 
-  // 2. Gestion du graphique
   useEffect(() => {
     if (viewMode !== 'chart' || !chartContainerRef.current || !selectedSymbol) return;
 
@@ -90,10 +82,25 @@ function App() {
     
     chartInstanceRef.current = chart;
 
+    // Configuration des séries
     const candleSeries = chart.addSeries(CandlestickSeries, { upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350' });
     const ma10Series = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 2, crosshairMarkerVisible: false });
     const ma100Series = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 2, crosshairMarkerVisible: false });
     const ma365Series = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false });
+    
+    // Ajout de la série d'histogramme pour le volume
+    const volumeSeries = chart.addSeries(HistogramSeries, {
+      priceFormat: { type: 'volume' },
+      priceScaleId: '', // Assigne l'histogramme à une échelle indépendante
+    });
+
+    // On force l'échelle indépendante à rester tout en bas du graphique (les derniers 20%)
+    chart.priceScale('').applyOptions({
+      scaleMargins: {
+        top: 0.8,
+        bottom: 0,
+      },
+    });
 
     let isMounted = true;
 
@@ -112,12 +119,17 @@ function App() {
                     formattedTime = i.date.split('T')[0].split(' ')[0];
                 }
 
+                // Détermination de la couleur du volume selon que la bougie est haussière ou baissière
+                const isBullish = i.close >= i.open;
+
                 return { 
                     time: formattedTime, 
                     open: i.open, 
                     high: i.high, 
                     low: i.low, 
-                    close: i.close 
+                    close: i.close,
+                    value: i.volume, // 'value' est la clé attendue par HistogramSeries
+                    color: isBullish ? 'rgba(38, 166, 154, 0.4)' : 'rgba(239, 83, 80, 0.4)'
                 };
             })
             .sort((a, b) => {
@@ -138,6 +150,8 @@ function App() {
           if (rawData.length > 0) {
             currentDataRef.current = rawData;
             candleSeries.setData(rawData.map(d => ({ time: d.time, open: d.open, high: d.high, low: d.low, close: d.close })));
+            volumeSeries.setData(rawData.map(d => ({ time: d.time, value: d.value, color: d.color })));
+            
             ma10Series.setData(rawData.filter(d => d.ma10 !== null).map(d => ({ time: d.time, value: d.ma10 })));
             ma100Series.setData(rawData.filter(d => d.ma100 !== null).map(d => ({ time: d.time, value: d.ma100 })));
             ma365Series.setData(rawData.filter(d => d.ma365 !== null).map(d => ({ time: d.time, value: d.ma365 })));
@@ -155,6 +169,7 @@ function App() {
           ma10: param.seriesData.get(ma10Series)?.value?.toFixed(2),
           ma100: param.seriesData.get(ma100Series)?.value?.toFixed(2),
           ma365: param.seriesData.get(ma365Series)?.value?.toFixed(2),
+          volume: param.seriesData.get(volumeSeries)?.value, // Récupération du volume survolé
         });
       }
     });
@@ -255,6 +270,7 @@ function App() {
           <div style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', gap: '15px', backgroundColor: 'rgba(19, 23, 34, 0.8)', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold' }}>
               <span style={{ color: '#d1d4dc' }}>{selectedSymbol} {legendData.close && `$${legendData.close}`}</span>
+              <span style={{ color: '#8a919e' }}>Vol {legendData.volume && `: ${formatVal(legendData.volume, '')}`}</span>
               <span style={{ color: '#00bcd4' }}>MM 10 {legendData.ma10 && `: ${legendData.ma10}`}</span>
               <span style={{ color: '#ff9800' }}>MM 100 {legendData.ma100 && `: ${legendData.ma100}`}</span>
               <span style={{ color: '#9c27b0' }}>MM 365 {legendData.ma365 && `: ${legendData.ma365}`}</span>
