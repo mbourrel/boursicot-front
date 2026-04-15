@@ -6,13 +6,39 @@ function TradingChart({ selectedSymbol }) {
   const chartInstanceRef = useRef(null);
   const currentDataRef = useRef([]);
   
+  // Références pour pouvoir cibler les courbes et les masquer/afficher sans tout recharger
+  const volumeSeriesRef = useRef(null);
+  const ma10SeriesRef = useRef(null);
+  const ma100SeriesRef = useRef(null);
+  const ma365SeriesRef = useRef(null);
+  
   const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma365: null, volume: null });
   const [timeRange, setTimeRange] = useState('1Y');
   const [candleInterval, setCandleInterval] = useState('1D');
 
+  // NOUVEAU : État pour gérer la visibilité des indicateurs
+  const [indicators, setIndicators] = useState({
+    volume: true,
+    ma10: true,
+    ma100: true,
+    ma365: true
+  });
+
   const API_URL = window.location.hostname === 'localhost' 
     ? 'http://127.0.0.1:8000' 
     : import.meta.env.VITE_API_URL;
+
+  // Effet pour mettre à jour la visibilité quand on clique sur un bouton
+  useEffect(() => {
+    if (volumeSeriesRef.current) volumeSeriesRef.current.applyOptions({ visible: indicators.volume });
+    if (ma10SeriesRef.current) ma10SeriesRef.current.applyOptions({ visible: indicators.ma10 });
+    if (ma100SeriesRef.current) ma100SeriesRef.current.applyOptions({ visible: indicators.ma100 });
+    if (ma365SeriesRef.current) ma365SeriesRef.current.applyOptions({ visible: indicators.ma365 });
+  }, [indicators]);
+
+  const toggleIndicator = (key) => {
+    setIndicators(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const applyTimeRange = (range, chart = chartInstanceRef.current, data = currentDataRef.current) => {
     if (!chart || data.length === 0) return;
@@ -53,6 +79,7 @@ function TradingChart({ selectedSymbol }) {
     else if (interval === '1W') setTimeRange('ALL');
   };
 
+  // Chargement principal du graphique
   useEffect(() => {
     if (!chartContainerRef.current || !selectedSymbol) return;
 
@@ -67,13 +94,16 @@ function TradingChart({ selectedSymbol }) {
     chartInstanceRef.current = chart;
 
     const candleSeries = chart.addSeries(CandlestickSeries, { upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350' });
-    const ma10Series = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 2, crosshairMarkerVisible: false });
-    const ma100Series = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 2, crosshairMarkerVisible: false });
-    const ma365Series = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false });
     
-    const volumeSeries = chart.addSeries(HistogramSeries, {
+    // On sauvegarde la référence de chaque indicateur en l'ajoutant
+    ma10SeriesRef.current = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 2, crosshairMarkerVisible: false, visible: indicators.ma10 });
+    ma100SeriesRef.current = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 2, crosshairMarkerVisible: false, visible: indicators.ma100 });
+    ma365SeriesRef.current = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false, visible: indicators.ma365 });
+    
+    volumeSeriesRef.current = chart.addSeries(HistogramSeries, {
       priceFormat: { type: 'volume' },
       priceScaleId: '', 
+      visible: indicators.volume
     });
 
     chart.priceScale('').applyOptions({
@@ -127,11 +157,11 @@ function TradingChart({ selectedSymbol }) {
           if (rawData.length > 0) {
             currentDataRef.current = rawData;
             candleSeries.setData(rawData.map(d => ({ time: d.time, open: d.open, high: d.high, low: d.low, close: d.close })));
-            volumeSeries.setData(rawData.map(d => ({ time: d.time, value: d.value, color: d.color })));
+            volumeSeriesRef.current.setData(rawData.map(d => ({ time: d.time, value: d.value, color: d.color })));
             
-            ma10Series.setData(rawData.filter(d => d.ma10 !== null).map(d => ({ time: d.time, value: d.ma10 })));
-            ma100Series.setData(rawData.filter(d => d.ma100 !== null).map(d => ({ time: d.time, value: d.ma100 })));
-            ma365Series.setData(rawData.filter(d => d.ma365 !== null).map(d => ({ time: d.time, value: d.ma365 })));
+            ma10SeriesRef.current.setData(rawData.filter(d => d.ma10 !== null).map(d => ({ time: d.time, value: d.ma10 })));
+            ma100SeriesRef.current.setData(rawData.filter(d => d.ma100 !== null).map(d => ({ time: d.time, value: d.ma100 })));
+            ma365SeriesRef.current.setData(rawData.filter(d => d.ma365 !== null).map(d => ({ time: d.time, value: d.ma365 })));
             
             applyTimeRange(timeRange, chart, rawData);
           }
@@ -143,10 +173,10 @@ function TradingChart({ selectedSymbol }) {
       if (param.time && param.seriesData.size > 0) {
         setLegendData({
           close: param.seriesData.get(candleSeries)?.close?.toFixed(2),
-          ma10: param.seriesData.get(ma10Series)?.value?.toFixed(2),
-          ma100: param.seriesData.get(ma100Series)?.value?.toFixed(2),
-          ma365: param.seriesData.get(ma365Series)?.value?.toFixed(2),
-          volume: param.seriesData.get(volumeSeries)?.value, 
+          ma10: param.seriesData.get(ma10SeriesRef.current)?.value?.toFixed(2),
+          ma100: param.seriesData.get(ma100SeriesRef.current)?.value?.toFixed(2),
+          ma365: param.seriesData.get(ma365SeriesRef.current)?.value?.toFixed(2),
+          volume: param.seriesData.get(volumeSeriesRef.current)?.value, 
         });
       }
     });
@@ -159,11 +189,12 @@ function TradingChart({ selectedSymbol }) {
         window.removeEventListener('resize', handleResize); 
         chart.remove(); 
     };
-  }, [selectedSymbol, candleInterval, API_URL]);
+  }, [selectedSymbol, candleInterval, API_URL]); // Note : on n'inclut pas "indicators" ici pour ne pas relancer la requête API !
 
-  const filterBtnStyle = (isActive) => ({
-    padding: '6px 12px', background: isActive ? '#2962FF' : 'transparent', color: isActive ? 'white' : '#8a919e',
-    border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'all 0.2s'
+  // On personnalise un peu la couleur selon l'indicateur activé
+  const filterBtnStyle = (isActive, activeColor = '#2962FF') => ({
+    padding: '6px 12px', background: isActive ? activeColor : 'transparent', color: isActive ? 'white' : '#8a919e',
+    border: `1px solid ${isActive ? activeColor : '#2B2B43'}`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'all 0.2s'
   });
 
   const formatVal = (val) => {
@@ -175,32 +206,53 @@ function TradingChart({ selectedSymbol }) {
 
   return (
     <div style={{ backgroundColor: '#131722', padding: '15px', borderRadius: '12px', border: '1px solid #2B2B43' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #2B2B43', paddingBottom: '15px' }}>
+      
+      {/* BARRE DE CONTRÔLE SUPÉRIEURE */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '15px', borderBottom: '1px solid #2B2B43', paddingBottom: '15px' }}>
+        
+        {/* Contrôles de Bougies */}
         <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '10px' }}>BOUGIES :</span>
+          <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '5px' }}>BOUGIES :</span>
           {['15m', '1h', '1D', '1W'].map(interval => (
             <button key={interval} style={filterBtnStyle(candleInterval === interval)} onClick={() => handleIntervalChange(interval)}>
                 {interval === '15m' ? '15 Min' : interval === '1h' ? '1 Heure' : interval === '1D' ? 'Jour' : 'Semaine'}
             </button>
           ))}
         </div>
+        
+        {/* Contrôles de Zoom */}
         <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '10px' }}>ZOOM :</span>
+          <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '5px' }}>ZOOM :</span>
           {['1W', '1M', '3M', '6M', '1Y', '5Y', 'ALL'].map(range => (
             <button key={range} style={filterBtnStyle(timeRange === range)} onClick={() => { setTimeRange(range); applyTimeRange(range); }}>
               {range === 'ALL' ? 'Tout' : range}
             </button>
           ))}
         </div>
+
+        {/* NOUVEAU : Contrôles d'affichage des Indicateurs */}
+        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', marginLeft: 'auto' }}>
+          <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '5px' }}>AFFICHAGE :</span>
+          <button style={filterBtnStyle(indicators.volume, '#2962FF')} onClick={() => toggleIndicator('volume')}>Volumes</button>
+          <button style={filterBtnStyle(indicators.ma10, '#00bcd4')} onClick={() => toggleIndicator('ma10')}>MM 10</button>
+          <button style={filterBtnStyle(indicators.ma100, '#ff9800')} onClick={() => toggleIndicator('ma100')}>MM 100</button>
+          <button style={filterBtnStyle(indicators.ma365, '#9c27b0')} onClick={() => toggleIndicator('ma365')}>MM 365</button>
+        </div>
+
       </div>
+
+      {/* ZONE DU GRAPHIQUE */}
       <div style={{ position: 'relative' }}>
+        
+        {/* LÉGENDE DYNAMIQUE AU SURVOL (Masque les infos décochées) */}
         <div style={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', gap: '15px', backgroundColor: 'rgba(19, 23, 34, 0.8)', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold' }}>
           <span style={{ color: '#d1d4dc' }}>{selectedSymbol} {legendData.close && `$${legendData.close}`}</span>
-          <span style={{ color: '#8a919e' }}>Vol {legendData.volume && `: ${formatVal(legendData.volume)}`}</span>
-          <span style={{ color: '#00bcd4' }}>MM 10 {legendData.ma10 && `: ${legendData.ma10}`}</span>
-          <span style={{ color: '#ff9800' }}>MM 100 {legendData.ma100 && `: ${legendData.ma100}`}</span>
-          <span style={{ color: '#9c27b0' }}>MM 365 {legendData.ma365 && `: ${legendData.ma365}`}</span>
+          {indicators.volume && legendData.volume !== undefined && <span style={{ color: '#8a919e' }}>Vol : {formatVal(legendData.volume)}</span>}
+          {indicators.ma10 && legendData.ma10 && <span style={{ color: '#00bcd4' }}>MM 10 : {legendData.ma10}</span>}
+          {indicators.ma100 && legendData.ma100 && <span style={{ color: '#ff9800' }}>MM 100 : {legendData.ma100}</span>}
+          {indicators.ma365 && legendData.ma365 && <span style={{ color: '#9c27b0' }}>MM 365 : {legendData.ma365}</span>}
         </div>
+        
         {selectedSymbol && <div ref={chartContainerRef} style={{ width: '100%', height: '500px' }} />}
       </div>
     </div>
