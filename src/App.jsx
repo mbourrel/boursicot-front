@@ -9,12 +9,12 @@ function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('');
   const [viewMode, setViewMode] = useState('chart');
   const [fundamentalsData, setFundamentalsData] = useState([]);
-  const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma200: null, volume: null });
+  const [legendData, setLegendData] = useState({ close: null, ma10: null, ma100: null, ma365: null, volume: null });
 
   const [timeRange, setTimeRange] = useState('1Y');
   const [candleInterval, setCandleInterval] = useState('1D');
 
-  // MODIFICATION VITE ICI : Utilisation de import.meta.env
+  // Utilisation de import.meta.env
   const API_URL = window.location.hostname === 'localhost' 
     ? 'http://127.0.0.1:8000' 
     : import.meta.env.VITE_API_URL;
@@ -51,7 +51,8 @@ function App() {
     else if (range === '5Y') fromDate.setFullYear(fromDate.getFullYear() - 5);
 
     let fromStr;
-    if (candleInterval === '1h') {
+    // Les bougies intraday nécessitent un timestamp Unix
+    if (['15m', '1h'].includes(candleInterval)) {
         fromStr = Math.floor(fromDate.getTime() / 1000);
     } else {
         fromStr = fromDate.toISOString().split('T')[0];
@@ -65,7 +66,9 @@ function App() {
 
   const handleIntervalChange = (interval) => {
     setCandleInterval(interval);
-    if (interval === '1h') setTimeRange('1W');
+    // Ajustement dynamique du zoom par défaut selon l'intervalle choisi
+    if (interval === '15m') setTimeRange('1W');
+    else if (interval === '1h') setTimeRange('1M');
     else if (interval === '1D') setTimeRange('1Y');
     else if (interval === '1W') setTimeRange('ALL');
   };
@@ -95,7 +98,7 @@ function App() {
       priceScaleId: '', // Assigne l'histogramme à une échelle indépendante
     });
 
-    // On force l'échelle indépendante à rester tout en bas du graphique (les derniers 20%)
+    // On force l'échelle indépendante à rester tout en bas du graphique
     chart.priceScale('').applyOptions({
       scaleMargins: {
         top: 0.8,
@@ -114,13 +117,15 @@ function App() {
           let rawData = data
             .map(i => {
                 let formattedTime;
-                if (candleInterval === '1h') {
-                    formattedTime = Math.floor(new Date(i.date).getTime() / 1000);
+                // Adaptation pour les timestamps Intraday vs Journalier
+                if (['15m', '1h'].includes(candleInterval)) {
+                    // L'API renvoie maintenant "time" (ex: 2024-03-12T15:30:00)
+                    formattedTime = Math.floor(new Date(i.time).getTime() / 1000);
                 } else {
-                    formattedTime = i.date.split('T')[0].split(' ')[0];
+                    formattedTime = i.time.split('T')[0];
                 }
 
-                // Détermination de la couleur du volume selon que la bougie est haussière ou baissière
+                // Détermination de la couleur du volume
                 const isBullish = i.close >= i.open;
 
                 return { 
@@ -129,12 +134,13 @@ function App() {
                     high: i.high, 
                     low: i.low, 
                     close: i.close,
-                    value: i.volume, // 'value' est la clé attendue par HistogramSeries
+                    value: i.volume, 
                     color: isBullish ? 'rgba(38, 166, 154, 0.4)' : 'rgba(239, 83, 80, 0.4)'
                 };
             })
             .sort((a, b) => {
-                if (candleInterval === '1h') return a.time - b.time;
+                // Le tri doit aussi s'adapter selon le type de format de temps
+                if (['15m', '1h'].includes(candleInterval)) return a.time - b.time;
                 return new Date(a.time) - new Date(b.time);
             });
           
@@ -170,7 +176,7 @@ function App() {
           ma10: param.seriesData.get(ma10Series)?.value?.toFixed(2),
           ma100: param.seriesData.get(ma100Series)?.value?.toFixed(2),
           ma365: param.seriesData.get(ma365Series)?.value?.toFixed(2),
-          volume: param.seriesData.get(volumeSeries)?.value, // Récupération du volume survolé
+          volume: param.seriesData.get(volumeSeries)?.value, 
         });
       }
     });
@@ -253,9 +259,9 @@ function App() {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #2B2B43', paddingBottom: '15px' }}>
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: '#8a919e', marginRight: '10px' }}>BOUGIES :</span>
-              {['1h', '1D', '1W'].map(interval => (
+              {['15m', '1h', '1D', '1W'].map(interval => (
                 <button key={interval} style={filterBtnStyle(candleInterval === interval)} onClick={() => handleIntervalChange(interval)}>
-                    {interval === '1h' ? '1 Heure' : interval === '1D' ? 'Jour' : 'Semaine'}
+                    {interval === '15m' ? '15 Min' : interval === '1h' ? '1 Heure' : interval === '1D' ? 'Jour' : 'Semaine'}
                 </button>
               ))}
             </div>
