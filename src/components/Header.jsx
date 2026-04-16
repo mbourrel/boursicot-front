@@ -5,7 +5,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
 
-  // === 1. ÉTAT DES FILTRES ===
+  // 1. ÉTAT DES FILTRES
   const [assetFilters, setAssetFilters] = useState({
     stock: true,
     index: true,
@@ -13,7 +13,6 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     commodity: true
   });
 
-  // Mettre à jour l'affichage de l'input quand l'action sélectionnée change
   useEffect(() => {
     const selectedCompany = fundamentalsData.find(c => c.ticker === selectedSymbol);
     if (selectedCompany) {
@@ -21,7 +20,6 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     }
   }, [selectedSymbol, fundamentalsData]);
 
-  // Fermer le menu si l'utilisateur clique en dehors du champ de recherche
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -37,7 +35,6 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [selectedSymbol, fundamentalsData]);
 
-  // === 2. FONCTION POUR BASCULER L'ÉTAT D'UNE CASE ===
   const handleFilterChange = (assetType) => {
     setAssetFilters(prev => ({
       ...prev,
@@ -45,20 +42,31 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     }));
   };
 
-  // === 3. LOGIQUE DE FILTRAGE COMBINÉE ===
-  // On filtre d'abord par le type d'actif (case cochée), puis par la recherche textuelle
+  // === NOUVEAUTÉ : Fonction pour deviner le type grâce au Ticker ===
+  const getAssetType = (ticker) => {
+    if (!ticker) return 'stock';
+    if (ticker.includes('=F')) return 'commodity'; // ex: GC=F, CL=F
+    if (ticker.startsWith('^')) return 'index';    // ex: ^FCHI, ^GSPC
+    if (ticker.includes('-USD')) return 'crypto';  // ex: BTC-USD
+    return 'stock'; // Par défaut (ex: AAPL, LVMH.PA)
+  };
+
+  // 3. LOGIQUE DE FILTRAGE COMBINÉE
   const filteredData = fundamentalsData.filter(company => {
-    const type = company.type || 'stock'; // Par défaut 'stock' si la propriété est absente
+    // On utilise notre nouvelle fonction pour catégoriser l'actif
+    const type = getAssetType(company.ticker); 
     
-    // Si la case de cette catégorie n'est pas cochée, on exclut d'office
+    // Si la case de cette catégorie n'est pas cochée, on exclut
     if (!assetFilters[type]) return false;
 
-    // Sinon, on vérifie si ça correspond au texte tapé
-    return company.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-           company.ticker.toLowerCase().includes(searchTerm.toLowerCase());
+    // Sinon, on vérifie si ça correspond au texte tapé (recherche par nom ou par ticker)
+    const companyName = company.name || '';
+    const companyTicker = company.ticker || '';
+    
+    return companyName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+           companyTicker.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  // Action quand on clique sur un actif dans la liste
   const handleSelect = (ticker) => {
     setSelectedSymbol(ticker);
     setIsOpen(false);
