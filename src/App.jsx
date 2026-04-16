@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import TradingChart from './components/TradingChart';
+import SimpleChart from './components/SimpleChart';
 import Fundamentals from './components/Fundamentals';
 
 function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('AAPL');
   const [viewMode, setViewMode] = useState('chart');
-  const [fundamentalsData, setFundamentalsData] = useState([]); 
+  const [chartMode, setChartMode] = useState('trading');
+  const [fundamentalsData, setFundamentalsData] = useState([]);
 
   useEffect(() => {
     const loadData = () => {
@@ -59,7 +61,34 @@ function App() {
       />
       
       {viewMode === 'chart' ? (
-        <TradingChart selectedSymbol={selectedSymbol} />
+        <>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
+            <button
+              onClick={() => setChartMode('trading')}
+              style={{
+                padding: '7px 16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
+                borderRadius: '6px 0 0 6px', border: '1px solid #2B2B43', transition: 'all 0.2s',
+                background: chartMode === 'trading' ? '#2962FF' : '#1e222d',
+                color: chartMode === 'trading' ? 'white' : '#8a919e',
+              }}>
+              Trading
+            </button>
+            <button
+              onClick={() => setChartMode('simple')}
+              style={{
+                padding: '7px 16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
+                borderRadius: '0 6px 6px 0', border: '1px solid #2B2B43', borderLeft: 'none', transition: 'all 0.2s',
+                background: chartMode === 'simple' ? '#2962FF' : '#1e222d',
+                color: chartMode === 'simple' ? 'white' : '#8a919e',
+              }}>
+              Simple
+            </button>
+          </div>
+          {chartMode === 'trading'
+            ? <TradingChart selectedSymbol={selectedSymbol} />
+            : <SimpleChart selectedSymbol={selectedSymbol} />
+          }
+        </>
       ) : (
         <Fundamentals selectedSymbol={selectedSymbol} />
       )}

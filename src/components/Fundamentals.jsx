@@ -15,17 +15,21 @@ function Fundamentals({ selectedSymbol }) {
     setError(null);
     setCurrentData(null);
 
-    fetch(`${API_URL}/api/search?q=${encodeURIComponent(selectedSymbol)}`)
-      .then(res => res.json())
+    fetch(`${API_URL}/api/fundamentals/${encodeURIComponent(selectedSymbol)}`)
+      .then(res => {
+        if (!res.ok) throw new Error(res.status);
+        return res.json();
+      })
       .then(data => {
-        const match = data.find(c => c.ticker === selectedSymbol);
-        if (match) {
-          setCurrentData(match);
-        } else {
+        setCurrentData(data);
+      })
+      .catch(err => {
+        if (err.message === '404') {
           setError(`Aucune donnée fondamentale disponible pour ${selectedSymbol}`);
+        } else {
+          setError("Erreur de connexion à l'API");
         }
       })
-      .catch(() => setError("Erreur de connexion à l'API"))
       .finally(() => setLoading(false));
   }, [selectedSymbol, API_URL]);
 
