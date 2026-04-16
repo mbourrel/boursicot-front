@@ -5,13 +5,11 @@ import { ASSET_COLORS } from './CompareBar';
 function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
   const chartContainerRef = useRef();
   const chartInstanceRef = useRef(null);
-  // Map ticker -> données brutes normalisées
   const allDataRef = useRef({});
   const debounceTimerRef = useRef(null);
 
   const [timeRange, setTimeRange] = useState('1Y');
   const [candleInterval, setCandleInterval] = useState('1D');
-  // Map ticker -> { price, change }
   const [assetStats, setAssetStats] = useState({});
   const [hoverData, setHoverData] = useState(null);
 
@@ -46,14 +44,6 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
     chart.timeScale().setVisibleRange({ from: fromStr, to: last.time });
   };
 
-  // Normalise un tableau de {time, value} en base 100 depuis son premier point
-  const normalize = (data) => {
-    if (!data || data.length === 0) return [];
-    const base = data[0].value;
-    if (!base) return data;
-    return data.map(d => ({ ...d, value: ((d.value - base) / base) * 100 }));
-  };
-
   useEffect(() => {
     if (!chartContainerRef.current || !selectedSymbol) return;
 
@@ -71,13 +61,13 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
 
     chartInstanceRef.current = chart;
 
-    // Références des séries pour le crosshair
     const seriesMap = {};
 
     const buildSeries = (ticker, colorIndex, isFirst) => {
       const color = ASSET_COLORS[colorIndex];
+
       if (isFirst && !isComparing) {
-        // Vue solo : area pleine
+        // Vue solo : area sur l'échelle principale
         const s = chart.addSeries(AreaSeries, {
           lineColor: color,
           topColor: `${color}40`,
@@ -86,16 +76,31 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
         });
         seriesMap[ticker] = s;
         return s;
-      } else {
-        // Vue comparaison : toutes en lignes
+      }
+
+      if (isFirst) {
+        // Actif principal en comparaison : ligne sur l'échelle principale
         const s = chart.addSeries(LineSeries, {
           color,
-          lineWidth: isFirst ? 2.5 : 1.5,
+          lineWidth: 2.5,
           crosshairMarkerVisible: true,
         });
         seriesMap[ticker] = s;
         return s;
       }
+
+      // Actifs de comparaison : chacun sur sa propre échelle cachée
+      // → chaque courbe auto-scale sur toute la hauteur, cours réels préservés
+      const scaleId = `compare_${colorIndex}`;
+      chart.priceScale(scaleId).applyOptions({ visible: false });
+      const s = chart.addSeries(LineSeries, {
+        color,
+        lineWidth: 1.5,
+        crosshairMarkerVisible: true,
+        priceScaleId: scaleId,
+      });
+      seriesMap[ticker] = s;
+      return s;
     };
 
     let isMounted = true;
@@ -114,7 +119,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
             value: i.close,
           })).sort((a, b) => typeof a.time === 'number' ? a.time - b.time : new Date(a.time) - new Date(b.time));
 
-          // Calcul MA20 / MA50 (actif principal uniquement, vue solo)
+          // MA20 / MA50 uniquement en mode solo sur l'actif principal
           if (!isComparing && colorIndex === 0) {
             for (let i = 0; i < rawData.length; i++) {
               const calcMA = (period) => {
@@ -131,17 +136,12 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
           allDataRef.current[ticker] = rawData;
           loadedCount++;
 
-          // On attend que tous les actifs soient chargés pour normaliser ensemble
           if (loadedCount === allSymbols.length) {
-            // Supprimer les séries existantes et les recréer proprement
-            // (on ne peut pas mettre à jour les séries déjà ajoutées ici car elles sont dans la closure)
-            // Les séries ont déjà été ajoutées, on set juste les données
-
-            allSymbols.forEach((sym, idx) => {
+            // Alimenter toutes les séries avec les cours réels (pas de normalisation)
+            allSymbols.forEach(sym => {
               const d = allDataRef.current[sym];
               if (!d || d.length === 0) return;
-              const displayData = isComparing ? normalize(d) : d;
-              seriesMap[sym].setData(displayData.map(p => ({ time: p.time, value: p.value })));
+              seriesMap[sym].setData(d.map(p => ({ time: p.time, value: p.value })));
             });
 
             // MA20 / MA50 en mode solo
@@ -155,7 +155,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
               }
             }
 
-            // Stats initiales
+            // Stats initiales (% sur toute la période)
             const stats = {};
             allSymbols.forEach(sym => {
               const d = allDataRef.current[sym];
@@ -169,7 +169,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
 
             applyTimeRange(timeRange, chart);
 
-            // % dynamique sur fenêtre visible
+            // % dynamique sur la fenêtre visible (debounce 50ms)
             chart.timeScale().subscribeVisibleLogicalRangeChange((lr) => {
               if (!lr) return;
               clearTimeout(debounceTimerRef.current);
@@ -190,13 +190,13 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
               }, 50);
             });
 
-            // Légende crosshair
+            // Légende curseur — prix réels
             chart.subscribeCrosshairMove(param => {
               if (!param.time || param.seriesData.size === 0) { setHoverData(null); return; }
               const hover = {};
               allSymbols.forEach(sym => {
                 const val = param.seriesData.get(seriesMap[sym])?.value;
-                if (val !== undefined) hover[sym] = val.toFixed(2);
+                if (val !== undefined) hover[sym] = val;
               });
               setHoverData(Object.keys(hover).length > 0 ? hover : null);
             });
@@ -204,7 +204,6 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
         });
     };
 
-    // Créer toutes les séries d'abord, puis fetcher
     allSymbols.forEach((sym, idx) => buildSeries(sym, idx, idx === 0));
     allSymbols.forEach((sym, idx) => fetchAndDraw(sym, idx).catch(e => console.error(e)));
 
@@ -226,6 +225,12 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
     color: active ? 'white' : '#8a919e', border: `1px solid ${active ? '#2962FF' : '#2B2B43'}`,
     borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', transition: 'all 0.2s',
   });
+
+  const formatPrice = (val) => {
+    if (val === null || val === undefined) return '—';
+    if (val >= 1000) return val.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+    return val.toFixed(2);
+  };
 
   return (
     <div style={{ backgroundColor: '#131722', padding: '15px', borderRadius: '12px', border: '1px solid #2B2B43' }}>
@@ -251,8 +256,8 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
           </div>
         </div>
 
-        {/* Badges stats par actif */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {/* Badges : prix réel + % sur la fenêtre */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           {!isComparing && (
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '12px' }}>
               <span style={{ color: '#00bcd4', fontWeight: 'bold' }}>— MM20</span>
@@ -268,7 +273,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
               <div key={sym} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', backgroundColor: '#1e222d', padding: '5px 10px', borderRadius: '6px', border: `1px solid ${color}40` }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color, display: 'inline-block', flexShrink: 0, alignSelf: 'center' }} />
                 <span style={{ color: 'white', fontWeight: 'bold', fontSize: '13px' }}>{sym}</span>
-                {!isComparing && <span style={{ color: 'white', fontWeight: 'bold', fontSize: '15px' }}>{s.price.toFixed(2)}</span>}
+                <span style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>{formatPrice(s.price)}</span>
                 <span style={{ color: changeColor, fontWeight: 'bold', fontSize: '12px' }}>
                   {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
                 </span>
@@ -283,18 +288,16 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
         {hoverData && (
           <div style={{
             position: 'absolute', top: 12, left: 12, zIndex: 10,
-            display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center',
+            display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center',
             backgroundColor: 'rgba(19, 23, 34, 0.9)', padding: '7px 12px',
             borderRadius: '6px', fontSize: '12px', fontWeight: 'bold',
             border: '1px solid #2B2B43', pointerEvents: 'none',
           }}>
-            {allSymbols.map((sym, i) => hoverData[sym] && (
+            {allSymbols.map((sym, i) => hoverData[sym] !== undefined && (
               <span key={sym}>
                 <span style={{ color: ASSET_COLORS[i] }}>● </span>
                 <span style={{ color: '#8a919e' }}>{sym} </span>
-                <span style={{ color: 'white' }}>
-                  {isComparing ? `${parseFloat(hoverData[sym]) >= 0 ? '+' : ''}${hoverData[sym]}%` : hoverData[sym]}
-                </span>
+                <span style={{ color: 'white' }}>{formatPrice(hoverData[sym])}</span>
               </span>
             ))}
           </div>
