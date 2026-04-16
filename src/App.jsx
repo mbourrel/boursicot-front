@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import TradingChart from './components/TradingChart';
 import Fundamentals from './components/Fundamentals';
@@ -61,7 +61,7 @@ function App() {
       {viewMode === 'chart' ? (
         <TradingChart selectedSymbol={selectedSymbol} />
       ) : (
-        <Fundamentals selectedSymbol={selectedSymbol} fundamentalsData={fundamentalsData} />
+        <Fundamentals selectedSymbol={selectedSymbol} />
       )}
       
     </div>

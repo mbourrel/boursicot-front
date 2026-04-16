@@ -1,6 +1,34 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 
-function Fundamentals({ currentData }) {
+function Fundamentals({ selectedSymbol }) {
+  const [currentData, setCurrentData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const API_URL = window.location.hostname === 'localhost'
+    ? 'http://127.0.0.1:8000'
+    : import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    if (!selectedSymbol) return;
+    setLoading(true);
+    setError(null);
+    setCurrentData(null);
+
+    fetch(`${API_URL}/api/search?q=${encodeURIComponent(selectedSymbol)}`)
+      .then(res => res.json())
+      .then(data => {
+        const match = data.find(c => c.ticker === selectedSymbol);
+        if (match) {
+          setCurrentData(match);
+        } else {
+          setError(`Aucune donnée fondamentale disponible pour ${selectedSymbol}`);
+        }
+      })
+      .catch(() => setError("Erreur de connexion à l'API"))
+      .finally(() => setLoading(false));
+  }, [selectedSymbol, API_URL]);
+
   const formatVal = (val, unit) => {
     if (val === null || val === undefined) return "N/A";
     if (val > 1000000000) return (val / 1000000000).toFixed(2) + ' Md' + (unit === '$' ? ' $' : '');
@@ -19,7 +47,7 @@ function Fundamentals({ currentData }) {
               <span style={{ color: '#8a919e', fontSize: '12px', textTransform: 'uppercase' }}>{metric.name}</span>
               <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '10px' }}>
                 <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{formatVal(metric.val, metric.unit)}</span>
-                
+
                 {metric.avg !== 0 && metric.avg !== undefined && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                     <span style={{ fontSize: '11px', color: '#8a919e' }}>Moy. Secteur</span>
@@ -34,8 +62,16 @@ function Fundamentals({ currentData }) {
     );
   };
 
+  if (loading) {
+    return <p style={{ color: '#8a919e' }}>Chargement des données pour {selectedSymbol}...</p>;
+  }
+
+  if (error) {
+    return <p style={{ color: '#ef5350' }}>{error}</p>;
+  }
+
   if (!currentData) {
-    return <p>Chargement ou données introuvables pour cette action...</p>;
+    return <p style={{ color: '#8a919e' }}>Aucune donnée disponible.</p>;
   }
 
   return (
