@@ -41,14 +41,13 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     }));
   };
 
-  // === FONCTION INFAILLIBLE BASÉE SUR TES TICKERS ===
   const getAssetType = (ticker) => {
     if (!ticker) return 'stock';
     const t = ticker.toUpperCase();
-    if (t.includes('-USD')) return 'crypto';       // ex: BTC-USD
-    if (t.startsWith('^')) return 'index';         // ex: ^FCHI, ^GSPC
-    if (t.endsWith('=F')) return 'commodity';      // ex: GC=F, CL=F
-    return 'stock';                                // Le reste (CAC40, Mag 7)
+    if (t.includes('-USD')) return 'crypto';
+    if (t.startsWith('^')) return 'index';
+    if (t.endsWith('=F')) return 'commodity';
+    return 'stock';
   };
 
   const filteredData = fundamentalsData.filter(company => {
@@ -104,12 +103,32 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
           />
           
           {isOpen && (
-            <ul style={{ position: 'absolute', top: '100%', left: 0, width: '100%', backgroundColor: '#1e222d', border: '1px solid #2B2B43', borderRadius: '6px', marginTop: '4px', padding: 0, listStyle: 'none', maxHeight: '300px', overflowY: 'auto', zIndex: 50, color: 'white' }}>
+            <ul style={{ position: 'absolute', top: '100%', left: 0, width: '100%', backgroundColor: '#1e222d', border: '1px solid #2B2B43', borderRadius: '6px', marginTop: '4px', padding: 0, listStyle: 'none', maxHeight: '300px', overflowY: 'auto', zIndex: 50, color: 'white', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}>
               {filteredData.length > 0 ? (
                 filteredData.map((company) => (
-                  <li key={company.ticker} onClick={() => handleSelect(company.ticker)} onMouseEnter={(e) => e.target.style.backgroundColor = '#2962FF'} onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'} style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #2B2B43' }}>
-                    <strong style={{ color: '#00bcd4', marginRight: '8px' }}>{company.ticker}</strong> 
-                    <span style={{ fontSize: '13px' }}>{company.name || ''}</span>
+                  <li 
+                    key={company.ticker} 
+                    onClick={() => handleSelect(company.ticker)} 
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2962FF'} 
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'} 
+                    style={{ 
+                      padding: '10px 12px', 
+                      cursor: 'pointer', 
+                      borderBottom: '1px solid #2B2B43',
+                      display: 'flex',
+                      alignItems: 'baseline', // Permet d'aligner le texte sur la même ligne de base même s'ils ont des tailles différentes
+                      transition: 'background-color 0.2s'
+                    }}
+                  >
+                    {/* LE NOM EN GRAND ET EN GRAS */}
+                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#ffffff', marginRight: '8px' }}>
+                      {company.name || company.ticker}
+                    </span>
+                    
+                    {/* LE TICKER EN PLUS PETIT ET EN CYAN */}
+                    <span style={{ fontSize: '12px', color: '#00bcd4' }}>
+                      ({company.ticker})
+                    </span>
                   </li>
                 ))
               ) : (
@@ -121,8 +140,8 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
 
         {/* BOUTONS DE NAVIGATION */}
         <div style={{ display: 'flex', backgroundColor: '#1e222d', borderRadius: '6px' }}>
-          <button onClick={() => setViewMode('chart')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'chart' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '6px', cursor: 'pointer' }}>Graphique</button>
-          <button onClick={() => setViewMode('fundamentals')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'fundamentals' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '6px', cursor: 'pointer' }}>Infos</button>
+          <button onClick={() => setViewMode('chart')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'chart' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Graphique</button>
+          <button onClick={() => setViewMode('fundamentals')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'fundamentals' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Infos</button>
         </div>
       </div>
     </div>
