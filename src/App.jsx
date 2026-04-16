@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Header from './component/Header';
-import TradingChart from './component/TradingChart';
-import Fundamentals from './component/Fundamentals';
+import Header from './components/Header';
+import TradingChart from './components/TradingChart';
+import Fundamentals from './components/Fundamentals';
 // PAS de import App ici !
 function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('AAPL');
