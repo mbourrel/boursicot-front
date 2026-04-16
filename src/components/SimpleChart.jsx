@@ -5,11 +5,13 @@ function SimpleChart({ selectedSymbol }) {
   const chartContainerRef = useRef();
   const chartInstanceRef = useRef(null);
   const currentDataRef = useRef([]);
+  const debounceTimerRef = useRef(null);
 
   const [timeRange, setTimeRange] = useState('1Y');
   const [candleInterval, setCandleInterval] = useState('1D');
   const [currentPrice, setCurrentPrice] = useState(null);
   const [priceChange, setPriceChange] = useState(null);
+  const [hoverData, setHoverData] = useState(null); // légende curseur
 
   const API_URL = window.location.hostname === 'localhost'
     ? 'http://127.0.0.1:8000'
@@ -109,6 +111,42 @@ function SimpleChart({ selectedSymbol }) {
           setPriceChange(((last - first) / first) * 100);
           applyTimeRange(timeRange, chart, rawData);
         }
+
+        // --- % DYNAMIQUE SUR LA FENÊTRE VISIBLE ---
+        // subscribeVisibleLogicalRangeChange donne les indices de barres visibles
+        // Calcul O(1), debounce 50ms pour ne pas re-rendre à chaque pixel de scroll
+        chart.timeScale().subscribeVisibleLogicalRangeChange((logicalRange) => {
+          if (!logicalRange || currentDataRef.current.length === 0) return;
+          clearTimeout(debounceTimerRef.current);
+          debounceTimerRef.current = setTimeout(() => {
+            const d = currentDataRef.current;
+            const fromIdx = Math.max(0, Math.floor(logicalRange.from));
+            const toIdx = Math.min(d.length - 1, Math.ceil(logicalRange.to));
+            if (fromIdx >= toIdx) return;
+            const first = d[fromIdx].value;
+            const last = d[toIdx].value;
+            setCurrentPrice(last);
+            setPriceChange(((last - first) / first) * 100);
+          }, 50);
+        });
+
+        // --- LÉGENDE EN DIRECT AU CURSEUR ---
+        chart.subscribeCrosshairMove(param => {
+          if (!param.time || param.seriesData.size === 0) {
+            setHoverData(null);
+            return;
+          }
+          const price = param.seriesData.get(areaSeries)?.value;
+          const ma20 = param.seriesData.get(ma20Series)?.value;
+          const ma50 = param.seriesData.get(ma50Series)?.value;
+          if (price !== undefined) {
+            setHoverData({
+              price: price.toFixed(2),
+              ma20: ma20 != null ? ma20.toFixed(2) : null,
+              ma50: ma50 != null ? ma50.toFixed(2) : null,
+            });
+          }
+        });
       })
       .catch(err => console.error('Erreur SimpleChart:', err));
 
@@ -121,6 +159,7 @@ function SimpleChart({ selectedSymbol }) {
 
     return () => {
       isMounted = false;
+      clearTimeout(debounceTimerRef.current);
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
@@ -170,7 +209,7 @@ function SimpleChart({ selectedSymbol }) {
           </div>
         </div>
 
-        {/* Légende prix + variation */}
+        {/* Badge prix + variation fenêtre visible */}
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '12px' }}>
             <span style={{ color: '#00bcd4', fontWeight: 'bold' }}>— MM20</span>
@@ -189,8 +228,27 @@ function SimpleChart({ selectedSymbol }) {
         </div>
       </div>
 
-      {/* GRAPHIQUE */}
-      <div ref={chartContainerRef} style={{ width: '100%', height: '500px' }} />
+      {/* GRAPHIQUE + LÉGENDE CURSEUR */}
+      <div style={{ position: 'relative' }}>
+
+        {/* Overlay légende au survol */}
+        {hoverData && (
+          <div style={{
+            position: 'absolute', top: 12, left: 12, zIndex: 10,
+            display: 'flex', gap: '12px', alignItems: 'center',
+            backgroundColor: 'rgba(19, 23, 34, 0.85)',
+            padding: '7px 12px', borderRadius: '6px',
+            fontSize: '12px', fontWeight: 'bold',
+            border: '1px solid #2B2B43', pointerEvents: 'none',
+          }}>
+            <span style={{ color: '#d1d4dc' }}>{selectedSymbol} <span style={{ color: 'white' }}>{hoverData.price}</span></span>
+            {hoverData.ma20 && <span style={{ color: '#00bcd4' }}>MM20 : {hoverData.ma20}</span>}
+            {hoverData.ma50 && <span style={{ color: '#ff9800' }}>MM50 : {hoverData.ma50}</span>}
+          </div>
+        )}
+
+        <div ref={chartContainerRef} style={{ width: '100%', height: '500px' }} />
+      </div>
     </div>
   );
 }
