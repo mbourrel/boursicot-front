@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Header from './component/Header';
 import TradingChart from './component/TradingChart';
-// Import de tes autres composants (Fundamentals, etc.) si tu les utilises
-import Fundamentals from './component/Fundamentals'; 
-
+import Fundamentals from './component/Fundamentals';
+// PAS de import App ici !
 function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('AAPL');
   const [viewMode, setViewMode] = useState('chart');
