@@ -55,6 +55,15 @@ function App() {
   return (
     <div style={{ backgroundColor: '#0b0e11', minHeight: '100vh', padding: '20px', color: 'white', fontFamily: 'sans-serif' }}>
 
+      <div style={{
+        backgroundColor: '#1a1400', border: '1px solid #f59e0b40',
+        borderRadius: '6px', padding: '8px 14px', marginBottom: '14px',
+        fontSize: '12px', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '8px',
+      }}>
+        <span>⚠</span>
+        <span>Version bêta gratuite — si les données ne s'affichent pas, patientez environ une minute le temps que le serveur démarre.</span>
+      </div>
+
       <Header
         selectedSymbol={selectedSymbol}
         setSelectedSymbol={handleSelectSymbol}
