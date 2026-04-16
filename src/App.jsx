@@ -6,7 +6,7 @@ import SimpleChart from './components/SimpleChart';
 import Fundamentals from './components/Fundamentals';
 
 function App() {
-  const [selectedSymbol, setSelectedSymbol] = useState('AAPL');
+  const [selectedSymbol, setSelectedSymbol] = useState('SAN.PA');
   const [compareSymbols, setCompareSymbols] = useState([]);
   const [viewMode, setViewMode] = useState('chart');
   const [chartMode, setChartMode] = useState('trading');
