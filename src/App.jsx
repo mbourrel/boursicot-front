@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 // Attention : on respecte la casse exacte de tes fichiers !
-import Header from './component/header';
+import Header from './component/Header';
 import TradingChart from './component/TradingChart';
-import Fundamentals from './component/fundamentals';
+import Fundamentals from './component/Fundamentals';
 
 function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('AAPL');
