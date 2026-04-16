@@ -5,7 +5,15 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
 
-  // 1. Mettre à jour l'affichage de l'input quand l'action sélectionnée change
+  // === 1. ÉTAT DES FILTRES ===
+  const [assetFilters, setAssetFilters] = useState({
+    stock: true,
+    index: true,
+    crypto: true,
+    commodity: true
+  });
+
+  // Mettre à jour l'affichage de l'input quand l'action sélectionnée change
   useEffect(() => {
     const selectedCompany = fundamentalsData.find(c => c.ticker === selectedSymbol);
     if (selectedCompany) {
@@ -13,12 +21,11 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     }
   }, [selectedSymbol, fundamentalsData]);
 
-  // 2. Fermer le menu si l'utilisateur clique en dehors du champ de recherche
+  // Fermer le menu si l'utilisateur clique en dehors du champ de recherche
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
-        // On remet le texte par défaut (l'action sélectionnée) si on quitte sans rien choisir
         const selectedCompany = fundamentalsData.find(c => c.ticker === selectedSymbol);
         if (selectedCompany) {
           setSearchTerm(`${selectedCompany.name} (${selectedCompany.ticker})`);
@@ -30,24 +37,66 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [selectedSymbol, fundamentalsData]);
 
-  // 3. Logique de filtrage (cherche dans le nom OU dans le ticker)
-  const filteredData = fundamentalsData.filter(company => 
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    company.ticker.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // === 2. FONCTION POUR BASCULER L'ÉTAT D'UNE CASE ===
+  const handleFilterChange = (assetType) => {
+    setAssetFilters(prev => ({
+      ...prev,
+      [assetType]: !prev[assetType]
+    }));
+  };
 
-  // 4. Action quand on clique sur une action dans la liste
+  // === 3. LOGIQUE DE FILTRAGE COMBINÉE ===
+  // On filtre d'abord par le type d'actif (case cochée), puis par la recherche textuelle
+  const filteredData = fundamentalsData.filter(company => {
+    const type = company.type || 'stock'; // Par défaut 'stock' si la propriété est absente
+    
+    // Si la case de cette catégorie n'est pas cochée, on exclut d'office
+    if (!assetFilters[type]) return false;
+
+    // Sinon, on vérifie si ça correspond au texte tapé
+    return company.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+           company.ticker.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  // Action quand on clique sur un actif dans la liste
   const handleSelect = (ticker) => {
     setSelectedSymbol(ticker);
     setIsOpen(false);
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
       <h1 style={{ margin: 0, color: '#fff' }}>Boursicot Pro 📈</h1>
-      <div style={{ display: 'flex', gap: '15px' }}>
+      
+      <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
         
-        {/* === NOUVELLE BARRE DE RECHERCHE === */}
+        {/* === BARRE DE FILTRES === */}
+        <div style={{ 
+          display: 'flex', gap: '12px', padding: '8px 12px', 
+          backgroundColor: '#1e222d', borderRadius: '6px', border: '1px solid #2B2B43',
+          alignItems: 'center'
+        }}>
+          <span style={{ color: '#8a919e', fontSize: '11px', fontWeight: 'bold' }}>FILTRER :</span>
+          
+          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '12px' }}>
+            <input type="checkbox" checked={assetFilters.stock} onChange={() => handleFilterChange('stock')} style={{ cursor: 'pointer', accentColor: '#2962FF' }} />
+            Actions
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '12px' }}>
+            <input type="checkbox" checked={assetFilters.index} onChange={() => handleFilterChange('index')} style={{ cursor: 'pointer', accentColor: '#2962FF' }} />
+            Indices
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '12px' }}>
+            <input type="checkbox" checked={assetFilters.crypto} onChange={() => handleFilterChange('crypto')} style={{ cursor: 'pointer', accentColor: '#2962FF' }} />
+            Cryptos
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '12px' }}>
+            <input type="checkbox" checked={assetFilters.commodity} onChange={() => handleFilterChange('commodity')} style={{ cursor: 'pointer', accentColor: '#2962FF' }} />
+            Matières
+          </label>
+        </div>
+
+        {/* === BARRE DE RECHERCHE === */}
         <div ref={dropdownRef} style={{ position: 'relative', width: '280px' }}>
           <input
             type="text"
@@ -57,10 +106,10 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
               setIsOpen(true);
             }}
             onClick={() => {
-              setSearchTerm(''); // Vide le champ pour faciliter la nouvelle recherche
+              setSearchTerm(''); 
               setIsOpen(true);
             }}
-            placeholder={fundamentalsData.length === 0 ? "Chargement..." : "Rechercher une action..."}
+            placeholder={fundamentalsData.length === 0 ? "Chargement..." : "Rechercher..."}
             disabled={fundamentalsData.length === 0}
             style={{ 
               width: '100%', padding: '8px 12px', borderRadius: '6px', 
@@ -96,18 +145,19 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
                 ))
               ) : (
                 <li style={{ padding: '10px 12px', color: '#8a919e', fontStyle: 'italic', fontSize: '13px' }}>
-                  Aucun résultat pour "{searchTerm}"
+                  Aucun résultat
                 </li>
               )}
             </ul>
           )}
         </div>
-        {/* === FIN DE LA BARRE DE RECHERCHE === */}
 
+        {/* === BOUTONS DE NAVIGATION === */}
         <div style={{ display: 'flex', backgroundColor: '#1e222d', borderRadius: '6px' }}>
-          <button onClick={() => setViewMode('chart')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'chart' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Données de marché</button>
-          <button onClick={() => setViewMode('fundamentals')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'fundamentals' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Infos Entreprise</button>
+          <button onClick={() => setViewMode('chart')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'chart' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Graphique</button>
+          <button onClick={() => setViewMode('fundamentals')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'fundamentals' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Infos</button>
         </div>
+        
       </div>
     </div>
   );
