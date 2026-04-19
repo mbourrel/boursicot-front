@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { ASSET_COLORS } from './CompareBar';
 
 function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
-  const [dataMap, setDataMap] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [dataMap, setDataMap]   = useState({});
+  const [loading, setLoading]   = useState(false);
+  const [errors, setErrors]     = useState({});
 
   const API_URL = window.location.hostname === 'localhost'
     ? 'http://127.0.0.1:8000'
@@ -16,20 +16,15 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     if (allSymbols.length === 0) return;
     setLoading(true);
     setErrors({});
-
     Promise.all(
       allSymbols.map(sym =>
         fetch(`${API_URL}/api/fundamentals/${encodeURIComponent(sym)}`)
-          .then(res => {
-            if (!res.ok) throw new Error(res.status);
-            return res.json();
-          })
+          .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
           .then(data => ({ sym, data }))
           .catch(() => ({ sym, data: null }))
       )
     ).then(results => {
-      const newMap = {};
-      const newErrors = {};
+      const newMap = {}, newErrors = {};
       results.forEach(({ sym, data }) => {
         if (data) newMap[sym] = data;
         else newErrors[sym] = true;
@@ -40,40 +35,58 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     });
   }, [allSymbols.join(','), API_URL]);
 
-  const formatVal = (val, unit) => {
-    if (val === null || val === undefined || val === 0) return <span style={{ color: '#4a5568' }}>—</span>;
-    let display;
-    if (val > 1000000000) display = (val / 1000000000).toFixed(2) + ' Md' + (unit === '$' ? ' $' : '');
-    else if (val > 1000000) display = (val / 1000000).toFixed(2) + ' M' + (unit === '$' ? ' $' : '');
-    else display = val + (unit === '%' ? '%' : unit === 'x' ? 'x' : unit === '$' ? ' $' : '');
-    return display;
+  // ── Formateur de valeurs ───────────────────────────────────────────────────
+  const fmt = (val, unit) => {
+    if (val === null || val === undefined) return <span style={{ color: '#4a5568' }}>—</span>;
+    if (val === 0) return <span style={{ color: '#4a5568' }}>—</span>;
+
+    if (unit === '%') return `${val.toFixed(2)}%`;
+    if (unit === 'x') return `${val.toFixed(2)}x`;
+
+    // Valeurs monétaires — gestion des négatifs et des grandes échelles
+    const abs = Math.abs(val);
+    const sign = val < 0 ? '-' : '';
+    if (abs >= 1e9)  return `${sign}${(abs / 1e9).toFixed(2)} Md$`;
+    if (abs >= 1e6)  return `${sign}${(abs / 1e6).toFixed(2)} M$`;
+    if (abs >= 1e3)  return `${sign}${(abs / 1e3).toFixed(2)} k$`;
+    return `${sign}${abs.toFixed(2)} $`;
+  };
+
+  const fmtRaw = (val, unit) => {
+    const result = fmt(val, unit);
+    return typeof result === 'string' ? result : '—';
   };
 
   if (loading) return <p style={{ color: '#8a919e' }}>Chargement...</p>;
 
-  const isSolo = allSymbols.length === 1;
+  const isSolo      = allSymbols.length === 1;
   const primaryData = dataMap[selectedSymbol];
 
-  // --- VUE SOLO ---
+  // ══════════════════════════════════════════════════════════════════════════
+  //  VUE SOLO
+  // ══════════════════════════════════════════════════════════════════════════
   if (isSolo) {
-    if (errors[selectedSymbol]) return <p style={{ color: '#ef5350' }}>Aucune donnée fondamentale disponible pour {selectedSymbol}</p>;
-    if (!primaryData) return <p style={{ color: '#8a919e' }}>Aucune donnée disponible.</p>;
+    if (errors[selectedSymbol]) return <p style={{ color: '#ef5350' }}>Aucune donnée disponible pour {selectedSymbol}</p>;
+    if (!primaryData)           return <p style={{ color: '#8a919e' }}>Aucune donnée disponible.</p>;
 
+    // Rendu d'une catégorie "simple" (format [{name, val, unit, avg}])
     const renderCategory = (title, dataArray) => {
       if (!dataArray || dataArray.length === 0) return null;
       return (
-        <div style={{ marginBottom: '40px' }}>
-          <h3 style={{ borderBottom: '2px solid #2B2B43', paddingBottom: '10px', color: '#2962FF' }}>{title}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
+        <div style={{ marginBottom: '36px' }}>
+          <h3 style={h3Style}>{title}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
             {dataArray.map((metric, i) => (
-              <div key={i} style={{ backgroundColor: '#1e222d', padding: '15px', borderRadius: '8px', border: '1px solid #2B2B43', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <span style={{ color: '#8a919e', fontSize: '12px', textTransform: 'uppercase' }}>{metric.name}</span>
+              <div key={i} style={cardStyle}>
+                <span style={{ color: '#8a919e', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{metric.name}</span>
                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '10px' }}>
-                  <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{formatVal(metric.val, metric.unit)}</span>
+                  <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{fmt(metric.val, metric.unit)}</span>
                   {metric.avg !== 0 && metric.avg !== undefined && (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                      <span style={{ fontSize: '11px', color: '#8a919e' }}>Moy. Secteur</span>
-                      <span style={{ fontSize: '13px', fontWeight: 'bold', color: metric.val >= metric.avg ? '#26a69a' : '#ef5350' }}>{formatVal(metric.avg, metric.unit)}</span>
+                      <span style={{ fontSize: '10px', color: '#8a919e' }}>Moy. Secteur</span>
+                      <span style={{ fontSize: '13px', fontWeight: 'bold', color: metric.val >= metric.avg ? '#26a69a' : '#ef5350' }}>
+                        {fmtRaw(metric.avg, metric.unit)}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -84,35 +97,109 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
       );
     };
 
-    return (
-      <div style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
-        <div style={{ marginBottom: '30px' }}>
-          <h2 style={{ color: '#fff', fontSize: '28px', marginBottom: '5px' }}>{primaryData.name}</h2>
-          <div style={{ color: '#2962FF', fontWeight: 'bold', marginBottom: '15px' }}>Secteur : {primaryData.sector}</div>
-          <p style={{ color: '#8a919e', maxWidth: '1000px', lineHeight: '1.5' }}>{primaryData.description}</p>
+    // Rendu d'un état financier historique (format {years, items:[{name, vals, unit}]})
+    const renderStatement = (title, stmtData) => {
+      if (!stmtData || !stmtData.items || stmtData.items.length === 0) return null;
+      const { years, items } = stmtData;
+      const cols = years.slice(0, 4);
+
+      return (
+        <div style={{ marginBottom: '36px' }}>
+          <h3 style={h3Style}>{title}</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#1a1e2e' }}>
+                  <th style={{ ...thStyle, textAlign: 'left', width: '38%' }}>Indicateur</th>
+                  {cols.map((y, i) => (
+                    <th key={i} style={{ ...thStyle, textAlign: 'right' }}>
+                      {y.slice(0, 4)}
+                      {i === 0 && <span style={{ marginLeft: '4px', fontSize: '9px', color: '#2962FF', fontWeight: 'normal' }}>↑ récent</span>}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, rowIdx) => {
+                  const vals = item.vals.slice(0, 4);
+                  return (
+                    <tr key={rowIdx} style={{ backgroundColor: rowIdx % 2 === 0 ? '#131722' : '#1a1e2e' }}>
+                      <td style={{ ...tdStyle, color: '#d1d4dc' }}>{item.name}</td>
+                      {vals.map((val, colIdx) => {
+                        const next = vals[colIdx + 1]; // année précédente
+                        let trend = null;
+                        if (colIdx === 0 && val !== null && next !== null && next !== 0) {
+                          const pct = ((val - next) / Math.abs(next)) * 100;
+                          trend = { pct, up: pct >= 0 };
+                        }
+                        return (
+                          <td key={colIdx} style={{ ...tdStyle, textAlign: 'right', fontWeight: colIdx === 0 ? 'bold' : 'normal', color: colIdx === 0 ? 'white' : '#8a919e' }}>
+                            {fmt(val, item.unit)}
+                            {trend && (
+                              <span style={{
+                                marginLeft: '6px', fontSize: '10px',
+                                color: trend.up ? '#26a69a' : '#ef5350',
+                              }}>
+                                {trend.up ? '▲' : '▼'} {Math.abs(trend.pct).toFixed(1)}%
+                              </span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-        {renderCategory('1. Analyse de Marché', primaryData.market_analysis)}
-        {renderCategory('2. Santé Financière', primaryData.financial_health)}
-        {renderCategory('3. Valorisation Avancée', primaryData.advanced_valuation)}
-        {renderCategory('4. Compte de Résultat & Croissance', primaryData.income_growth)}
-        {renderCategory('5. Bilan & Liquidité', primaryData.balance_cash)}
-        {renderCategory('6. Risque & Marché', primaryData.risk_market)}
+      );
+    };
+
+    return (
+      <div>
+        <div style={{ marginBottom: '28px' }}>
+          <h2 style={{ color: '#fff', fontSize: '26px', marginBottom: '4px' }}>{primaryData.name}</h2>
+          <div style={{ color: '#2962FF', fontWeight: 'bold', marginBottom: '12px', fontSize: '13px' }}>
+            Secteur : {primaryData.sector}
+          </div>
+          <p style={{ color: '#8a919e', maxWidth: '960px', lineHeight: '1.6', fontSize: '13px' }}>{primaryData.description}</p>
+        </div>
+
+        {renderCategory('1. Analyse de Marché',              primaryData.market_analysis)}
+        {renderCategory('2. Santé Financière',               primaryData.financial_health)}
+        {renderCategory('3. Valorisation Avancée',           primaryData.advanced_valuation)}
+        {renderCategory('4. Compte de Résultat & Croissance',primaryData.income_growth)}
+        {renderCategory('5. Bilan & Liquidité',              primaryData.balance_cash)}
+        {renderCategory('6. Risque & Marché',                primaryData.risk_market)}
+
+        {renderStatement('7. Compte de Résultat — Historique (4 ans)', primaryData.income_stmt_data)}
+        {renderStatement('8. Bilan Comptable — Historique (4 ans)',     primaryData.balance_sheet_data)}
+        {renderStatement('9. Flux de Trésorerie — Historique (4 ans)',  primaryData.cashflow_data)}
       </div>
     );
   }
 
-  // --- VUE COMPARAISON ---
-  const CATEGORIES = [
-    { key: 'market_analysis', label: '1. Analyse de Marché' },
-    { key: 'financial_health', label: '2. Santé Financière' },
+  // ══════════════════════════════════════════════════════════════════════════
+  //  VUE COMPARAISON
+  // ══════════════════════════════════════════════════════════════════════════
+  const SIMPLE_CATEGORIES = [
+    { key: 'market_analysis',    label: '1. Analyse de Marché' },
+    { key: 'financial_health',   label: '2. Santé Financière' },
     { key: 'advanced_valuation', label: '3. Valorisation Avancée' },
-    { key: 'income_growth', label: '4. Compte de Résultat & Croissance' },
-    { key: 'balance_cash', label: '5. Bilan & Liquidité' },
-    { key: 'risk_market', label: '6. Risque & Marché' },
+    { key: 'income_growth',      label: '4. Compte de Résultat & Croissance' },
+    { key: 'balance_cash',       label: '5. Bilan & Liquidité' },
+    { key: 'risk_market',        label: '6. Risque & Marché' },
   ];
 
-  // Collecter toutes les métriques possibles par catégorie
-  const getMetricNames = (catKey) => {
+  const STMT_CATEGORIES = [
+    { key: 'income_stmt_data',   label: '7. Compte de Résultat — Historique' },
+    { key: 'balance_sheet_data', label: '8. Bilan Comptable — Historique' },
+    { key: 'cashflow_data',      label: '9. Flux de Trésorerie — Historique' },
+  ];
+
+  // Collecte toutes les métriques d'une catégorie simple
+  const getSimpleMetricNames = (catKey) => {
     const names = new Set();
     allSymbols.forEach(sym => {
       const d = dataMap[sym];
@@ -121,13 +208,63 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     return Array.from(names);
   };
 
-  const getMetricVal = (sym, catKey, metricName) => {
+  const getSimpleMetric = (sym, catKey, metricName) => {
     const d = dataMap[sym];
     if (!d || !d[catKey]) return null;
     return d[catKey].find(m => m.name === metricName) || null;
   };
 
+  // Collecte toutes les métriques d'un état financier (most recent value only)
+  const getStmtMetricNames = (stmtKey) => {
+    const names = new Set();
+    allSymbols.forEach(sym => {
+      const d = dataMap[sym];
+      if (d && d[stmtKey] && d[stmtKey].items) d[stmtKey].items.forEach(m => names.add(m.name));
+    });
+    return Array.from(names);
+  };
+
+  const getStmtMetric = (sym, stmtKey, metricName) => {
+    const d = dataMap[sym];
+    if (!d || !d[stmtKey] || !d[stmtKey].items) return null;
+    const item = d[stmtKey].items.find(m => m.name === metricName);
+    if (!item) return null;
+    // Renvoie la valeur la plus récente + l'année précédente pour le YoY
+    return {
+      val:  item.vals[0] ?? null,
+      prev: item.vals[1] ?? null,
+      unit: item.unit,
+      year: d[stmtKey].years?.[0]?.slice(0, 4) ?? '',
+    };
+  };
+
   const colWidth = `${Math.floor(80 / allSymbols.length)}%`;
+
+  const renderCompareTable = (label, rows, renderRow) => {
+    if (rows.length === 0) return null;
+    return (
+      <div style={{ marginBottom: '36px' }}>
+        <h3 style={{ ...h3Style, borderBottom: '2px solid #2B2B43', paddingBottom: '10px' }}>{label}</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ width: '20%', padding: '10px 12px', textAlign: 'left', color: '#8a919e', fontSize: '11px', borderBottom: '1px solid #2B2B43', fontWeight: 'normal' }}>
+                MÉTRIQUE
+              </th>
+              {allSymbols.map((sym, i) => (
+                <th key={sym} style={{ width: colWidth, padding: '10px 12px', textAlign: 'right', color: ASSET_COLORS[i], fontSize: '12px', borderBottom: '1px solid #2B2B43', fontWeight: 'bold' }}>
+                  {dataMap[sym]?.name || sym}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((name, rowIdx) => renderRow(name, rowIdx))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -140,12 +277,12 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             <div key={sym} style={{ flex: 1, minWidth: '160px', backgroundColor: '#1e222d', padding: '14px 16px', borderRadius: '10px', borderTop: `3px solid ${color}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: color, flexShrink: 0 }} />
-                <span style={{ color: 'white', fontWeight: 'bold', fontSize: '16px' }}>{sym}</span>
+                <span style={{ color: 'white', fontWeight: 'bold', fontSize: '15px' }}>{d?.name || sym}</span>
               </div>
               {d ? (
                 <>
-                  <div style={{ color: '#8a919e', fontSize: '12px' }}>{d.name}</div>
-                  <div style={{ color: color, fontSize: '11px', marginTop: '2px' }}>{d.sector}</div>
+                  <div style={{ color: '#8a919e', fontSize: '11px' }}>{sym}</div>
+                  <div style={{ color, fontSize: '11px', marginTop: '2px' }}>{d.sector}</div>
                 </>
               ) : (
                 <div style={{ color: '#ef5350', fontSize: '12px' }}>Données indisponibles</div>
@@ -155,66 +292,103 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
         })}
       </div>
 
-      {/* Tableau comparatif par catégorie */}
-      {CATEGORIES.map(cat => {
-        const metricNames = getMetricNames(cat.key);
-        if (metricNames.length === 0) return null;
-        return (
-          <div key={cat.key} style={{ marginBottom: '36px' }}>
-            <h3 style={{ borderBottom: '2px solid #2B2B43', paddingBottom: '10px', color: '#2962FF', marginBottom: '0' }}>
-              {cat.label}
-            </h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ width: '20%', padding: '10px 12px', textAlign: 'left', color: '#8a919e', fontSize: '11px', borderBottom: '1px solid #2B2B43', fontWeight: 'normal' }}>
-                    MÉTRIQUE
-                  </th>
-                  {allSymbols.map((sym, i) => (
-                    <th key={sym} style={{ width: colWidth, padding: '10px 12px', textAlign: 'right', color: ASSET_COLORS[i], fontSize: '12px', borderBottom: '1px solid #2B2B43', fontWeight: 'bold' }}>
-                      {sym}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {metricNames.map((name, rowIdx) => {
-                  // Trouver la valeur max/min pour colorer les extremes
-                  const vals = allSymbols.map(sym => getMetricVal(sym, cat.key, name)?.val ?? null);
-                  const numericVals = vals.filter(v => v !== null && v !== 0);
-                  const maxVal = numericVals.length > 1 ? Math.max(...numericVals) : null;
-                  const minVal = numericVals.length > 1 ? Math.min(...numericVals) : null;
+      {/* Catégories simples */}
+      {SIMPLE_CATEGORIES.map(cat => {
+        const metricNames = getSimpleMetricNames(cat.key);
+        return renderCompareTable(cat.label, metricNames, (name, rowIdx) => {
+          const vals = allSymbols.map(sym => getSimpleMetric(sym, cat.key, name));
+          const numerics = vals.map(m => m?.val ?? null).filter(v => v !== null && v !== 0);
+          const maxVal = numerics.length > 1 ? Math.max(...numerics) : null;
+          const minVal = numerics.length > 1 ? Math.min(...numerics) : null;
+          const unit = vals.find(Boolean)?.unit ?? '';
+          return (
+            <tr key={name} style={{ backgroundColor: rowIdx % 2 === 0 ? '#131722' : '#1a1e2e' }}>
+              <td style={{ ...tdStyle, color: '#8a919e' }}>{name}</td>
+              {allSymbols.map(sym => {
+                const metric = getSimpleMetric(sym, cat.key, name);
+                const val = metric?.val ?? null;
+                let color = 'white';
+                if (maxVal !== null && val !== null && val !== 0) {
+                  if (val === maxVal) color = '#26a69a';
+                  else if (val === minVal) color = '#ef5350';
+                }
+                return (
+                  <td key={sym} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', fontSize: '13px', color }}>
+                    {fmt(val, unit)}
+                  </td>
+                );
+              })}
+            </tr>
+          );
+        });
+      })}
 
-                  return (
-                    <tr key={name} style={{ backgroundColor: rowIdx % 2 === 0 ? '#131722' : '#1a1e2e' }}>
-                      <td style={{ padding: '10px 12px', color: '#8a919e', fontSize: '12px', borderBottom: '1px solid #2B2B4322' }}>
-                        {name}
-                      </td>
-                      {allSymbols.map((sym) => {
-                        const metric = getMetricVal(sym, cat.key, name);
-                        const val = metric?.val ?? null;
-                        const unit = metric?.unit ?? '';
-                        let valueColor = 'white';
-                        if (maxVal !== null && val !== null && val !== 0) {
-                          if (val === maxVal) valueColor = '#26a69a';
-                          else if (val === minVal) valueColor = '#ef5350';
-                        }
-                        return (
-                          <td key={sym} style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 'bold', fontSize: '13px', color: valueColor, borderBottom: '1px solid #2B2B4322' }}>
-                            {formatVal(val, unit)}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        );
+      {/* États financiers — valeur la plus récente + YoY */}
+      {STMT_CATEGORIES.map(cat => {
+        const metricNames = getStmtMetricNames(cat.key);
+        const yearLabel = (() => {
+          for (const sym of allSymbols) {
+            const d = dataMap[sym];
+            const y = d?.[cat.key]?.years?.[0]?.slice(0, 4);
+            if (y) return ` (exercice ${y})`;
+          }
+          return '';
+        })();
+        return renderCompareTable(`${cat.label}${yearLabel}`, metricNames, (name, rowIdx) => {
+          const metrics = allSymbols.map(sym => getStmtMetric(sym, cat.key, name));
+          const numerics = metrics.map(m => m?.val ?? null).filter(v => v !== null && v !== 0);
+          const maxVal = numerics.length > 1 ? Math.max(...numerics) : null;
+          const minVal = numerics.length > 1 ? Math.min(...numerics) : null;
+          return (
+            <tr key={name} style={{ backgroundColor: rowIdx % 2 === 0 ? '#131722' : '#1a1e2e' }}>
+              <td style={{ ...tdStyle, color: '#8a919e' }}>{name}</td>
+              {allSymbols.map((sym, i) => {
+                const m = metrics[i];
+                const val = m?.val ?? null;
+                let valueColor = 'white';
+                if (maxVal !== null && val !== null && val !== 0) {
+                  if (val === maxVal) valueColor = '#26a69a';
+                  else if (val === minVal) valueColor = '#ef5350';
+                }
+                // YoY
+                let yoy = null;
+                if (m && m.val !== null && m.prev !== null && m.prev !== 0) {
+                  yoy = ((m.val - m.prev) / Math.abs(m.prev)) * 100;
+                }
+                return (
+                  <td key={sym} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', fontSize: '13px', color: valueColor }}>
+                    {fmt(val, '$')}
+                    {yoy !== null && (
+                      <span style={{ display: 'block', fontSize: '10px', fontWeight: 'normal', color: yoy >= 0 ? '#26a69a' : '#ef5350' }}>
+                        {yoy >= 0 ? '▲' : '▼'} {Math.abs(yoy).toFixed(1)}% vs N-1
+                      </span>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          );
+        });
       })}
     </div>
   );
 }
+
+// ── Styles partagés ────────────────────────────────────────────────────────
+const h3Style = {
+  margin: '0 0 14px', color: '#2962FF', fontSize: '13px', fontWeight: 'bold',
+  letterSpacing: '0.05em',
+};
+const cardStyle = {
+  backgroundColor: '#1e222d', padding: '15px', borderRadius: '8px',
+  border: '1px solid #2B2B43', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+};
+const thStyle = {
+  padding: '10px 12px', color: '#8a919e', fontSize: '11px',
+  borderBottom: '1px solid #2B2B43', fontWeight: 'bold', letterSpacing: '0.04em',
+};
+const tdStyle = {
+  padding: '9px 12px', fontSize: '12px', borderBottom: '1px solid #2B2B4322',
+};
 
 export default Fundamentals;
