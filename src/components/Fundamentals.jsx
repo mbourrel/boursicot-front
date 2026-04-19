@@ -1,23 +1,27 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ASSET_COLORS } from './CompareBar';
 import EXPLANATIONS from '../constants/metricExplanations';
 
 // ── Composant tooltip réutilisable ─────────────────────────────────────────
 function MetricInfo({ name }) {
-  const [open, setOpen] = useState(false);
-  const [above, setAbove] = useState(false);
+  const [pos, setPos] = useState(null);
   const btnRef = useRef(null);
   const text = EXPLANATIONS[name];
   if (!text) return null;
 
   const handleClick = (e) => {
     e.stopPropagation();
-    if (!open && btnRef.current) {
-      const rect = btnRef.current.getBoundingClientRect();
-      // Bascule au-dessus si moins de 180px disponibles en dessous
-      setAbove(window.innerHeight - rect.bottom < 180);
-    }
-    setOpen(v => !v);
+    if (pos) { setPos(null); return; }
+    const rect = btnRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    // Tooltip en dessous si assez de place, sinon au-dessus
+    setPos({
+      left: Math.min(rect.left, window.innerWidth - 276),
+      ...(spaceBelow >= 180
+        ? { top: rect.bottom + 6 }
+        : { top: rect.top - 6, transform: 'translateY(-100%)' }),
+    });
   };
 
   return (
@@ -26,41 +30,42 @@ function MetricInfo({ name }) {
         ref={btnRef}
         onClick={handleClick}
         style={{
-          background: open ? '#2962FF22' : 'transparent',
-          border: `1px solid ${open ? '#2962FF88' : '#3a3f5a'}`,
-          color: open ? '#2962FF' : '#8a919e',
+          background: pos ? '#2962FF22' : 'transparent',
+          border: `1px solid ${pos ? '#2962FF88' : '#3a3f5a'}`,
+          color: pos ? '#2962FF' : '#8a919e',
           borderRadius: '50%', width: '14px', height: '14px',
           fontSize: '9px', fontWeight: 'bold', cursor: 'pointer',
           padding: 0, lineHeight: 1, flexShrink: 0,
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           transition: 'all 0.15s',
         }}
-        title="En savoir plus"
       >
         i
       </button>
-      {open && (
+
+      {pos && createPortal(
         <>
-          <span
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
-            onClick={() => setOpen(false)}
+          {/* Backdrop */}
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 998 }}
+            onClick={() => setPos(null)}
           />
+          {/* Tooltip */}
           <div style={{
-            position: 'absolute',
-            ...(above
-              ? { bottom: 'calc(100% + 6px)' }
-              : { top:    'calc(100% + 6px)' }),
-            left: 0, zIndex: 99, width: '260px',
+            position: 'fixed',
+            top: pos.top, left: pos.left,
+            transform: pos.transform ?? 'none',
+            zIndex: 999, width: '260px',
             backgroundColor: '#1a1e2e', border: '1px solid #2962FF44',
             borderRadius: '8px', padding: '10px 12px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
             fontSize: '11px', color: '#b0b8c4', lineHeight: '1.65',
-            pointerEvents: 'none',
           }}>
             <div style={{ color: '#d1d4dc', fontWeight: 'bold', fontSize: '11px', marginBottom: '5px' }}>{name}</div>
             {text}
           </div>
-        </>
+        </>,
+        document.body
       )}
     </span>
   );
