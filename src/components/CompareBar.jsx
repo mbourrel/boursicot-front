@@ -46,7 +46,7 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
     }}>
       {/* Chip actif primaire */}
       <Chip
-        label={primarySymbol}
+        label={allAssets.find(a => a.ticker === primarySymbol)?.name || primarySymbol}
         color={ASSET_COLORS[0]}
         isPrimary
       />
@@ -55,7 +55,7 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
       {compareSymbols.map((ticker, i) => (
         <Chip
           key={ticker}
-          label={ticker}
+          label={allAssets.find(a => a.ticker === ticker)?.name || ticker}
           color={ASSET_COLORS[i + 1]}
           onRemove={() => handleRemove(ticker)}
         />
