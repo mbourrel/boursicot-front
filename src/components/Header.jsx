@@ -3,7 +3,9 @@ import React, { useState, useRef, useEffect } from 'react';
 function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode, setViewMode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterOpen, setFilterOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const filterRef = useRef(null);
 
   const [assetFilters, setAssetFilters] = useState({
     stock: true,
@@ -27,6 +29,9 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
         if (selectedCompany) {
           setSearchTerm(`${selectedCompany.name || selectedCompany.ticker} (${selectedCompany.ticker})`);
         }
+      }
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setFilterOpen(false);
       }
     };
 
@@ -73,22 +78,70 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
       
       <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
         
-        {/* BARRE DE FILTRES */}
-        <div style={{ display: 'flex', gap: '12px', padding: '8px 12px', backgroundColor: '#1e222d', borderRadius: '6px', border: '1px solid #2B2B43', alignItems: 'center' }}>
-          <span style={{ color: '#8a919e', fontSize: '11px', fontWeight: 'bold' }}>FILTRER :</span>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '12px' }}>
-            <input type="checkbox" checked={assetFilters.stock} onChange={() => handleFilterChange('stock')} style={{ cursor: 'pointer', accentColor: '#2962FF' }} /> Actions
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '12px' }}>
-            <input type="checkbox" checked={assetFilters.index} onChange={() => handleFilterChange('index')} style={{ cursor: 'pointer', accentColor: '#2962FF' }} /> Indices
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '12px' }}>
-            <input type="checkbox" checked={assetFilters.crypto} onChange={() => handleFilterChange('crypto')} style={{ cursor: 'pointer', accentColor: '#2962FF' }} /> Cryptos
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '12px' }}>
-            <input type="checkbox" checked={assetFilters.commodity} onChange={() => handleFilterChange('commodity')} style={{ cursor: 'pointer', accentColor: '#2962FF' }} /> Matières
-          </label>
-        </div>
+        {/* FILTRE DÉROULANT */}
+        {(() => {
+          const activeCount = Object.values(assetFilters).filter(Boolean).length;
+          const total = Object.keys(assetFilters).length;
+          const label = activeCount === total ? 'Tous les actifs' : `${activeCount} / ${total} types`;
+          const FILTERS = [
+            { key: 'stock',     label: 'Actions' },
+            { key: 'index',     label: 'Indices' },
+            { key: 'crypto',    label: 'Cryptos' },
+            { key: 'commodity', label: 'Matières' },
+          ];
+          return (
+            <div ref={filterRef} style={{ position: 'relative' }}>
+              <button
+                onClick={() => setFilterOpen(v => !v)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '8px 12px', backgroundColor: '#1e222d',
+                  border: `1px solid ${filterOpen ? '#2962FF' : '#2B2B43'}`,
+                  borderRadius: '6px', cursor: 'pointer', color: 'white',
+                  fontSize: '12px', whiteSpace: 'nowrap',
+                }}
+              >
+                <span style={{ color: '#8a919e', fontSize: '11px', fontWeight: 'bold' }}>FILTRER</span>
+                <span>{label}</span>
+                <span style={{ color: '#8a919e', fontSize: '10px' }}>{filterOpen ? '▲' : '▼'}</span>
+              </button>
+
+              {filterOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 6px)', left: 0,
+                  backgroundColor: '#1e222d', border: '1px solid #2B2B43',
+                  borderRadius: '6px', padding: '6px 0',
+                  zIndex: 50, minWidth: '150px',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
+                }}>
+                  {FILTERS.map(({ key, label: fl }) => (
+                    <label
+                      key={key}
+                      onClick={() => handleFilterChange(key)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                        padding: '8px 14px', cursor: 'pointer', fontSize: '13px',
+                        color: assetFilters[key] ? 'white' : '#8a919e',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2B2B43'}
+                      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={assetFilters[key]}
+                        onChange={() => handleFilterChange(key)}
+                        onClick={e => e.stopPropagation()}
+                        style={{ accentColor: '#2962FF', cursor: 'pointer', width: '14px', height: '14px' }}
+                      />
+                      {fl}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* BARRE DE RECHERCHE */}
         <div ref={dropdownRef} style={{ position: 'relative', width: '280px' }}>
