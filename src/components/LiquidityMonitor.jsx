@@ -1,11 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
-const ML = 54, MR = 20, MT = 20, MB = 38; // marges SVG
+const ML = 54, MR = 20, MT = 20, MB = 38;
 const SVG_W = 780, SVG_H = 300;
-const PW = SVG_W - ML - MR; // largeur zone de tracé
-const PH = SVG_H - MT - MB; // hauteur zone de tracé
+const PW = SVG_W - ML - MR;
+const PH = SVG_H - MT - MB;
 
 function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error }) {
+  const [showInfo, setShowInfo] = useState(false);
+
   const computed = useMemo(() => {
     if (!dates || dates.length < 2 || !m2_normalized || !btc_normalized) return null;
 
@@ -24,14 +26,12 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
     const toPolyline = (values) =>
       values.map((v, i) => `${xS(i).toFixed(1)},${yS(v).toFixed(1)}`).join(' ');
 
-    // Repères X : ~10 étiquettes régulièrement espacées
     const step = Math.max(1, Math.floor(dates.length / 10));
     const xTicks = [];
     for (let i = 0; i < dates.length; i += step) {
-      xTicks.push({ x: xS(i), label: dates[i].slice(0, 7) }); // YYYY-MM
+      xTicks.push({ x: xS(i), label: dates[i].slice(0, 7) });
     }
 
-    // Repères Y : 5 paliers
     const yTicks = Array.from({ length: 6 }, (_, k) => {
       const v = yLo + (k / 5) * (yHi - yLo);
       return { y: yS(v), label: v.toFixed(0) };
@@ -56,7 +56,24 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
     <div style={cardStyle}>
       {/* En-tête */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-        <h3 style={titleStyle}>LIQUIDITÉ GLOBALE — M2 USA vs BITCOIN</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h3 style={titleStyle}>LIQUIDITÉ GLOBALE — M2 USA vs BITCOIN</h3>
+          <button
+            onClick={() => setShowInfo(v => !v)}
+            title="Comment interpréter ce graphique ?"
+            style={{
+              background: showInfo ? '#2962FF22' : 'transparent',
+              border: `1px solid ${showInfo ? '#2962FF' : '#2B2B43'}`,
+              color: showInfo ? '#2962FF' : '#8a919e',
+              borderRadius: '50%', width: '22px', height: '22px',
+              cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, transition: 'all 0.2s',
+            }}
+          >
+            i
+          </button>
+        </div>
         <div style={{ display: 'flex', gap: '18px', fontSize: '12px', color: '#d1d4dc' }}>
           <span>
             <span style={{ color: '#60A5FA', fontWeight: 'bold', marginRight: '5px' }}>—</span>M2 USA
@@ -67,12 +84,59 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
         </div>
       </div>
 
+      {/* Panneau d'explication */}
+      {showInfo && (
+        <div style={infoPanelStyle}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+            <div style={blockStyle}>
+              <div style={{ color: '#60A5FA', fontWeight: 'bold', fontSize: '12px', marginBottom: '5px' }}>
+                M2 — Masse monétaire large
+              </div>
+              <p style={infoTextStyle}>
+                L'agrégat M2 regroupe tous les billets en circulation, les dépôts à vue, les comptes d'épargne
+                et les fonds monétaires aux États-Unis. Il représente la quantité de monnaie disponible dans l'économie.
+                Quand la Fed imprime de la monnaie (QE), M2 gonfle ; quand elle resserre (QT), M2 se contracte.
+              </p>
+            </div>
+            <div style={blockStyle}>
+              <div style={{ color: '#F97316', fontWeight: 'bold', fontSize: '12px', marginBottom: '5px' }}>
+                Pourquoi M2 vs Bitcoin ?
+              </div>
+              <p style={infoTextStyle}>
+                Historiquement, les expansions de la masse monétaire mondiale précèdent de quelques mois les hausses
+                des actifs risqués, et particulièrement du Bitcoin. Quand les liquidités abondent, les investisseurs
+                prennent plus de risques. Le Bitcoin, actif le plus sensible à la liquidité, amplifie ces mouvements.
+                Cette corrélation est suivie de près par les traders macro.
+              </p>
+            </div>
+            <div style={blockStyle}>
+              <div style={{ color: '#758696', fontWeight: 'bold', fontSize: '12px', marginBottom: '5px' }}>
+                Base 100 — Lecture du graphique
+              </div>
+              <p style={infoTextStyle}>
+                Les deux séries sont normalisées à <strong style={{ color: '#d1d4dc' }}>100 en janvier 2020</strong> pour
+                pouvoir comparer leur trajectoire relative, indépendamment de leurs niveaux absolus (M2 est en trillions
+                de dollars, BTC en milliers de dollars). Une valeur de 150 signifie +50 % depuis le point de départ.
+                La ligne pointillée marque la base 100.
+              </p>
+            </div>
+          </div>
+          <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: '#1a1e2e', border: '1px solid #2962FF40' }}>
+            <span style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '11px' }}>Signal à surveiller : </span>
+            <span style={{ color: '#8a919e', fontSize: '11px' }}>
+              Quand la courbe M2 repart à la hausse après une contraction, c'est historiquement un signal
+              précurseur d'un rallye Bitcoin à horizon 3-6 mois. Quand BTC diverge fortement au-dessus de M2,
+              un recalibrage est possible.
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* SVG */}
       <svg
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
         style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }}
       >
-        {/* Grille horizontale + labels Y */}
         {yTicks.map((t, i) => (
           <g key={i}>
             <line x1={ML} y1={t.y} x2={ML + PW} y2={t.y} stroke="#2B2B43" strokeWidth="1" />
@@ -82,7 +146,6 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
           </g>
         ))}
 
-        {/* Ligne de référence base 100 */}
         <line
           x1={ML} y1={refY} x2={ML + PW} y2={refY}
           stroke="#758696" strokeWidth="1.5" strokeDasharray="7 4" opacity="0.8"
@@ -91,7 +154,6 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
           100
         </text>
 
-        {/* Grille verticale + labels X */}
         {xTicks.map((t, i) => (
           <g key={i}>
             <line x1={t.x} y1={MT} x2={t.x} y2={MT + PH} stroke="#2B2B43" strokeWidth="0.5" />
@@ -101,11 +163,9 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
           </g>
         ))}
 
-        {/* Axes */}
         <line x1={ML} y1={MT} x2={ML} y2={MT + PH} stroke="#2B2B43" strokeWidth="1" />
         <line x1={ML} y1={MT + PH} x2={ML + PW} y2={MT + PH} stroke="#2B2B43" strokeWidth="1" />
 
-        {/* Label axe Y */}
         <text
           transform={`translate(13,${MT + PH / 2}) rotate(-90)`}
           textAnchor="middle" fontSize="10" fill="#8a919e" fontFamily="sans-serif"
@@ -113,7 +173,6 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
           Base 100 (janv. 2020)
         </text>
 
-        {/* Courbe M2 */}
         <polyline
           points={m2Points}
           fill="none"
@@ -123,7 +182,6 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
           strokeLinecap="round"
         />
 
-        {/* Courbe BTC */}
         <polyline
           points={btcPoints}
           fill="none"
@@ -150,6 +208,16 @@ const cardStyle = {
 };
 const titleStyle = {
   margin: 0, color: '#d1d4dc', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.06em',
+};
+const infoPanelStyle = {
+  backgroundColor: '#0d1117', border: '1px solid #2B2B43', borderRadius: '8px',
+  padding: '14px 16px', marginBottom: '16px',
+};
+const blockStyle = {
+  padding: '10px 12px', borderRadius: '8px', border: '1px solid #2B2B43', backgroundColor: '#131722',
+};
+const infoTextStyle = {
+  margin: 0, color: '#8a919e', fontSize: '11px', lineHeight: '1.6',
 };
 
 export default LiquidityMonitor;
