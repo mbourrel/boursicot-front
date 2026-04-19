@@ -4,6 +4,7 @@ import CompareBar from './components/CompareBar';
 import TradingChart from './components/TradingChart';
 import SimpleChart from './components/SimpleChart';
 import Fundamentals from './components/Fundamentals';
+import MacroEnvironment from './components/MacroEnvironment';
 
 function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('^FCHI');
@@ -72,15 +73,19 @@ function App() {
         setViewMode={setViewMode}
       />
 
-      {/* Barre de comparaison — visible dans toutes les vues */}
-      <CompareBar
-        primarySymbol={selectedSymbol}
-        compareSymbols={compareSymbols}
-        setCompareSymbols={setCompareSymbols}
-        allAssets={fundamentalsData}
-      />
+      {/* Barre de comparaison — masquée sur la vue Macro */}
+      {viewMode !== 'macro' && (
+        <CompareBar
+          primarySymbol={selectedSymbol}
+          compareSymbols={compareSymbols}
+          setCompareSymbols={setCompareSymbols}
+          allAssets={fundamentalsData}
+        />
+      )}
 
-      {viewMode === 'chart' ? (
+      {viewMode === 'macro' ? (
+        <MacroEnvironment />
+      ) : viewMode === 'chart' ? (
         <>
           {/* Toggle Trading / Simple */}
           <div style={{ display: 'flex', gap: '0', marginBottom: '12px' }}>

@@ -1,0 +1,2 @@
+# Ajouter cette ligne dans requirements.txt du dépôt backend
+fredapi

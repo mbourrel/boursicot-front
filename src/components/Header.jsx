@@ -140,8 +140,9 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
 
         {/* BOUTONS DE NAVIGATION */}
         <div style={{ display: 'flex', backgroundColor: '#1e222d', borderRadius: '6px' }}>
-          <button onClick={() => setViewMode('chart')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'chart' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Graphique</button>
-          <button onClick={() => setViewMode('fundamentals')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'fundamentals' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Infos</button>
+          <button onClick={() => setViewMode('chart')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'chart' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '6px 0 0 6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Graphique</button>
+          <button onClick={() => setViewMode('fundamentals')} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid #2B2B43', backgroundColor: viewMode === 'fundamentals' ? '#2962FF' : 'transparent', color: 'white', borderRadius: '0', cursor: 'pointer', transition: 'background-color 0.2s' }}>Infos</button>
+          <button onClick={() => setViewMode('macro')} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid #2B2B43', backgroundColor: viewMode === 'macro' ? '#26a69a' : 'transparent', color: 'white', borderRadius: '0 6px 6px 0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🌐 Macro</button>
         </div>
       </div>
     </div>
