@@ -1,17 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ASSET_COLORS } from './CompareBar';
 import EXPLANATIONS from '../constants/metricExplanations';
 
 // ── Composant tooltip réutilisable ─────────────────────────────────────────
 function MetricInfo({ name }) {
   const [open, setOpen] = useState(false);
+  const [above, setAbove] = useState(false);
+  const btnRef = useRef(null);
   const text = EXPLANATIONS[name];
   if (!text) return null;
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      // Bascule au-dessus si moins de 180px disponibles en dessous
+      setAbove(window.innerHeight - rect.bottom < 180);
+    }
+    setOpen(v => !v);
+  };
 
   return (
     <span style={{ position: 'relative', display: 'inline-flex', verticalAlign: 'middle', marginLeft: '5px' }}>
       <button
-        onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
+        ref={btnRef}
+        onClick={handleClick}
         style={{
           background: open ? '#2962FF22' : 'transparent',
           border: `1px solid ${open ? '#2962FF88' : '#3a3f5a'}`,
@@ -33,8 +46,11 @@ function MetricInfo({ name }) {
             onClick={() => setOpen(false)}
           />
           <div style={{
-            position: 'absolute', top: 'calc(100% + 6px)', left: 0,
-            zIndex: 99, width: '260px',
+            position: 'absolute',
+            ...(above
+              ? { bottom: 'calc(100% + 6px)' }
+              : { top:    'calc(100% + 6px)' }),
+            left: 0, zIndex: 99, width: '260px',
             backgroundColor: '#1a1e2e', border: '1px solid #2962FF44',
             borderRadius: '8px', padding: '10px 12px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
