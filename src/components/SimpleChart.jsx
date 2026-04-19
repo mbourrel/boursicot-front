@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { createChart, AreaSeries, LineSeries } from 'lightweight-charts';
 import { ASSET_COLORS } from './CompareBar';
 
-function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
+function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
+  const getName = (ticker) => allAssets.find(a => a.ticker === ticker)?.name || ticker;
   const chartContainerRef = useRef();
   const chartInstanceRef = useRef(null);
   const allDataRef = useRef({});
@@ -272,7 +273,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
             return (
               <div key={sym} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', backgroundColor: '#1e222d', padding: '5px 10px', borderRadius: '6px', border: `1px solid ${color}40` }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color, display: 'inline-block', flexShrink: 0, alignSelf: 'center' }} />
-                <span style={{ color: 'white', fontWeight: 'bold', fontSize: '13px' }}>{sym}</span>
+                <span style={{ color: 'white', fontWeight: 'bold', fontSize: '13px' }}>{getName(sym)}</span>
                 <span style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>{formatPrice(s.price)}</span>
                 <span style={{ color: changeColor, fontWeight: 'bold', fontSize: '12px' }}>
                   {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
@@ -307,7 +308,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [] }) {
             {allSymbols.map((sym, i) => hoverData[sym] !== undefined && (
               <span key={sym}>
                 <span style={{ color: ASSET_COLORS[i] }}>● </span>
-                <span style={{ color: '#8a919e' }}>{sym} </span>
+                <span style={{ color: '#8a919e' }}>{getName(sym)} </span>
                 <span style={{ color: 'white' }}>
                   {/* En mode normalisé : afficher le % ; en mode individuel : le prix réel */}
                   {isComparing && !individualScales

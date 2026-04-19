@@ -104,8 +104,8 @@ function App() {
           </div>
 
           {chartMode === 'trading'
-            ? <TradingChart selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} />
-            : <SimpleChart selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} />
+            ? <TradingChart selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} allAssets={fundamentalsData} />
+            : <SimpleChart selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} allAssets={fundamentalsData} />
           }
         </>
       ) : (

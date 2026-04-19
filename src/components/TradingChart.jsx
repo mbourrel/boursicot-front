@@ -33,7 +33,8 @@ const extendLine = (p1, p2, W) => {
   return { x1: 0, y1: p1.y - slope * p1.x, x2: W, y2: p1.y + slope * (W - p1.x) };
 };
 
-function TradingChart({ selectedSymbol }) {
+function TradingChart({ selectedSymbol, allAssets = [] }) {
+  const getName = (ticker) => allAssets.find(a => a.ticker === ticker)?.name || ticker;
   const chartContainerRef = useRef();
   const chartInstanceRef  = useRef(null);
   const mainSeriesRef     = useRef(null);
@@ -520,7 +521,7 @@ function TradingChart({ selectedSymbol }) {
 
         {/* Légende crosshair */}
         <div style={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', flexWrap: 'wrap', gap: '10px', backgroundColor: 'rgba(19, 23, 34, 0.8)', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', maxWidth: '90%', pointerEvents: 'none' }}>
-          <span style={{ color: '#d1d4dc' }}>{selectedSymbol} {legendData.close && `$${legendData.close}`}</span>
+          <span style={{ color: '#d1d4dc' }}>{getName(selectedSymbol)} {legendData.close && `$${legendData.close}`}</span>
           {indicators.volume && legendData.volume !== undefined && <span style={{ color: '#8a919e' }}>Vol: {formatVal(legendData.volume)}</span>}
           {indicators.ma10   && legendData.ma10    && <span style={{ color: '#00bcd4' }}>MM10: {legendData.ma10}</span>}
           {indicators.ma100  && legendData.ma100   && <span style={{ color: '#ff9800' }}>MM100: {legendData.ma100}</span>}
