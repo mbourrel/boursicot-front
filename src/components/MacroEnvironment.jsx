@@ -16,29 +16,26 @@ function MacroEnvironment() {
   const [liquidityError,  setLiquidityError]  = useState(null);
 
   useEffect(() => {
-    // ── Cycle économique ──────────────────────────────────────────────────
-    fetch(`${API_URL}/macro/cycle`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const fetchWithDetail = (url) =>
+      fetch(url).then(async (r) => {
+        if (!r.ok) {
+          // Lire le detail FastAPI pour avoir le vrai message d'erreur
+          let detail = `HTTP ${r.status}`;
+          try { const body = await r.json(); detail = body.detail ?? detail; } catch {}
+          throw new Error(detail);
+        }
         return r.json();
-      })
-      .then((data) => { setCycleData(data); setCycleLoading(false); })
-      .catch((err) => {
-        setCycleError(`Impossible de charger le cycle économique (${err.message})`);
-        setCycleLoading(false);
       });
 
+    // ── Cycle économique ──────────────────────────────────────────────────
+    fetchWithDetail(`${API_URL}/macro/cycle`)
+      .then((data) => { setCycleData(data); setCycleLoading(false); })
+      .catch((err) => { setCycleError(err.message); setCycleLoading(false); });
+
     // ── Liquidité M2 vs BTC ───────────────────────────────────────────────
-    fetch(`${API_URL}/macro/liquidity`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
+    fetchWithDetail(`${API_URL}/macro/liquidity`)
       .then((data) => { setLiquidityData(data); setLiquidityLoading(false); })
-      .catch((err) => {
-        setLiquidityError(`Impossible de charger les données de liquidité (${err.message})`);
-        setLiquidityLoading(false);
-      });
+      .catch((err) => { setLiquidityError(err.message); setLiquidityLoading(false); });
   }, [API_URL]);
 
   return (
