@@ -155,121 +155,121 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+      {/* ── Layout côte à côte : jauge (25%) | graphique (75%) ── */}
+      <div style={{ display: 'flex', gap: '0', alignItems: 'stretch' }}>
 
-        {/* ── SVG Jauge ── */}
-        <svg viewBox="0 0 320 200" style={{ width: '100%', maxWidth: '320px', overflow: 'visible' }}>
-
-          {PHASES.map((p) => (
-            <path
-              key={p.id}
-              d={arcPath(CX, CY, OUTER_R, INNER_R, p.start, p.end)}
-              fill={p.id === phase ? p.color : `${p.color}45`}
-              style={{ stroke: 'var(--bg1)' }}
-              strokeWidth="2"
-              style={{ transition: 'fill 0.5s ease' }}
-            />
-          ))}
-
-          {labelPositions.map((p) => (
-            <text
-              key={p.id}
-              x={p.lx.toFixed(1)}
-              y={(p.ly + 4).toFixed(1)}
-              textAnchor="middle"
-              fontSize="10.5"
-              fontWeight="bold"
-              fontFamily="sans-serif"
-              style={{ fill: p.id === phase ? 'var(--text1)' : 'var(--text3)' }}
-              style={{ transition: 'fill 0.5s ease', userSelect: 'none' }}
-            >
-              {p.id}
-            </text>
-          ))}
-
-          <g
-            style={{
+        {/* ── Colonne gauche : jauge ── */}
+        <div style={{
+          width: '25%', minWidth: '150px', flexShrink: 0,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+          paddingRight: '16px', borderRight: '1px solid var(--border)',
+        }}>
+          <svg viewBox="0 0 320 200" style={{ width: '100%', overflow: 'visible' }}>
+            {PHASES.map((p) => (
+              <path
+                key={p.id}
+                d={arcPath(CX, CY, OUTER_R, INNER_R, p.start, p.end)}
+                fill={p.id === phase ? p.color : `${p.color}45`}
+                stroke="var(--bg1)"
+                strokeWidth="2"
+                style={{ transition: 'fill 0.5s ease' }}
+              />
+            ))}
+            {labelPositions.map((p) => (
+              <text
+                key={p.id}
+                x={p.lx.toFixed(1)}
+                y={(p.ly + 4).toFixed(1)}
+                textAnchor="middle"
+                fontSize="10.5"
+                fontWeight="bold"
+                fontFamily="sans-serif"
+                style={{ fill: p.id === phase ? 'var(--text1)' : 'var(--text3)', transition: 'fill 0.5s ease', userSelect: 'none' }}
+              >
+                {p.id}
+              </text>
+            ))}
+            <g style={{
               transform: `rotate(${cssRotation}deg)`,
               transformOrigin: `${CX}px ${CY}px`,
               transition: 'transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            }}
-          >
-            <line
-              x1={CX} y1={CY + 12}
-              x2={CX} y2={CY - Math.round(OUTER_R * 0.83)}
-              stroke="white"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-            <polygon
-              points={`${CX},${CY + 14} ${CX - 5},${CY + 4} ${CX + 5},${CY + 4}`}
-              fill="white"
-              opacity="0.6"
-            />
-          </g>
+            }}>
+              <line x1={CX} y1={CY + 12} x2={CX} y2={CY - Math.round(OUTER_R * 0.83)}
+                stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+              <polygon points={`${CX},${CY + 14} ${CX - 5},${CY + 4} ${CX + 5},${CY + 4}`}
+                fill="white" opacity="0.6" />
+            </g>
+            <circle cx={CX} cy={CY} r="7" fill="var(--bg3)" stroke="var(--text1)" strokeWidth="2" />
+            <line x1={CX - OUTER_R - 6} y1={CY} x2={CX + OUTER_R + 6} y2={CY}
+              stroke="var(--border)" strokeWidth="1" />
+          </svg>
 
-          <circle cx={CX} cy={CY} r="7" style={{ fill: 'var(--bg3)', stroke: 'var(--text1)' }} strokeWidth="2" />
-          <line
-            x1={CX - OUTER_R - 6} y1={CY}
-            x2={CX + OUTER_R + 6} y2={CY}
-            style={{ stroke: 'var(--border)' }} strokeWidth="1"
-          />
-        </svg>
-
-        {/* ── Phase actuelle + explication courte ── */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: phaseColor, transition: 'color 0.5s' }}>
-            {phase ?? '—'}
-          </div>
-          {phaseExpl && (
-            <div style={{ fontSize: '11px', color: phaseExpl.color, marginTop: '2px', opacity: 0.8 }}>
-              {phaseExpl.summary}
+          {/* Phase actuelle */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '22px', fontWeight: 'bold', color: phaseColor, transition: 'color 0.5s' }}>
+              {phase ?? '—'}
             </div>
-          )}
-          <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '3px' }}>
-            Phase de marché actuelle
-          </div>
-        </div>
-
-        {/* ── Indicateurs YoY ── */}
-        <div style={{ display: 'flex', gap: '32px', paddingTop: '8px', borderTop: '1px solid var(--border)', width: '100%', justifyContent: 'center' }}>
-          <YoYBlock
-            label="Croissance (INDPRO)"
-            value={growth_yoy}
-            trend={growth_trend}
-            positiveColor="#26a69a"
-          />
-          <div style={{ width: '1px', backgroundColor: 'var(--border)' }} />
-          <YoYBlock
-            label="Inflation (CPI)"
-            value={inflation_yoy}
-            trend={inflation_trend}
-            positiveColor="#ef5350"
-          />
-        </div>
-      </div>
-
-      {/* ── Historique des phases ── */}
-      <div style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text3)', letterSpacing: '0.06em' }}>
-            HISTORIQUE DES PHASES · 5 ANS (INDPRO YoY %)
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            {Object.entries(PHASE_COLORS).map(([name, color]) => (
-              <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color }} />
-                <span style={{ fontSize: '10px', color: 'var(--text3)' }}>{name}</span>
+            {phaseExpl && (
+              <div style={{ fontSize: '10px', color: phaseExpl.color, marginTop: '2px', opacity: 0.8 }}>
+                {phaseExpl.summary}
               </div>
-            ))}
+            )}
+            <div style={{ fontSize: '10px', color: 'var(--text3)', marginTop: '3px' }}>
+              Phase actuelle
+            </div>
+          </div>
+
+          {/* Indicateurs YoY empilés */}
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '6px', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+            <YoYBlock label="Croissance (INDPRO)" value={growth_yoy} trend={growth_trend} positiveColor="#26a69a" />
+            <div style={{ height: '1px', backgroundColor: 'var(--border)' }} />
+            <YoYBlock label="Inflation (CPI)" value={inflation_yoy} trend={inflation_trend} positiveColor="#ef5350" />
           </div>
         </div>
-        {historyLoading
-          ? <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: 'var(--text3)', fontSize: '12px' }}>Chargement de l'historique…</span>
+
+        {/* ── Colonne droite : graphique historique ── */}
+        <div style={{ flex: 1, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
+
+          {/* En-tête : titre + légende */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text3)', letterSpacing: '0.06em' }}>
+              HISTORIQUE DES PHASES · 5 ANS
             </div>
-          : <CycleHistoryChart history={history} />
-        }
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {Object.entries(PHASE_COLORS).map(([name, color]) => (
+                <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color }} />
+                  <span style={{ fontSize: '10px', color: 'var(--text3)' }}>{name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Graphique avec titres d'axes */}
+          {historyLoading
+            ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '240px' }}>
+                <span style={{ color: 'var(--text3)', fontSize: '12px' }}>Chargement de l'historique…</span>
+              </div>
+            : <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '0' }}>
+                <div style={{ display: 'flex', flex: 1 }}>
+                  {/* Titre axe Y (vertical) */}
+                  <div style={{
+                    writingMode: 'vertical-rl', transform: 'rotate(180deg)',
+                    fontSize: '10px', color: 'var(--text3)',
+                    textAlign: 'center', paddingRight: '4px', flexShrink: 0,
+                    letterSpacing: '0.04em',
+                  }}>
+                    Croissance YoY (%)
+                  </div>
+                  <CycleHistoryChart history={history} height={280} />
+                </div>
+                {/* Titre axe X */}
+                <div style={{ textAlign: 'center', fontSize: '10px', color: 'var(--text3)', marginTop: '4px', letterSpacing: '0.04em' }}>
+                  Période · données mensuelles (INDPRO)
+                </div>
+              </div>
+          }
+        </div>
       </div>
     </div>
   );
@@ -294,7 +294,7 @@ function splitByPhase(data) {
   return segments;
 }
 
-function CycleHistoryChart({ history }) {
+function CycleHistoryChart({ history, height = 280 }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -306,8 +306,8 @@ function CycleHistoryChart({ history }) {
       layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#9ba3ad' },
       grid: { vertLines: { color: '#2a2f3a' }, horzLines: { color: '#2a2f3a' } },
       width: container.clientWidth,
-      height: 160,
-      timeScale: { borderColor: '#2a2f3a', timeVisible: false },
+      height,
+      timeScale: { borderColor: '#2a2f3a', timeVisible: true },
       rightPriceScale: { borderColor: '#2a2f3a' },
       crosshair: { vertLine: { color: '#758696aa' }, horzLine: { color: '#758696aa' } },
       handleScroll: false,
@@ -355,13 +355,13 @@ function CycleHistoryChart({ history }) {
 
   if (!history?.length) {
     return (
-      <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ height: `${height}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
         <span style={{ color: 'var(--text3)', fontSize: '12px' }}>Données historiques indisponibles</span>
       </div>
     );
   }
 
-  return <div ref={containerRef} style={{ width: '100%', height: '160px' }} />;
+  return <div ref={containerRef} style={{ width: '100%', height: `${height}px`, flex: 1 }} />;
 }
 
 function YoYBlock({ label, value, trend, positiveColor }) {
