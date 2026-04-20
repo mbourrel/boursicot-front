@@ -40,7 +40,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
   const mainSeriesRef     = useRef(null);
   const currentDataRef    = useRef([]);
   const svgFrameRef        = useRef(null);
-  const candleIntervalRef  = useRef(candleInterval);
+  const candleIntervalRef  = useRef('1D');
 
   const volumeSeriesRef  = useRef(null);
   const ma10SeriesRef    = useRef(null);
