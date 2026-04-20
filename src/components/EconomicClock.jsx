@@ -202,10 +202,11 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
           <div style={{ ...infoSectionStyle, marginBottom: 0 }}>
             <div style={infoTitleStyle}>Comment lire le graphique historique ?</div>
             <p style={{ ...infoTextStyle, marginBottom: '10px' }}>
-              Le graphique retrace les <strong style={{ color: 'var(--text2)' }}>5 dernières années de cycle économique</strong> en données
-              mensuelles. Chaque segment de la courbe est coloré selon la phase dans laquelle l'économie
+              Le graphique retrace le <strong style={{ color: 'var(--text2)' }}>cycle économique depuis 1998</strong> en données
+              mensuelles (~320 points). Chaque segment de la courbe est coloré selon la phase dans laquelle l'économie
               se trouvait à ce moment-là, permettant de visualiser d'un coup d'œil les transitions de régime
-              et leur durée.
+              et leur durée. On y retrouve notamment la bulle internet (2001), la crise des subprimes (2008–2009),
+              le choc COVID (2020) et la surchauffe post-pandémie (2021–2022).
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
               <div style={indicatorExplStyle}>
@@ -225,9 +226,9 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
                 </div>
                 <p style={infoTextStyle}>
                   Chaque point correspond à un mois de données FRED.
-                  L'historique couvre les <strong style={{ color: 'var(--text2)' }}>60 derniers mois</strong> (5 ans), ce qui permet
-                  d'observer au moins un cycle économique complet et de contextualiser la phase actuelle
-                  par rapport aux phases récentes.
+                  L'historique couvre <strong style={{ color: 'var(--text2)' }}>depuis janvier 1998</strong> (~320 points mensuels),
+                  ce qui permet d'observer plusieurs cycles économiques complets : bulle internet, subprimes,
+                  COVID, surchauffe post-pandémie. Utilisez la molette pour zoomer sur une période précise.
                 </p>
               </div>
             </div>
@@ -327,7 +328,7 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
           {/* En-tête : titre + légende */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
             <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text3)', letterSpacing: '0.06em' }}>
-              HISTORIQUE DES PHASES · 5 ANS
+              HISTORIQUE DES PHASES · DEPUIS 1998
             </div>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               {Object.entries(PHASE_COLORS).map(([name, color]) => (
