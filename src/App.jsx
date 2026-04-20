@@ -7,7 +7,7 @@ import Fundamentals from './components/Fundamentals';
 import MacroEnvironment from './components/MacroEnvironment';
 
 function App() {
-  const [selectedSymbol, setSelectedSymbol] = useState('^FCHI');
+  const [selectedSymbol, setSelectedSymbol] = useState('AI.PA');
   const [compareSymbols, setCompareSymbols] = useState([]);
   const [viewMode, setViewMode] = useState('chart');
   const [chartMode, setChartMode] = useState('trading');
