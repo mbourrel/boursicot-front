@@ -45,7 +45,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
   const volumeSeriesRef  = useRef(null);
   const ma10SeriesRef    = useRef(null);
   const ma100SeriesRef   = useRef(null);
-  const ma365SeriesRef   = useRef(null);
+  const ma200SeriesRef   = useRef(null);
   const bbUpperSeriesRef = useRef(null);
   const bbLowerSeriesRef = useRef(null);
   const atrSeriesRef     = useRef(null);
@@ -54,7 +54,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
   const [timeRange,      setTimeRange]      = useState('1Y');
   const [candleInterval, setCandleInterval] = useState('1D');
   const [indicators, setIndicators] = useState({
-    volume: true, ma10: true, ma100: false, ma365: false, bb: false, atr: false,
+    volume: true, ma10: true, ma100: true, ma200: false, bb: false, atr: false,
   });
 
   // ── State dessin ────────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
     if (volumeSeriesRef.current)  volumeSeriesRef.current.applyOptions({ visible: indicators.volume });
     if (ma10SeriesRef.current)    ma10SeriesRef.current.applyOptions({ visible: indicators.ma10 });
     if (ma100SeriesRef.current)   ma100SeriesRef.current.applyOptions({ visible: indicators.ma100 });
-    if (ma365SeriesRef.current)   ma365SeriesRef.current.applyOptions({ visible: indicators.ma365 });
+    if (ma200SeriesRef.current)   ma200SeriesRef.current.applyOptions({ visible: indicators.ma200 });
     if (bbUpperSeriesRef.current) bbUpperSeriesRef.current.applyOptions({ visible: indicators.bb });
     if (bbLowerSeriesRef.current) bbLowerSeriesRef.current.applyOptions({ visible: indicators.bb });
     if (atrSeriesRef.current)     atrSeriesRef.current.applyOptions({ visible: indicators.atr });
@@ -215,7 +215,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
 
     ma10SeriesRef.current    = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 2, crosshairMarkerVisible: false, visible: indicators.ma10 });
     ma100SeriesRef.current   = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 2, crosshairMarkerVisible: false, visible: indicators.ma100 });
-    ma365SeriesRef.current   = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false, visible: indicators.ma365 });
+    ma200SeriesRef.current   = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false, visible: indicators.ma200 });
     bbUpperSeriesRef.current = chart.addSeries(LineSeries, { color: 'rgba(41, 98, 255, 0.5)', lineWidth: 1, crosshairMarkerVisible: false, visible: indicators.bb });
     bbLowerSeriesRef.current = chart.addSeries(LineSeries, { color: 'rgba(41, 98, 255, 0.5)', lineWidth: 1, crosshairMarkerVisible: false, visible: indicators.bb });
     atrSeriesRef.current     = chart.addSeries(LineSeries, { color: '#e91e63', lineWidth: 2, priceScaleId: 'atr', visible: indicators.atr });
@@ -244,7 +244,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
           const calcMA = (p) => { if (i < p - 1) return null; let s = 0; for (let j = 0; j < p; j++) s += rawData[i - j].close; return s / p; };
           rawData[i].ma10  = calcMA(10);
           rawData[i].ma100 = calcMA(100);
-          rawData[i].ma365 = calcMA(365);
+          rawData[i].ma200 = calcMA(200);
           if (i >= 19) {
             const sma20 = calcMA(20); let sq = 0;
             for (let j = 0; j < 20; j++) sq += Math.pow(rawData[i - j].close - sma20, 2);
@@ -263,7 +263,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
           volumeSeriesRef.current.setData(rawData.map(d => ({ time: d.time, value: d.value, color: d.color })));
           ma10SeriesRef.current.setData(rawData.filter(d => d.ma10 !== null).map(d => ({ time: d.time, value: d.ma10 })));
           ma100SeriesRef.current.setData(rawData.filter(d => d.ma100 !== null).map(d => ({ time: d.time, value: d.ma100 })));
-          ma365SeriesRef.current.setData(rawData.filter(d => d.ma365 !== null).map(d => ({ time: d.time, value: d.ma365 })));
+          ma200SeriesRef.current.setData(rawData.filter(d => d.ma200 !== null).map(d => ({ time: d.time, value: d.ma200 })));
           bbUpperSeriesRef.current.setData(rawData.filter(d => d.bbUpper !== null).map(d => ({ time: d.time, value: d.bbUpper })));
           bbLowerSeriesRef.current.setData(rawData.filter(d => d.bbLower !== null).map(d => ({ time: d.time, value: d.bbLower })));
           atrSeriesRef.current.setData(rawData.filter(d => d.atr !== null).map(d => ({ time: d.time, value: d.atr })));
@@ -279,7 +279,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
           volume:  param.seriesData.get(volumeSeriesRef.current)?.value,
           ma10:    param.seriesData.get(ma10SeriesRef.current)?.value?.toFixed(2),
           ma100:   param.seriesData.get(ma100SeriesRef.current)?.value?.toFixed(2),
-          ma365:   param.seriesData.get(ma365SeriesRef.current)?.value?.toFixed(2),
+          ma200:   param.seriesData.get(ma200SeriesRef.current)?.value?.toFixed(2),
           bbUpper: param.seriesData.get(bbUpperSeriesRef.current)?.value?.toFixed(2),
           bbLower: param.seriesData.get(bbLowerSeriesRef.current)?.value?.toFixed(2),
           atr:     param.seriesData.get(atrSeriesRef.current)?.value?.toFixed(2),
@@ -448,7 +448,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
             <button style={filterBtnStyle(indicators.atr, '#e91e63')}     onClick={() => toggleIndicator('atr')}>Volatilité (ATR)</button>
             <button style={filterBtnStyle(indicators.ma10, '#00bcd4')}    onClick={() => toggleIndicator('ma10')}>MM 10</button>
             <button style={filterBtnStyle(indicators.ma100, '#ff9800')}   onClick={() => toggleIndicator('ma100')}>MM 100</button>
-            <button style={filterBtnStyle(indicators.ma365, '#9c27b0')}   onClick={() => toggleIndicator('ma365')}>MM 365</button>
+            <button style={filterBtnStyle(indicators.ma200, '#9c27b0')}   onClick={() => toggleIndicator('ma200')}>MM 200</button>
           </div>
 
           {/* Toggle dessin */}
@@ -536,7 +536,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
           {indicators.volume && legendData.volume !== undefined && <span style={{ color: '#8a919e' }}>Vol: {formatVal(legendData.volume)}</span>}
           {indicators.ma10   && legendData.ma10    && <span style={{ color: '#00bcd4' }}>MM10: {legendData.ma10}</span>}
           {indicators.ma100  && legendData.ma100   && <span style={{ color: '#ff9800' }}>MM100: {legendData.ma100}</span>}
-          {indicators.ma365  && legendData.ma365   && <span style={{ color: '#9c27b0' }}>MM365: {legendData.ma365}</span>}
+          {indicators.ma200  && legendData.ma200   && <span style={{ color: '#9c27b0' }}>MM200: {legendData.ma200}</span>}
           {indicators.bb && legendData.bbUpper && legendData.bbLower && <span style={{ color: '#448aff' }}>BB: {legendData.bbLower} - {legendData.bbUpper}</span>}
           {indicators.atr && legendData.atr && <span style={{ color: '#e91e63' }}>ATR: {legendData.atr}</span>}
         </div>

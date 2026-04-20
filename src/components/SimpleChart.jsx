@@ -133,8 +133,9 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
                 for (let j = 0; j < period; j++) sum += rawData[i - j].value;
                 return sum / period;
               };
-              rawData[i].ma20 = calcMA(20);
-              rawData[i].ma50 = calcMA(50);
+              rawData[i].ma10  = calcMA(10);
+              rawData[i].ma100 = calcMA(100);
+              rawData[i].ma200 = calcMA(200);
             }
           }
 
@@ -154,10 +155,12 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             if (!isComparing) {
               const pd = allDataRef.current[selectedSymbol];
               if (pd) {
-                const ma20s = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 1.5, crosshairMarkerVisible: false });
-                const ma50s = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 1.5, crosshairMarkerVisible: false });
-                ma20s.setData(pd.filter(d => d.ma20 != null).map(d => ({ time: d.time, value: d.ma20 })));
-                ma50s.setData(pd.filter(d => d.ma50 != null).map(d => ({ time: d.time, value: d.ma50 })));
+                const ma10s  = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 1.5, crosshairMarkerVisible: false });
+                const ma100s = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 1.5, crosshairMarkerVisible: false });
+                const ma200s = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 1.5, crosshairMarkerVisible: false });
+                ma10s.setData(pd.filter(d => d.ma10   != null).map(d => ({ time: d.time, value: d.ma10 })));
+                ma100s.setData(pd.filter(d => d.ma100 != null).map(d => ({ time: d.time, value: d.ma100 })));
+                ma200s.setData(pd.filter(d => d.ma200 != null).map(d => ({ time: d.time, value: d.ma200 })));
               }
             }
 
@@ -271,8 +274,9 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           {!isComparing && (
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '12px' }}>
-              <span style={{ color: '#00bcd4', fontWeight: 'bold' }}>— MM20</span>
-              <span style={{ color: '#ff9800', fontWeight: 'bold' }}>— MM50</span>
+              <span style={{ color: '#00bcd4', fontWeight: 'bold' }}>— MM10</span>
+              <span style={{ color: '#ff9800', fontWeight: 'bold' }}>— MM100</span>
+              <span style={{ color: '#9c27b0', fontWeight: 'bold' }}>— MM200</span>
             </div>
           )}
 
