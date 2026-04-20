@@ -5,6 +5,9 @@
       "Bash(python -c ' *)",
       "Bash(ls c:/Users/mateo/boursicot-api/*.py)",
       "Read(//c/Users/mateo/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\mateo\\boursicot-api"
     ]
   }
 }
