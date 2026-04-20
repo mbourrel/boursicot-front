@@ -108,50 +108,144 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
       {/* Panneau d'explication */}
       {showInfo && (
         <div style={infoPanelStyle}>
-          <div style={{ marginBottom: '14px' }}>
-            <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
-              Comment fonctionne l'horloge économique ?
-            </div>
+
+          {/* ── 1. Principe général ── */}
+          <div style={infoSectionStyle}>
+            <div style={infoTitleStyle}>Comment fonctionne l'horloge économique ?</div>
             <p style={infoTextStyle}>
-              L'horloge positionne l'économie dans un <strong style={{ color: 'var(--text2)' }}>cycle en 4 phases</strong> en croisant
-              deux variables clés : la croissance réelle et l'inflation. La phase détermine quels actifs sont
-              historiquement favorisés ou pénalisés.
+              L'horloge s'inspire du modèle de cycle économique de <strong style={{ color: 'var(--text2)' }}>Fidelity Investments</strong> et
+              de la théorie du portefeuille <strong style={{ color: 'var(--text2)' }}>All Weather de Ray Dalio</strong>. Elle positionne
+              l'économie dans un <strong style={{ color: 'var(--text2)' }}>cycle en 4 phases</strong> en croisant deux variables macroéconomiques
+              clés : la <strong style={{ color: '#26a69a' }}>croissance réelle</strong> (INDPRO) et
+              l'<strong style={{ color: '#ef5350' }}>inflation</strong> (CPI). Pour chaque variable, on regarde
+              non pas le niveau absolu, mais la <strong style={{ color: 'var(--text2)' }}>tendance</strong> : est-ce que le taux de
+              variation annuel accélère ou ralentit par rapport au mois précédent ? C'est ce croisement de tendances
+              qui détermine la phase et, in fine, quels actifs sont historiquement favorisés ou pénalisés.
             </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px' }}>
-            {Object.entries(PHASE_EXPLANATIONS).map(([name, expl]) => (
-              <div key={name} style={{
-                padding: '10px 12px', borderRadius: '8px',
-                border: `1px solid ${name === phase ? expl.color : 'var(--border)'}`,
-                backgroundColor: name === phase ? `${expl.color}15` : 'var(--bg0)',
-              }}>
-                <div style={{ color: expl.color, fontWeight: 'bold', fontSize: '12px', marginBottom: '3px' }}>
-                  {name} {name === phase && <span style={{ fontSize: '10px', opacity: 0.8 }}>← actuel</span>}
-                </div>
-                <div style={{ color: 'var(--text3)', fontSize: '11px', marginBottom: '5px' }}>{expl.summary}</div>
-                <div style={{ color: '#b0b8c4', fontSize: '11px', lineHeight: '1.5' }}>{expl.detail}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px' }}>
+              <div style={matrixCellStyle}>
+                <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '4px' }}>Croissance ↑ · Inflation ↓</div>
+                <div style={{ color: '#26a69a', fontWeight: 'bold', fontSize: '12px' }}>→ Expansion</div>
               </div>
-            ))}
+              <div style={matrixCellStyle}>
+                <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '4px' }}>Croissance ↑ · Inflation ↑</div>
+                <div style={{ color: '#ff9800', fontWeight: 'bold', fontSize: '12px' }}>→ Surchauffe</div>
+              </div>
+              <div style={matrixCellStyle}>
+                <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '4px' }}>Croissance ↓ · Inflation ↑</div>
+                <div style={{ color: '#ef5350', fontWeight: 'bold', fontSize: '12px' }}>→ Contraction</div>
+              </div>
+              <div style={matrixCellStyle}>
+                <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '4px' }}>Croissance ↓ · Inflation ↓</div>
+                <div style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '12px' }}>→ Récession</div>
+              </div>
+            </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <div style={indicatorExplStyle}>
-              <div style={{ color: '#26a69a', fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}>INDPRO — Indice de production industrielle</div>
-              <p style={infoTextStyle}>
-                Publié par la Réserve Fédérale américaine, il mesure la production des usines, mines et
-                services publics. C'est un proxy fiable de la croissance économique réelle, plus réactif que le PIB
-                car publié chaque mois.
-              </p>
-            </div>
-            <div style={indicatorExplStyle}>
-              <div style={{ color: '#ef5350', fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}>CPI — Indice des prix à la consommation</div>
-              <p style={infoTextStyle}>
-                Mesure l'évolution du coût d'un panier de biens et services représentatif (alimentation, énergie,
-                logement…). C'est l'indicateur d'inflation de référence suivi par la Fed pour calibrer sa politique monétaire.
-              </p>
+          {/* ── 2. Les 4 phases en détail ── */}
+          <div style={infoSectionStyle}>
+            <div style={infoTitleStyle}>Les 4 phases du cycle en détail</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {Object.entries(PHASE_EXPLANATIONS).map(([name, expl]) => (
+                <div key={name} style={{
+                  padding: '10px 12px', borderRadius: '8px',
+                  border: `1px solid ${name === phase ? expl.color : 'var(--border)'}`,
+                  backgroundColor: name === phase ? `${expl.color}15` : 'var(--bg0)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: expl.color, flexShrink: 0 }} />
+                    <span style={{ color: expl.color, fontWeight: 'bold', fontSize: '12px' }}>
+                      {name}
+                    </span>
+                    {name === phase && <span style={{ fontSize: '10px', color: expl.color, opacity: 0.8 }}>← actuel</span>}
+                  </div>
+                  <div style={{ color: 'var(--text3)', fontSize: '11px', marginBottom: '5px', fontStyle: 'italic' }}>{expl.summary}</div>
+                  <div style={{ color: '#b0b8c4', fontSize: '11px', lineHeight: '1.55' }}>{expl.detail}</div>
+                </div>
+              ))}
             </div>
           </div>
+
+          {/* ── 3. Les indicateurs utilisés ── */}
+          <div style={infoSectionStyle}>
+            <div style={infoTitleStyle}>Les indicateurs macroéconomiques utilisés</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={indicatorExplStyle}>
+                <div style={{ color: '#26a69a', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
+                  INDPRO — Production industrielle (Fed)
+                </div>
+                <p style={infoTextStyle}>
+                  Publié chaque mois par la Réserve Fédérale américaine, l'<strong style={{ color: 'var(--text2)' }}>Industrial Production Index</strong> mesure
+                  le volume de production des usines, mines et services publics aux États-Unis.
+                  C'est un proxy de la <strong style={{ color: 'var(--text2)' }}>croissance économique réelle</strong>, plus réactif que le PIB
+                  (trimestriel) car disponible chaque mois avec un décalage d'environ 2 semaines.
+                  Une variation annuelle positive et accélérante indique une économie en expansion ;
+                  une variation décélérante ou négative signale un ralentissement.
+                </p>
+              </div>
+              <div style={indicatorExplStyle}>
+                <div style={{ color: '#ef5350', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
+                  CPIAUCSL — Indice des prix à la consommation (BLS)
+                </div>
+                <p style={infoTextStyle}>
+                  Publié par le Bureau of Labor Statistics, le <strong style={{ color: 'var(--text2)' }}>Consumer Price Index for All Urban Consumers</strong> mesure
+                  l'évolution du coût d'un panier représentatif de biens et services (alimentation, énergie,
+                  logement, santé…). C'est l'indicateur d'<strong style={{ color: 'var(--text2)' }}>inflation</strong> de référence suivi
+                  par la Fed pour calibrer sa politique monétaire. Un CPI YoY qui accélère pousse la Fed
+                  à monter les taux, ce qui pèse sur les actifs risqués.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── 4. Comment lire le graphique historique ── */}
+          <div style={{ ...infoSectionStyle, marginBottom: 0 }}>
+            <div style={infoTitleStyle}>Comment lire le graphique historique ?</div>
+            <p style={{ ...infoTextStyle, marginBottom: '10px' }}>
+              Le graphique retrace les <strong style={{ color: 'var(--text2)' }}>5 dernières années de cycle économique</strong> en données
+              mensuelles. Chaque segment de la courbe est coloré selon la phase dans laquelle l'économie
+              se trouvait à ce moment-là, permettant de visualiser d'un coup d'œil les transitions de régime
+              et leur durée.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+              <div style={indicatorExplStyle}>
+                <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '11px', marginBottom: '4px' }}>
+                  Axe Y · Croissance YoY (%)
+                </div>
+                <p style={infoTextStyle}>
+                  Variation en % de l'INDPRO par rapport au même mois un an plus tôt.
+                  Une valeur <strong style={{ color: '#26a69a' }}>positive</strong> signifie que la production industrielle est plus élevée qu'il y a un an (l'économie croît).
+                  Une valeur <strong style={{ color: '#ef5350' }}>négative</strong> indique une contraction.
+                  La <strong style={{ color: 'var(--text2)' }}>ligne pointillée à 0 %</strong> sert de référence neutre.
+                </p>
+              </div>
+              <div style={indicatorExplStyle}>
+                <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '11px', marginBottom: '4px' }}>
+                  Axe X · Période mensuelle
+                </div>
+                <p style={infoTextStyle}>
+                  Chaque point correspond à un mois de données FRED.
+                  L'historique couvre les <strong style={{ color: 'var(--text2)' }}>60 derniers mois</strong> (5 ans), ce qui permet
+                  d'observer au moins un cycle économique complet et de contextualiser la phase actuelle
+                  par rapport aux phases récentes.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+              {Object.entries(PHASE_COLORS).map(([name, color]) => (
+                <div key={name} style={{ ...matrixCellStyle, flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '20px', height: '3px', borderRadius: '2px', backgroundColor: color }} />
+                    <span style={{ color, fontWeight: 'bold', fontSize: '11px' }}>{name}</span>
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'var(--text3)', lineHeight: '1.4' }}>
+                    {PHASE_EXPLANATIONS[name]?.summary}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       )}
 
@@ -404,6 +498,21 @@ const infoTextStyle = {
 
 const indicatorExplStyle = {
   padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--bg0)',
+};
+
+const infoSectionStyle = {
+  marginBottom: '18px',
+  paddingBottom: '18px',
+  borderBottom: '1px solid var(--border)',
+};
+
+const infoTitleStyle = {
+  color: 'var(--text2)', fontWeight: 'bold', fontSize: '12px', marginBottom: '8px',
+};
+
+const matrixCellStyle = {
+  padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--border)',
+  backgroundColor: 'var(--bg0)', display: 'flex', flexDirection: 'column',
 };
 
 export default EconomicClock;
