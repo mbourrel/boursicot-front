@@ -254,7 +254,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             {d.sector}{d.industry && d.industry !== d.sector ? ` — ${d.industry}` : ''}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'stretch' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '24px', alignItems: 'stretch' }}>
             {/* Description */}
             <p style={{ color: 'var(--text3)', lineHeight: '1.7', fontSize: '13px', margin: 0 }}>{d.description}</p>
 
@@ -265,8 +265,8 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
               display: 'flex', flexDirection: 'column',
             }}>
               <div style={{
-                padding: '10px 14px', borderBottom: '1px solid var(--border)',
-                fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.08em',
+                padding: '14px 18px', borderBottom: '1px solid var(--border)',
+                fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.08em',
                 color: 'var(--text3)', textTransform: 'uppercase',
               }}>
                 Informations générales
@@ -275,18 +275,18 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                 {identityItems.map(({ icon, label, value, isLink }) => (
                   <div key={label} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '10px 14px', borderBottom: '1px solid var(--border)',
-                    flex: 1, gap: '12px',
+                    padding: '13px 18px', borderBottom: '1px solid var(--border)',
+                    flex: 1, gap: '16px',
                   }}>
-                    <span style={{ color: 'var(--text3)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                      <span>{icon}</span>{label}
+                    <span style={{ color: 'var(--text3)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      <span style={{ fontSize: '15px' }}>{icon}</span>{label}
                     </span>
                     {isLink
                       ? <a href={value} target="_blank" rel="noopener noreferrer"
-                          style={{ color: '#2962FF', fontSize: '12px', fontWeight: '500', textDecoration: 'none', textAlign: 'right', wordBreak: 'break-all' }}>
+                          style={{ color: '#2962FF', fontSize: '14px', fontWeight: '500', textDecoration: 'none', textAlign: 'right', wordBreak: 'break-all' }}>
                           {value.replace(/^https?:\/\/(www\.)?/, '')}
                         </a>
-                      : <span style={{ color: 'var(--text2)', fontSize: '12px', fontWeight: '600', textAlign: 'right' }}>{value}</span>
+                      : <span style={{ color: 'var(--text2)', fontSize: '14px', fontWeight: '600', textAlign: 'right' }}>{value}</span>
                     }
                   </div>
                 ))}
