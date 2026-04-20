@@ -226,26 +226,84 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
       );
     };
 
+    const d = primaryData;
+
+    // Formatage effectif
+    const fmtEmployees = (n) => {
+      if (!n) return null;
+      if (n >= 1000) return `${(n / 1000).toFixed(0)} k`;
+      return n.toString();
+    };
+
+    const identityItems = [
+      d.industry    && { icon: '🏭', label: 'Industrie',       value: d.industry },
+      d.country     && { icon: '📍', label: 'Siège',           value: [d.city, d.country].filter(Boolean).join(', ') },
+      d.ipo_date    && { icon: '📅', label: 'Introduction',    value: new Date(d.ipo_date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) },
+      d.employees   && { icon: '👥', label: 'Effectif',        value: `${fmtEmployees(d.employees)} employés` },
+      d.exchange    && { icon: '🏦', label: 'Bourse',          value: d.exchange },
+      d.currency    && { icon: '💱', label: 'Devise',          value: d.currency },
+      d.website     && { icon: '🔗', label: 'Site web',        value: d.website, isLink: true },
+    ].filter(Boolean);
+
     return (
       <div>
-        <div style={{ marginBottom: '28px' }}>
-          <h2 style={{ color: 'var(--text1)', fontSize: '26px', marginBottom: '4px' }}>{primaryData.name}</h2>
-          <div style={{ color: '#2962FF', fontWeight: 'bold', marginBottom: '12px', fontSize: '13px' }}>
-            Secteur : {primaryData.sector}
+        {/* ── EN-TÊTE : description + fiche d'identité ── */}
+        <div style={{ marginBottom: '32px' }}>
+          <h2 style={{ color: 'var(--text1)', fontSize: '26px', marginBottom: '2px' }}>{d.name}</h2>
+          <div style={{ color: '#2962FF', fontWeight: 'bold', marginBottom: '18px', fontSize: '13px' }}>
+            {d.sector}{d.industry && d.industry !== d.sector ? ` — ${d.industry}` : ''}
           </div>
-          <p style={{ color: 'var(--text3)', maxWidth: '960px', lineHeight: '1.6', fontSize: '13px' }}>{primaryData.description}</p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '24px', alignItems: 'start' }}>
+            {/* Description */}
+            <p style={{ color: 'var(--text3)', lineHeight: '1.7', fontSize: '13px', margin: 0 }}>{d.description}</p>
+
+            {/* Fiche d'identité */}
+            <div style={{
+              backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
+              borderRadius: '10px', overflow: 'hidden', flexShrink: 0,
+            }}>
+              <div style={{
+                padding: '10px 14px', borderBottom: '1px solid var(--border)',
+                fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.08em',
+                color: 'var(--text3)', textTransform: 'uppercase',
+              }}>
+                Informations générales
+              </div>
+              <div style={{ padding: '4px 0' }}>
+                {identityItems.map(({ icon, label, value, isLink }) => (
+                  <div key={label} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '8px 14px', borderBottom: '1px solid var(--border)',
+                    gap: '12px',
+                  }}>
+                    <span style={{ color: 'var(--text3)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      <span>{icon}</span>{label}
+                    </span>
+                    {isLink
+                      ? <a href={value} target="_blank" rel="noopener noreferrer"
+                          style={{ color: '#2962FF', fontSize: '12px', fontWeight: '500', textDecoration: 'none', textAlign: 'right', wordBreak: 'break-all' }}>
+                          {value.replace(/^https?:\/\/(www\.)?/, '')}
+                        </a>
+                      : <span style={{ color: 'var(--text2)', fontSize: '12px', fontWeight: '600', textAlign: 'right' }}>{value}</span>
+                    }
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {renderCategory('1. Analyse de Marché',               primaryData.market_analysis)}
-        {renderCategory('2. Santé Financière',                primaryData.financial_health)}
-        {renderCategory('3. Valorisation Avancée',            primaryData.advanced_valuation)}
-        {renderCategory('4. Compte de Résultat & Croissance', primaryData.income_growth)}
-        {renderCategory('5. Bilan & Liquidité',               primaryData.balance_cash)}
-        {renderCategory('6. Risque & Marché',                 primaryData.risk_market)}
+        {renderCategory('1. Analyse de Marché',               d.market_analysis)}
+        {renderCategory('2. Santé Financière',                d.financial_health)}
+        {renderCategory('3. Valorisation Avancée',            d.advanced_valuation)}
+        {renderCategory('4. Compte de Résultat & Croissance', d.income_growth)}
+        {renderCategory('5. Bilan & Liquidité',               d.balance_cash)}
+        {renderCategory('6. Risque & Marché',                 d.risk_market)}
 
-        {renderStatement('7. Compte de Résultat — Historique (4 ans)', primaryData.income_stmt_data)}
-        {renderStatement('8. Bilan Comptable — Historique (4 ans)',     primaryData.balance_sheet_data)}
-        {renderStatement('9. Flux de Trésorerie — Historique (4 ans)',  primaryData.cashflow_data)}
+        {renderStatement('7. Compte de Résultat — Historique (4 ans)', d.income_stmt_data)}
+        {renderStatement('8. Bilan Comptable — Historique (4 ans)',     d.balance_sheet_data)}
+        {renderStatement('9. Flux de Trésorerie — Historique (4 ans)',  d.cashflow_data)}
       </div>
     );
   }
