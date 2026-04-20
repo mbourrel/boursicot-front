@@ -8,7 +8,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   const chartInstanceRef = useRef(null);
   const allDataRef = useRef({});
   const debounceTimerRef   = useRef(null);
-  const candleIntervalRef  = useRef(candleInterval);
+  const candleIntervalRef  = useRef('1D');
 
   const [timeRange, setTimeRange] = useState('1Y');
   const [candleInterval, setCandleInterval] = useState('1D');
