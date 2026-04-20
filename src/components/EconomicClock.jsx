@@ -202,10 +202,12 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
           <div style={{ ...infoSectionStyle, marginBottom: 0 }}>
             <div style={infoTitleStyle}>Comment lire le graphique historique ?</div>
             <p style={{ ...infoTextStyle, marginBottom: '10px' }}>
-              Le graphique retrace le <strong style={{ color: 'var(--text2)' }}>cycle économique depuis 1998</strong> en données
-              mensuelles (~320 points). Chaque segment de la courbe est coloré selon la phase dans laquelle l'économie
-              se trouvait à ce moment-là, permettant de visualiser d'un coup d'œil les transitions de régime
-              et leur durée. On y retrouve notamment la bulle internet (2001), la crise des subprimes (2008–2009),
+              Le graphique retrace le <strong style={{ color: 'var(--text2)' }}>cycle économique depuis 1948</strong> en données
+              mensuelles (~920 points). C'est l'intégralité de l'historique disponible sur FRED : CPIAUCSL démarre
+              en janvier 1947, ce qui permet de calculer les premières variations YoY dès début 1948.
+              Chaque segment est coloré selon la phase à ce moment-là — on y retrouve notamment
+              la reconstruction d'après-guerre, les chocs pétroliers (1973, 1979), la grande inflation des années 70,
+              la désinflation Volcker (1980–1982), la bulle internet (2001), les subprimes (2008–2009),
               le choc COVID (2020) et la surchauffe post-pandémie (2021–2022).
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
@@ -226,9 +228,9 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
                 </div>
                 <p style={infoTextStyle}>
                   Chaque point correspond à un mois de données FRED.
-                  L'historique couvre <strong style={{ color: 'var(--text2)' }}>depuis janvier 1998</strong> (~320 points mensuels),
-                  ce qui permet d'observer plusieurs cycles économiques complets : bulle internet, subprimes,
-                  COVID, surchauffe post-pandémie. Utilisez la molette pour zoomer sur une période précise.
+                  L'historique couvre <strong style={{ color: 'var(--text2)' }}>depuis début 1948</strong> (~920 points mensuels) —
+                  l'intégralité de ce que FRED met à disposition pour CPIAUCSL. Utilisez la molette pour
+                  zoomer sur une période précise (ex. chocs pétroliers 70s, crise 2008, COVID 2020).
                 </p>
               </div>
             </div>
@@ -328,7 +330,7 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
           {/* En-tête : titre + légende */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
             <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text3)', letterSpacing: '0.06em' }}>
-              HISTORIQUE DES PHASES · DEPUIS 1998
+              HISTORIQUE DES PHASES · DEPUIS 1948
             </div>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               {Object.entries(PHASE_COLORS).map(([name, color]) => (
