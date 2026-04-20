@@ -452,11 +452,11 @@ function CycleHistoryChart({ history, height = 280 }) {
       }}>
         YoY (%)
       </div>
-      {/* Label axe X — dans la zone de graduation, coin inférieur gauche */}
+      {/* Label axe X — flux normal, juste sous le canvas = juste sous l'axe des dates */}
       <div style={{
-        position: 'absolute', bottom: '4px', left: '8px',
+        textAlign: 'center', marginTop: '3px',
         fontSize: '9px', color: '#9ba3ad', opacity: 0.85,
-        pointerEvents: 'none', letterSpacing: '0.03em',
+        letterSpacing: '0.03em', pointerEvents: 'none',
       }}>
         INDPRO mensuel
       </div>
