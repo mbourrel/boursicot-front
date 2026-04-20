@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python3 -c ' *)",
       "Bash(python -c ' *)",
-      "Bash(ls c:/Users/mateo/boursicot-api/*.py)"
+      "Bash(ls c:/Users/mateo/boursicot-api/*.py)",
+      "Read(//c/Users/mateo/**)"
     ]
   }
 }

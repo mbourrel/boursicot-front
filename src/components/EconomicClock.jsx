@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { createChart, LineSeries } from 'lightweight-charts';
 
 // ── Géométrie de la jauge ──────────────────────────────────────────────────
 const CX = 160, CY = 190;
@@ -59,7 +60,7 @@ const PHASE_EXPLANATIONS = {
   },
 };
 
-function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflation_trend, loading, error }) {
+function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflation_trend, loading, error, history, historyLoading }) {
   const [showInfo, setShowInfo] = useState(false);
 
   const activePhase = PHASES.find((p) => p.id === phase);
@@ -247,8 +248,120 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
           />
         </div>
       </div>
+
+      {/* ── Historique des phases ── */}
+      <div style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text3)', letterSpacing: '0.06em' }}>
+            HISTORIQUE DES PHASES · 5 ANS (INDPRO YoY %)
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {Object.entries(PHASE_COLORS).map(([name, color]) => (
+              <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color }} />
+                <span style={{ fontSize: '10px', color: 'var(--text3)' }}>{name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        {historyLoading
+          ? <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: 'var(--text3)', fontSize: '12px' }}>Chargement de l'historique…</span>
+            </div>
+          : <CycleHistoryChart history={history} />
+        }
+      </div>
     </div>
   );
+}
+
+// ── Découpe les données en segments continus par phase ───────────────────────
+function splitByPhase(data) {
+  if (!data || data.length === 0) return [];
+  const segments = [];
+  let current = { phase: data[0].phase, points: [data[0]] };
+  for (let i = 1; i < data.length; i++) {
+    if (data[i].phase === current.phase) {
+      current.points.push(data[i]);
+    } else {
+      // On chevauche le point de jonction pour ne pas avoir de gap visuel
+      current.points.push(data[i]);
+      segments.push(current);
+      current = { phase: data[i].phase, points: [data[i]] };
+    }
+  }
+  segments.push(current);
+  return segments;
+}
+
+function CycleHistoryChart({ history }) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current || !history?.length) return;
+
+    const container = containerRef.current;
+
+    const chart = createChart(container, {
+      layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#9ba3ad' },
+      grid: { vertLines: { color: '#2a2f3a' }, horzLines: { color: '#2a2f3a' } },
+      width: container.clientWidth,
+      height: 160,
+      timeScale: { borderColor: '#2a2f3a', timeVisible: false },
+      rightPriceScale: { borderColor: '#2a2f3a' },
+      crosshair: { vertLine: { color: '#758696aa' }, horzLine: { color: '#758696aa' } },
+      handleScroll: false,
+      handleScale: false,
+    });
+
+    // Ligne de référence à 0 %
+    const zeroSeries = chart.addSeries(LineSeries, {
+      color: '#ffffff25',
+      lineWidth: 1,
+      lineStyle: 2,      // pointillé
+      priceLineVisible: false,
+      lastValueVisible: false,
+      crosshairMarkerVisible: false,
+    });
+    zeroSeries.setData(history.map(p => ({ time: p.date, value: 0 })));
+
+    // Une LineSeries colorée par segment de phase
+    const segments = splitByPhase(history);
+    segments.forEach(({ phase, points }) => {
+      const color = PHASE_COLORS[phase] ?? '#888888';
+      const s = chart.addSeries(LineSeries, {
+        color,
+        lineWidth: 2,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: true,
+        crosshairMarkerRadius: 3,
+      });
+      s.setData(points.map(p => ({ time: p.date, value: p.growth_yoy })));
+    });
+
+    chart.timeScale().fitContent();
+
+    const ro = new ResizeObserver(() => {
+      if (container) chart.applyOptions({ width: container.clientWidth });
+    });
+    ro.observe(container);
+
+    return () => {
+      ro.disconnect();
+      chart.remove();
+    };
+  }, [history]);
+
+  if (!history?.length) {
+    return (
+      <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: 'var(--text3)', fontSize: '12px' }}>Données historiques indisponibles</span>
+      </div>
+    );
+  }
+
+  return <div ref={containerRef} style={{ width: '100%', height: '160px' }} />;
 }
 
 function YoYBlock({ label, value, trend, positiveColor }) {

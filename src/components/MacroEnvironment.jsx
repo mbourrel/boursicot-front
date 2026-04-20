@@ -10,8 +10,10 @@ function MacroEnvironment() {
 
   const [cycleData,       setCycleData]       = useState(null);
   const [liquidityData,   setLiquidityData]   = useState(null);
+  const [cycleHistory,    setCycleHistory]    = useState(null);
   const [cycleLoading,    setCycleLoading]    = useState(true);
   const [liquidityLoading,setLiquidityLoading]= useState(true);
+  const [historyLoading,  setHistoryLoading]  = useState(true);
   const [cycleError,      setCycleError]      = useState(null);
   const [liquidityError,  setLiquidityError]  = useState(null);
 
@@ -31,6 +33,11 @@ function MacroEnvironment() {
     fetchWithDetail(`${API_URL}/macro/cycle`)
       .then((data) => { setCycleData(data); setCycleLoading(false); })
       .catch((err) => { setCycleError(err.message); setCycleLoading(false); });
+
+    // ── Historique du cycle économique ───────────────────────────────────
+    fetchWithDetail(`${API_URL}/macro/cycle/history`)
+      .then((data) => { setCycleHistory(data.history); setHistoryLoading(false); })
+      .catch(() => { setHistoryLoading(false); });
 
     // ── Liquidité M2 vs BTC ───────────────────────────────────────────────
     fetchWithDetail(`${API_URL}/macro/liquidity`)
@@ -66,6 +73,8 @@ function MacroEnvironment() {
         inflation_trend={cycleData?.inflation_trend}
         loading={cycleLoading}
         error={cycleError}
+        history={cycleHistory}
+        historyLoading={historyLoading}
       />
 
       {/* ── Moniteur de liquidité ── */}
