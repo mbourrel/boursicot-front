@@ -80,15 +80,19 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
         
         {/* FILTRE DÉROULANT */}
         {(() => {
-          const activeCount = Object.values(assetFilters).filter(Boolean).length;
-          const total = Object.keys(assetFilters).length;
-          const label = activeCount === total ? 'Tous les actifs' : `${activeCount} / ${total} types`;
           const FILTERS = [
             { key: 'stock',     label: 'Actions' },
             { key: 'index',     label: 'Indices' },
             { key: 'crypto',    label: 'Cryptos' },
             { key: 'commodity', label: 'Matières' },
           ];
+          const activeCount = Object.values(assetFilters).filter(Boolean).length;
+          const total = FILTERS.length;
+          const label = activeCount === 0
+            ? 'Aucun type'
+            : activeCount === total
+              ? 'Tous les types'
+              : FILTERS.filter(f => assetFilters[f.key]).map(f => f.label).join(' · ');
           return (
             <div ref={filterRef} style={{ position: 'relative' }}>
               <button
