@@ -339,34 +339,17 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
             </div>
           </div>
 
-          {/* Graphique avec titres d'axes */}
+          {/* Graphique */}
           {historyLoading
             ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '240px' }}>
                 <span style={{ color: 'var(--text3)', fontSize: '12px' }}>Chargement de l'historique…</span>
               </div>
-            : <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '0' }}>
-                <div style={{ display: 'flex', flex: 1 }}>
-                  {/* Titre axe Y (vertical) */}
-                  <div style={{
-                    writingMode: 'vertical-rl', transform: 'rotate(180deg)',
-                    fontSize: '10px', color: 'var(--text3)',
-                    textAlign: 'center', paddingRight: '4px', flexShrink: 0,
-                    letterSpacing: '0.04em',
-                  }}>
-                    Croissance YoY (%)
-                  </div>
-                  <CycleHistoryChart history={history} height={280} />
+            : <>
+                <CycleHistoryChart history={history} height={280} />
+                <div style={{ textAlign: 'right', fontSize: '10px', color: 'var(--text3)', opacity: 0.6, marginTop: '2px' }}>
+                  molette pour zoomer · double-clic pour réinitialiser
                 </div>
-                {/* Titre axe X + hint interaction */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--text3)', letterSpacing: '0.04em' }}>
-                    Période · données mensuelles (INDPRO)
-                  </div>
-                  <div style={{ fontSize: '10px', color: 'var(--text3)', opacity: 0.6 }}>
-                    molette pour zoomer · double-clic pour réinitialiser
-                  </div>
-                </div>
-              </div>
+              </>
           }
         </div>
       </div>
@@ -458,7 +441,27 @@ function CycleHistoryChart({ history, height = 280 }) {
     );
   }
 
-  return <div ref={containerRef} style={{ width: '100%', height: `${height}px`, flex: 1 }} />;
+  return (
+    <div style={{ position: 'relative', width: '100%', flex: 1 }}>
+      <div ref={containerRef} style={{ width: '100%', height: `${height}px` }} />
+      {/* Label axe Y — dans la zone de graduation, coin supérieur droit */}
+      <div style={{
+        position: 'absolute', top: '4px', right: '4px',
+        fontSize: '9px', color: '#9ba3ad', opacity: 0.85,
+        pointerEvents: 'none', letterSpacing: '0.03em',
+      }}>
+        YoY (%)
+      </div>
+      {/* Label axe X — dans la zone de graduation, coin inférieur gauche */}
+      <div style={{
+        position: 'absolute', bottom: '4px', left: '8px',
+        fontSize: '9px', color: '#9ba3ad', opacity: 0.85,
+        pointerEvents: 'none', letterSpacing: '0.03em',
+      }}>
+        INDPRO mensuel
+      </div>
+    </div>
+  );
 }
 
 function YoYBlock({ label, value, trend, positiveColor }) {
