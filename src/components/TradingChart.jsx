@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, CandlestickSeries, LineSeries, HistogramSeries } from 'lightweight-charts';
+import { useTheme } from '../context/ThemeContext';
 
 const CHART_HEIGHT = 550;
 
@@ -16,13 +17,13 @@ const DRAW_TOOLS = [
 const DRAW_COLORS = ['#f59e0b', '#ef5350', '#26a69a', '#2962FF', '#9c27b0', '#e0e0e0'];
 
 const FIB_LEVELS = [
-  { r: 0,     label: '0%',    color: '#d1d4dc', dash: '' },
+  { r: 0,     label: '0%',    color: 'var(--text2)', dash: '' },
   { r: 0.236, label: '23.6%', color: '#2962FF', dash: '4 2' },
   { r: 0.382, label: '38.2%', color: '#26a69a', dash: '4 2' },
   { r: 0.5,   label: '50%',   color: '#ff9800', dash: '6 2' },
   { r: 0.618, label: '61.8%', color: '#26a69a', dash: '4 2' },
   { r: 0.786, label: '78.6%', color: '#2962FF', dash: '4 2' },
-  { r: 1,     label: '100%',  color: '#d1d4dc', dash: '' },
+  { r: 1,     label: '100%',  color: 'var(--text2)', dash: '' },
 ];
 
 // Prolonge une ligne (p1→p2) jusqu'aux bords du SVG (largeur W)
@@ -34,6 +35,7 @@ const extendLine = (p1, p2, W) => {
 };
 
 function TradingChart({ selectedSymbol, allAssets = [] }) {
+  const { theme, isDark } = useTheme();
   const getName = (ticker) => allAssets.find(a => a.ticker === ticker)?.name || ticker;
   const chartContainerRef = useRef();
   const chartInstanceRef  = useRef(null);
@@ -185,8 +187,8 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
     if (!chartContainerRef.current || !selectedSymbol) return;
 
     const chart = createChart(chartContainerRef.current, {
-      layout: { background: { type: 'solid', color: '#131722' }, textColor: '#d1d4dc' },
-      grid: { vertLines: { color: '#2B2B43' }, horzLines: { color: '#2B2B43' } },
+      layout: { background: { type: 'solid', color: theme.chartBg }, textColor: theme.chartText },
+      grid: { vertLines: { color: theme.chartGrid }, horzLines: { color: theme.chartGrid } },
       width: chartContainerRef.current.clientWidth,
       height: CHART_HEIGHT,
       timeScale: { timeVisible: true, minBarSpacing: 0.001 },
@@ -295,7 +297,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [selectedSymbol, candleInterval, API_URL]);
+  }, [selectedSymbol, candleInterval, isDark, API_URL]);
 
   // ── Rendu SVG : calcul des éléments ────────────────────────────────────────
   void svgTick; // référencé pour déclencher le re-render au scroll
@@ -308,7 +310,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
       return (
         <g key={d.id}>
           <line x1={0} y1={y} x2={W} y2={y} stroke={d.color} strokeWidth="1.5" strokeDasharray="6 3" />
-          <rect x={W - 66} y={y - 10} width={65} height={14} fill="#131722cc" rx="2" />
+          <rect x={W - 66} y={y - 10} width={65} height={14} fill={theme.bg1 + 'cc'} rx="2" />
           <text x={W - 63} y={y + 1} fill={d.color} fontSize="10" fontFamily="monospace">{d.price.toFixed(2)}</text>
         </g>
       );
@@ -349,7 +351,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
             return (
               <g key={fib.r}>
                 <line x1={0} y1={y} x2={W} y2={y} stroke={fib.color} strokeWidth="1" strokeDasharray={fib.dash || undefined} opacity="0.85" />
-                <rect x={W - 76} y={y - 9} width={75} height={13} fill="#131722cc" rx="2" />
+                <rect x={W - 76} y={y - 9} width={75} height={13} fill={theme.bg1 + 'cc'} rx="2" />
                 <text x={W - 73} y={y + 1} fill={fib.color} fontSize="9.5" fontFamily="monospace">{fib.label} {price.toFixed(2)}</text>
               </g>
             );
@@ -390,8 +392,8 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
   // ── Styles ──────────────────────────────────────────────────────────────────
   const filterBtnStyle = (isActive, activeColor = '#2962FF') => ({
     padding: '6px 10px', background: isActive ? activeColor : 'transparent',
-    color: isActive ? 'white' : '#8a919e',
-    border: `1px solid ${isActive ? activeColor : '#2B2B43'}`,
+    color: isActive ? 'white' : 'var(--text3)',
+    border: `1px solid ${isActive ? activeColor : 'var(--border)'}`,
     borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', transition: 'all 0.2s',
   });
 
@@ -412,16 +414,16 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
     : null;
 
   return (
-    <div style={{ backgroundColor: '#131722', padding: '15px', borderRadius: '12px', border: '1px solid #2B2B43' }}>
+    <div style={{ backgroundColor: 'var(--bg1)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border)' }}>
 
       {/* ── BARRE DE CONTRÔLE ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '15px', borderBottom: '1px solid #2B2B43', paddingBottom: '15px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '15px' }}>
 
         {/* Ligne 1 : Bougies + Zoom */}
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px' }}>
           <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: '#8a919e', marginRight: '5px' }}>BOUGIES :</span>
+              <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '5px' }}>BOUGIES :</span>
               {['15m', '1h', '1D', '1W'].map(iv => (
                 <button key={iv} style={filterBtnStyle(candleInterval === iv)} onClick={() => setCandleInterval(iv)}>
                   {iv === '15m' ? '15 Min' : iv === '1h' ? '1 Heure' : iv === '1D' ? 'Jour' : 'Semaine'}
@@ -429,7 +431,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
               ))}
             </div>
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: '#8a919e', marginRight: '5px' }}>ZOOM :</span>
+              <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '5px' }}>ZOOM :</span>
               {['1W', '1M', '3M', '6M', '1Y', '5Y', 'ALL'].map(r => (
                 <button key={r} style={filterBtnStyle(timeRange === r)} onClick={() => { setTimeRange(r); applyTimeRange(r); }}>
                   {r === 'ALL' ? 'Tout' : r}
@@ -442,7 +444,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
         {/* Ligne 2 : Indicateurs + bouton Dessiner */}
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '11px', color: '#8a919e', marginRight: '5px' }}>INDICATEURS :</span>
+            <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '5px' }}>INDICATEURS :</span>
             <button style={filterBtnStyle(indicators.volume)}              onClick={() => toggleIndicator('volume')}>Volumes</button>
             <button style={filterBtnStyle(indicators.bb)}                  onClick={() => toggleIndicator('bb')}>Bollinger</button>
             <button style={filterBtnStyle(indicators.atr, '#e91e63')}     onClick={() => toggleIndicator('atr')}>Volatilité (ATR)</button>
@@ -465,11 +467,11 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
 
         {/* Ligne 3 : Palette de dessin (conditionnelle) */}
         {showDrawTools && (
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', padding: '10px 14px', backgroundColor: '#1a1e2e', borderRadius: '8px', border: '1px solid #2B2B43' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', padding: '10px 14px', backgroundColor: 'var(--bg2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
 
             {/* Outils */}
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '11px', color: '#8a919e', marginRight: '4px' }}>OUTIL :</span>
+              <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '4px' }}>OUTIL :</span>
               {DRAW_TOOLS.map(t => (
                 <button
                   key={t.id}
@@ -481,11 +483,11 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
               ))}
             </div>
 
-            <div style={{ width: '1px', height: '24px', backgroundColor: '#2B2B43', flexShrink: 0 }} />
+            <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)', flexShrink: 0 }} />
 
             {/* Couleurs */}
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: '#8a919e', marginRight: '2px' }}>COULEUR :</span>
+              <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '2px' }}>COULEUR :</span>
               {DRAW_COLORS.map(c => (
                 <button
                   key={c}
@@ -500,7 +502,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
               ))}
             </div>
 
-            <div style={{ width: '1px', height: '24px', backgroundColor: '#2B2B43', flexShrink: 0 }} />
+            <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)', flexShrink: 0 }} />
 
             {/* Actions */}
             <button
@@ -519,7 +521,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
 
             {/* Hint contextuel */}
             {hintText && (
-              <span style={{ fontSize: '11px', color: '#8a919e', fontStyle: 'italic', marginLeft: '4px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text3)', fontStyle: 'italic', marginLeft: '4px' }}>
                 {hintText}
               </span>
             )}
@@ -532,8 +534,8 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
 
         {/* Légende crosshair */}
         <div style={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', flexWrap: 'wrap', gap: '10px', backgroundColor: 'rgba(19, 23, 34, 0.8)', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', maxWidth: '90%', pointerEvents: 'none' }}>
-          <span style={{ color: '#d1d4dc' }}>{getName(selectedSymbol)} {legendData.close && `$${legendData.close}`}</span>
-          {indicators.volume && legendData.volume !== undefined && <span style={{ color: '#8a919e' }}>Vol: {formatVal(legendData.volume)}</span>}
+          <span style={{ color: 'var(--text2)' }}>{getName(selectedSymbol)} {legendData.close && `$${legendData.close}`}</span>
+          {indicators.volume && legendData.volume !== undefined && <span style={{ color: 'var(--text3)' }}>Vol: {formatVal(legendData.volume)}</span>}
           {indicators.ma10   && legendData.ma10    && <span style={{ color: '#00bcd4' }}>MM10: {legendData.ma10}</span>}
           {indicators.ma100  && legendData.ma100   && <span style={{ color: '#ff9800' }}>MM100: {legendData.ma100}</span>}
           {indicators.ma200  && legendData.ma200   && <span style={{ color: '#9c27b0' }}>MM200: {legendData.ma200}</span>}

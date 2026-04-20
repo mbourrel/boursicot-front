@@ -63,8 +63,8 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
             title="Comment interpréter ce graphique ?"
             style={{
               background: showInfo ? '#2962FF22' : 'transparent',
-              border: `1px solid ${showInfo ? '#2962FF' : '#2B2B43'}`,
-              color: showInfo ? '#2962FF' : '#8a919e',
+              border: `1px solid ${showInfo ? '#2962FF' : 'var(--border)'}`,
+              color: showInfo ? '#2962FF' : 'var(--text3)',
               borderRadius: '50%', width: '22px', height: '22px',
               cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -74,7 +74,7 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
             i
           </button>
         </div>
-        <div style={{ display: 'flex', gap: '18px', fontSize: '12px', color: '#d1d4dc' }}>
+        <div style={{ display: 'flex', gap: '18px', fontSize: '12px', color: 'var(--text2)' }}>
           <span>
             <span style={{ color: '#60A5FA', fontWeight: 'bold', marginRight: '5px' }}>—</span>M2 USA
           </span>
@@ -114,16 +114,16 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
                 Base 100 — Lecture du graphique
               </div>
               <p style={infoTextStyle}>
-                Les deux séries sont normalisées à <strong style={{ color: '#d1d4dc' }}>100 en janvier 2020</strong> pour
+                Les deux séries sont normalisées à <strong style={{ color: 'var(--text2)' }}>100 en janvier 2020</strong> pour
                 pouvoir comparer leur trajectoire relative, indépendamment de leurs niveaux absolus (M2 est en trillions
                 de dollars, BTC en milliers de dollars). Une valeur de 150 signifie +50 % depuis le point de départ.
                 La ligne pointillée marque la base 100.
               </p>
             </div>
           </div>
-          <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: '#1a1e2e', border: '1px solid #2962FF40' }}>
+          <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--bg2)', border: '1px solid #2962FF40' }}>
             <span style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '11px' }}>Signal à surveiller : </span>
-            <span style={{ color: '#8a919e', fontSize: '11px' }}>
+            <span style={{ color: 'var(--text3)', fontSize: '11px' }}>
               Quand la courbe M2 repart à la hausse après une contraction, c'est historiquement un signal
               précurseur d'un rallye Bitcoin à horizon 3-6 mois. Quand BTC diverge fortement au-dessus de M2,
               un recalibrage est possible.
@@ -139,8 +139,8 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
       >
         {yTicks.map((t, i) => (
           <g key={i}>
-            <line x1={ML} y1={t.y} x2={ML + PW} y2={t.y} stroke="#2B2B43" strokeWidth="1" />
-            <text x={ML - 6} y={t.y + 4} textAnchor="end" fontSize="11" fill="#8a919e" fontFamily="sans-serif">
+            <line x1={ML} y1={t.y} x2={ML + PW} y2={t.y} style={{ stroke: 'var(--border)' }} strokeWidth="1" />
+            <text x={ML - 6} y={t.y + 4} textAnchor="end" fontSize="11" style={{ fill: 'var(--text3)' }} fontFamily="sans-serif">
               {t.label}
             </text>
           </g>
@@ -156,19 +156,19 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
 
         {xTicks.map((t, i) => (
           <g key={i}>
-            <line x1={t.x} y1={MT} x2={t.x} y2={MT + PH} stroke="#2B2B43" strokeWidth="0.5" />
-            <text x={t.x} y={MT + PH + 16} textAnchor="middle" fontSize="10" fill="#8a919e" fontFamily="sans-serif">
+            <line x1={t.x} y1={MT} x2={t.x} y2={MT + PH} style={{ stroke: 'var(--border)' }} strokeWidth="0.5" />
+            <text x={t.x} y={MT + PH + 16} textAnchor="middle" fontSize="10" style={{ fill: 'var(--text3)' }} fontFamily="sans-serif">
               {t.label}
             </text>
           </g>
         ))}
 
-        <line x1={ML} y1={MT} x2={ML} y2={MT + PH} stroke="#2B2B43" strokeWidth="1" />
-        <line x1={ML} y1={MT + PH} x2={ML + PW} y2={MT + PH} stroke="#2B2B43" strokeWidth="1" />
+        <line x1={ML} y1={MT} x2={ML} y2={MT + PH} style={{ stroke: 'var(--border)' }} strokeWidth="1" />
+        <line x1={ML} y1={MT + PH} x2={ML + PW} y2={MT + PH} style={{ stroke: 'var(--border)' }} strokeWidth="1" />
 
         <text
           transform={`translate(13,${MT + PH / 2}) rotate(-90)`}
-          textAnchor="middle" fontSize="10" fill="#8a919e" fontFamily="sans-serif"
+          textAnchor="middle" fontSize="10" style={{ fill: 'var(--text3)' }} fontFamily="sans-serif"
         >
           Base 100 (janv. 2020)
         </text>
@@ -195,7 +195,7 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
   );
 }
 
-function Placeholder({ children, color = '#8a919e' }) {
+function Placeholder({ children, color = 'var(--text3)' }) {
   return (
     <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
       <span style={{ color, fontSize: '13px' }}>{children}</span>
@@ -204,20 +204,20 @@ function Placeholder({ children, color = '#8a919e' }) {
 }
 
 const cardStyle = {
-  backgroundColor: '#131722', padding: '20px', borderRadius: '12px', border: '1px solid #2B2B43',
+  backgroundColor: 'var(--bg1)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)',
 };
 const titleStyle = {
-  margin: 0, color: '#d1d4dc', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.06em',
+  margin: 0, color: 'var(--text2)', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.06em',
 };
 const infoPanelStyle = {
-  backgroundColor: '#0d1117', border: '1px solid #2B2B43', borderRadius: '8px',
+  backgroundColor: 'var(--bg0)', border: '1px solid var(--border)', borderRadius: '8px',
   padding: '14px 16px', marginBottom: '16px',
 };
 const blockStyle = {
-  padding: '10px 12px', borderRadius: '8px', border: '1px solid #2B2B43', backgroundColor: '#131722',
+  padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--bg1)',
 };
 const infoTextStyle = {
-  margin: 0, color: '#8a919e', fontSize: '11px', lineHeight: '1.6',
+  margin: 0, color: 'var(--text3)', fontSize: '11px', lineHeight: '1.6',
 };
 
 export default LiquidityMonitor;

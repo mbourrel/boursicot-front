@@ -43,15 +43,15 @@ function MacroEnvironment() {
 
       {/* ── En-tête de section ── */}
       <div style={{
-        backgroundColor: '#1a1e2e', borderRadius: '10px', border: '1px solid #2B2B43',
+        backgroundColor: 'var(--bg2)', borderRadius: '10px', border: '1px solid var(--border)',
         padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '10px',
       }}>
         <span style={{ fontSize: '18px' }}>🌐</span>
         <div>
-          <div style={{ color: '#d1d4dc', fontWeight: 'bold', fontSize: '15px' }}>
+          <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '15px' }}>
             Environnement Macro Global
           </div>
-          <div style={{ color: '#8a919e', fontSize: '12px', marginTop: '2px' }}>
+          <div style={{ color: 'var(--text3)', fontSize: '12px', marginTop: '2px' }}>
             Cycle économique · Liquidité mondiale · Positionnement recommandé par classe d'actifs
           </div>
         </div>

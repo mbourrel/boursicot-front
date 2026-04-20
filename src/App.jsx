@@ -48,13 +48,13 @@ function App() {
 
   const toggleBtnStyle = (active) => ({
     padding: '7px 16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
-    border: '1px solid #2B2B43', transition: 'all 0.2s',
-    background: active ? '#2962FF' : '#1e222d',
-    color: active ? 'white' : '#8a919e',
+    border: '1px solid var(--border)', transition: 'all 0.2s',
+    background: active ? '#2962FF' : 'var(--bg3)',
+    color: active ? 'white' : 'var(--text3)',
   });
 
   return (
-    <div style={{ backgroundColor: '#0b0e11', minHeight: '100vh', padding: '20px', color: 'white', fontFamily: 'sans-serif' }}>
+    <div style={{ backgroundColor: 'var(--bg0)', minHeight: '100vh', padding: '20px', color: 'var(--text1)', fontFamily: 'sans-serif' }}>
 
       <div style={{
         backgroundColor: '#1a1400', border: '1px solid #f59e0b40',

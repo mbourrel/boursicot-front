@@ -74,7 +74,7 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
     });
   }, []);
 
-  const phaseColor = PHASE_COLORS[phase] ?? '#d1d4dc';
+  const phaseColor = PHASE_COLORS[phase] ?? 'var(--text2)';
   const phaseExpl = PHASE_EXPLANATIONS[phase];
 
   if (loading) return <Placeholder>Chargement du cycle économique…</Placeholder>;
@@ -83,8 +83,8 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
   return (
     <div style={cardStyle}>
       {/* Titre + bouton info */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #2B2B43', paddingBottom: '10px' }}>
-        <h3 style={{ margin: 0, color: '#d1d4dc', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.06em' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+        <h3 style={{ margin: 0, color: 'var(--text2)', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.06em' }}>
           HORLOGE ÉCONOMIQUE
         </h3>
         <button
@@ -92,8 +92,8 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
           title="Comment interpréter cet indicateur ?"
           style={{
             background: showInfo ? '#2962FF22' : 'transparent',
-            border: `1px solid ${showInfo ? '#2962FF' : '#2B2B43'}`,
-            color: showInfo ? '#2962FF' : '#8a919e',
+            border: `1px solid ${showInfo ? '#2962FF' : 'var(--border)'}`,
+            color: showInfo ? '#2962FF' : 'var(--text3)',
             borderRadius: '50%', width: '22px', height: '22px',
             cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -108,11 +108,11 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
       {showInfo && (
         <div style={infoPanelStyle}>
           <div style={{ marginBottom: '14px' }}>
-            <div style={{ color: '#d1d4dc', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
+            <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
               Comment fonctionne l'horloge économique ?
             </div>
             <p style={infoTextStyle}>
-              L'horloge positionne l'économie dans un <strong style={{ color: '#d1d4dc' }}>cycle en 4 phases</strong> en croisant
+              L'horloge positionne l'économie dans un <strong style={{ color: 'var(--text2)' }}>cycle en 4 phases</strong> en croisant
               deux variables clés : la croissance réelle et l'inflation. La phase détermine quels actifs sont
               historiquement favorisés ou pénalisés.
             </p>
@@ -122,13 +122,13 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
             {Object.entries(PHASE_EXPLANATIONS).map(([name, expl]) => (
               <div key={name} style={{
                 padding: '10px 12px', borderRadius: '8px',
-                border: `1px solid ${name === phase ? expl.color : '#2B2B43'}`,
-                backgroundColor: name === phase ? `${expl.color}15` : '#0d1117',
+                border: `1px solid ${name === phase ? expl.color : 'var(--border)'}`,
+                backgroundColor: name === phase ? `${expl.color}15` : 'var(--bg0)',
               }}>
                 <div style={{ color: expl.color, fontWeight: 'bold', fontSize: '12px', marginBottom: '3px' }}>
                   {name} {name === phase && <span style={{ fontSize: '10px', opacity: 0.8 }}>← actuel</span>}
                 </div>
-                <div style={{ color: '#8a919e', fontSize: '11px', marginBottom: '5px' }}>{expl.summary}</div>
+                <div style={{ color: 'var(--text3)', fontSize: '11px', marginBottom: '5px' }}>{expl.summary}</div>
                 <div style={{ color: '#b0b8c4', fontSize: '11px', lineHeight: '1.5' }}>{expl.detail}</div>
               </div>
             ))}
@@ -164,7 +164,7 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
               key={p.id}
               d={arcPath(CX, CY, OUTER_R, INNER_R, p.start, p.end)}
               fill={p.id === phase ? p.color : `${p.color}45`}
-              stroke="#131722"
+              style={{ stroke: 'var(--bg1)' }}
               strokeWidth="2"
               style={{ transition: 'fill 0.5s ease' }}
             />
@@ -179,7 +179,7 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
               fontSize="10.5"
               fontWeight="bold"
               fontFamily="sans-serif"
-              fill={p.id === phase ? 'white' : '#8a919e'}
+              style={{ fill: p.id === phase ? 'var(--text1)' : 'var(--text3)' }}
               style={{ transition: 'fill 0.5s ease', userSelect: 'none' }}
             >
               {p.id}
@@ -207,11 +207,11 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
             />
           </g>
 
-          <circle cx={CX} cy={CY} r="7" fill="#1e222d" stroke="white" strokeWidth="2" />
+          <circle cx={CX} cy={CY} r="7" style={{ fill: 'var(--bg3)', stroke: 'var(--text1)' }} strokeWidth="2" />
           <line
             x1={CX - OUTER_R - 6} y1={CY}
             x2={CX + OUTER_R + 6} y2={CY}
-            stroke="#2B2B43" strokeWidth="1"
+            style={{ stroke: 'var(--border)' }} strokeWidth="1"
           />
         </svg>
 
@@ -225,20 +225,20 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
               {phaseExpl.summary}
             </div>
           )}
-          <div style={{ fontSize: '11px', color: '#8a919e', marginTop: '3px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '3px' }}>
             Phase de marché actuelle
           </div>
         </div>
 
         {/* ── Indicateurs YoY ── */}
-        <div style={{ display: 'flex', gap: '32px', paddingTop: '8px', borderTop: '1px solid #2B2B43', width: '100%', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: '32px', paddingTop: '8px', borderTop: '1px solid var(--border)', width: '100%', justifyContent: 'center' }}>
           <YoYBlock
             label="Croissance (INDPRO)"
             value={growth_yoy}
             trend={growth_trend}
             positiveColor="#26a69a"
           />
-          <div style={{ width: '1px', backgroundColor: '#2B2B43' }} />
+          <div style={{ width: '1px', backgroundColor: 'var(--border)' }} />
           <YoYBlock
             label="Inflation (CPI)"
             value={inflation_yoy}
@@ -255,8 +255,8 @@ function YoYBlock({ label, value, trend, positiveColor }) {
   const trendColor = trend === 'up' ? positiveColor : (positiveColor === '#ef5350' ? '#26a69a' : '#ef5350');
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: '11px', color: '#8a919e', marginBottom: '5px' }}>{label}</div>
-      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#d1d4dc' }}>
+      <div style={{ fontSize: '11px', color: 'var(--text3)', marginBottom: '5px' }}>{label}</div>
+      <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text2)' }}>
         {value != null ? `${value > 0 ? '+' : ''}${value.toFixed(1)}%` : '—'}
         {trend && (
           <span style={{ marginLeft: '5px', fontSize: '18px', color: trendColor }}>
@@ -268,7 +268,7 @@ function YoYBlock({ label, value, trend, positiveColor }) {
   );
 }
 
-function Placeholder({ children, color = '#8a919e' }) {
+function Placeholder({ children, color = 'var(--text3)' }) {
   return (
     <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
       <span style={{ color, fontSize: '13px' }}>{children}</span>
@@ -277,20 +277,20 @@ function Placeholder({ children, color = '#8a919e' }) {
 }
 
 const cardStyle = {
-  backgroundColor: '#131722', padding: '20px', borderRadius: '12px', border: '1px solid #2B2B43',
+  backgroundColor: 'var(--bg1)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)',
 };
 
 const infoPanelStyle = {
-  backgroundColor: '#0d1117', border: '1px solid #2B2B43', borderRadius: '8px',
+  backgroundColor: 'var(--bg0)', border: '1px solid var(--border)', borderRadius: '8px',
   padding: '14px 16px', marginBottom: '18px',
 };
 
 const infoTextStyle = {
-  margin: 0, color: '#8a919e', fontSize: '11px', lineHeight: '1.6',
+  margin: 0, color: 'var(--text3)', fontSize: '11px', lineHeight: '1.6',
 };
 
 const indicatorExplStyle = {
-  padding: '10px 12px', borderRadius: '8px', border: '1px solid #2B2B43', backgroundColor: '#0d1117',
+  padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--bg0)',
 };
 
 export default EconomicClock;

@@ -32,7 +32,7 @@ function MetricInfo({ name }) {
         style={{
           background: pos ? '#2962FF22' : 'transparent',
           border: `1px solid ${pos ? '#2962FF88' : '#3a3f5a'}`,
-          color: pos ? '#2962FF' : '#8a919e',
+          color: pos ? '#2962FF' : 'var(--text3)',
           borderRadius: '50%', width: '14px', height: '14px',
           fontSize: '9px', fontWeight: 'bold', cursor: 'pointer',
           padding: 0, lineHeight: 1, flexShrink: 0,
@@ -56,12 +56,12 @@ function MetricInfo({ name }) {
             top: pos.top, left: pos.left,
             transform: pos.transform ?? 'none',
             zIndex: 999, width: '260px',
-            backgroundColor: '#1a1e2e', border: '1px solid #2962FF44',
+            backgroundColor: 'var(--bg2)', border: '1px solid #2962FF44',
             borderRadius: '8px', padding: '10px 12px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
             fontSize: '11px', color: '#b0b8c4', lineHeight: '1.65',
           }}>
-            <div style={{ color: '#d1d4dc', fontWeight: 'bold', fontSize: '11px', marginBottom: '5px' }}>{name}</div>
+            <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '11px', marginBottom: '5px' }}>{name}</div>
             {text}
           </div>
         </>,
@@ -125,7 +125,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     return typeof r === 'string' ? r : '—';
   };
 
-  if (loading) return <p style={{ color: '#8a919e' }}>Chargement...</p>;
+  if (loading) return <p style={{ color: 'var(--text3)' }}>Chargement...</p>;
 
   const isSolo      = allSymbols.length === 1;
   const primaryData = dataMap[selectedSymbol];
@@ -135,7 +135,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
   // ══════════════════════════════════════════════════════════════════════════
   if (isSolo) {
     if (errors[selectedSymbol]) return <p style={{ color: '#ef5350' }}>Aucune donnée disponible pour {selectedSymbol}</p>;
-    if (!primaryData)           return <p style={{ color: '#8a919e' }}>Aucune donnée disponible.</p>;
+    if (!primaryData)           return <p style={{ color: 'var(--text3)' }}>Aucune donnée disponible.</p>;
 
     const renderCategory = (title, dataArray) => {
       if (!dataArray || dataArray.length === 0) return null;
@@ -145,15 +145,15 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
             {dataArray.map((metric, i) => (
               <div key={i} style={cardStyle}>
-                <span style={{ color: '#8a919e', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text3)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
                   {metric.name}
                   <MetricInfo name={metric.name} />
                 </span>
                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '10px' }}>
-                  <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{fmt(metric.val, metric.unit)}</span>
+                  <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text1)' }}>{fmt(metric.val, metric.unit)}</span>
                   {metric.avg !== 0 && metric.avg !== undefined && (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                      <span style={{ fontSize: '10px', color: '#8a919e' }}>Moy. Secteur</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text3)' }}>Moy. Secteur</span>
                       <span style={{ fontSize: '13px', fontWeight: 'bold', color: metric.val >= metric.avg ? '#26a69a' : '#ef5350' }}>
                         {fmtRaw(metric.avg, metric.unit)}
                       </span>
@@ -177,7 +177,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
               <thead>
-                <tr style={{ backgroundColor: '#1a1e2e' }}>
+                <tr style={{ backgroundColor: 'var(--bg2)' }}>
                   <th style={{ ...thStyle, textAlign: 'left', width: '38%' }}>Indicateur</th>
                   {cols.map((y, i) => (
                     <th key={i} style={{ ...thStyle, textAlign: 'right' }}>
@@ -191,8 +191,8 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                 {items.map((item, rowIdx) => {
                   const vals = item.vals.slice(0, 4);
                   return (
-                    <tr key={rowIdx} style={{ backgroundColor: rowIdx % 2 === 0 ? '#131722' : '#1a1e2e' }}>
-                      <td style={{ ...tdStyle, color: '#d1d4dc' }}>
+                    <tr key={rowIdx} style={{ backgroundColor: rowIdx % 2 === 0 ? 'var(--bg1)' : 'var(--bg2)' }}>
+                      <td style={{ ...tdStyle, color: 'var(--text2)' }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0' }}>
                           {item.name}
                           <MetricInfo name={item.name} />
@@ -206,7 +206,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                           trend = { pct, up: pct >= 0 };
                         }
                         return (
-                          <td key={colIdx} style={{ ...tdStyle, textAlign: 'right', fontWeight: colIdx === 0 ? 'bold' : 'normal', color: colIdx === 0 ? 'white' : '#8a919e' }}>
+                          <td key={colIdx} style={{ ...tdStyle, textAlign: 'right', fontWeight: colIdx === 0 ? 'bold' : 'normal', color: colIdx === 0 ? 'var(--text1)' : 'var(--text3)' }}>
                             {fmt(val, item.unit)}
                             {trend && (
                               <span style={{ marginLeft: '6px', fontSize: '10px', color: trend.up ? '#26a69a' : '#ef5350' }}>
@@ -233,7 +233,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           <div style={{ color: '#2962FF', fontWeight: 'bold', marginBottom: '12px', fontSize: '13px' }}>
             Secteur : {primaryData.sector}
           </div>
-          <p style={{ color: '#8a919e', maxWidth: '960px', lineHeight: '1.6', fontSize: '13px' }}>{primaryData.description}</p>
+          <p style={{ color: 'var(--text3)', maxWidth: '960px', lineHeight: '1.6', fontSize: '13px' }}>{primaryData.description}</p>
         </div>
 
         {renderCategory('1. Analyse de Marché',               primaryData.market_analysis)}
@@ -297,7 +297,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
   const colWidth = `${Math.floor(80 / allSymbols.length)}%`;
 
   const MetricNameCell = ({ name }) => (
-    <td style={{ ...tdStyle, color: '#8a919e' }}>
+    <td style={{ ...tdStyle, color: 'var(--text3)' }}>
       <span style={{ display: 'inline-flex', alignItems: 'center' }}>
         {name}
         <MetricInfo name={name} />
@@ -309,15 +309,15 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     if (rows.length === 0) return null;
     return (
       <div style={{ marginBottom: '36px' }}>
-        <h3 style={{ ...h3Style, borderBottom: '2px solid #2B2B43', paddingBottom: '10px' }}>{label}</h3>
+        <h3 style={{ ...h3Style, borderBottom: '2px solid var(--border)', paddingBottom: '10px' }}>{label}</h3>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              <th style={{ width: '20%', padding: '10px 12px', textAlign: 'left', color: '#8a919e', fontSize: '11px', borderBottom: '1px solid #2B2B43', fontWeight: 'normal' }}>
+              <th style={{ width: '20%', padding: '10px 12px', textAlign: 'left', color: 'var(--text3)', fontSize: '11px', borderBottom: '1px solid var(--border)', fontWeight: 'normal' }}>
                 MÉTRIQUE
               </th>
               {allSymbols.map((sym, i) => (
-                <th key={sym} style={{ width: colWidth, padding: '10px 12px', textAlign: 'right', color: ASSET_COLORS[i], fontSize: '12px', borderBottom: '1px solid #2B2B43', fontWeight: 'bold' }}>
+                <th key={sym} style={{ width: colWidth, padding: '10px 12px', textAlign: 'right', color: ASSET_COLORS[i], fontSize: '12px', borderBottom: '1px solid var(--border)', fontWeight: 'bold' }}>
                   {dataMap[sym]?.name || sym}
                 </th>
               ))}
@@ -339,14 +339,14 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           const d = dataMap[sym];
           const color = ASSET_COLORS[i];
           return (
-            <div key={sym} style={{ flex: 1, minWidth: '160px', backgroundColor: '#1e222d', padding: '14px 16px', borderRadius: '10px', borderTop: `3px solid ${color}` }}>
+            <div key={sym} style={{ flex: 1, minWidth: '160px', backgroundColor: 'var(--bg3)', padding: '14px 16px', borderRadius: '10px', borderTop: `3px solid ${color}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: color, flexShrink: 0 }} />
-                <span style={{ color: 'white', fontWeight: 'bold', fontSize: '15px' }}>{d?.name || sym}</span>
+                <span style={{ color: 'var(--text1)', fontWeight: 'bold', fontSize: '15px' }}>{d?.name || sym}</span>
               </div>
               {d ? (
                 <>
-                  <div style={{ color: '#8a919e', fontSize: '11px' }}>{sym}</div>
+                  <div style={{ color: 'var(--text3)', fontSize: '11px' }}>{sym}</div>
                   <div style={{ color, fontSize: '11px', marginTop: '2px' }}>{d.sector}</div>
                 </>
               ) : (
@@ -367,7 +367,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           const minVal = numerics.length > 1 ? Math.min(...numerics) : null;
           const unit = vals.find(Boolean)?.unit ?? '';
           return (
-            <tr key={name} style={{ backgroundColor: rowIdx % 2 === 0 ? '#131722' : '#1a1e2e' }}>
+            <tr key={name} style={{ backgroundColor: rowIdx % 2 === 0 ? 'var(--bg1)' : 'var(--bg2)' }}>
               <MetricNameCell name={name} />
               {allSymbols.map(sym => {
                 const metric = getSimpleMetric(sym, cat.key, name);
@@ -404,7 +404,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           const maxVal = numerics.length > 1 ? Math.max(...numerics) : null;
           const minVal = numerics.length > 1 ? Math.min(...numerics) : null;
           return (
-            <tr key={name} style={{ backgroundColor: rowIdx % 2 === 0 ? '#131722' : '#1a1e2e' }}>
+            <tr key={name} style={{ backgroundColor: rowIdx % 2 === 0 ? 'var(--bg1)' : 'var(--bg2)' }}>
               <MetricNameCell name={name} />
               {allSymbols.map((sym, i) => {
                 const m = metrics[i];
@@ -442,15 +442,15 @@ const h3Style = {
   margin: '0 0 14px', color: '#2962FF', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em',
 };
 const cardStyle = {
-  backgroundColor: '#1e222d', padding: '15px', borderRadius: '8px',
-  border: '1px solid #2B2B43', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+  backgroundColor: 'var(--bg3)', padding: '15px', borderRadius: '8px',
+  border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
 };
 const thStyle = {
-  padding: '10px 12px', color: '#8a919e', fontSize: '11px',
-  borderBottom: '1px solid #2B2B43', fontWeight: 'bold', letterSpacing: '0.04em',
+  padding: '10px 12px', color: 'var(--text3)', fontSize: '11px',
+  borderBottom: '1px solid var(--border)', fontWeight: 'bold', letterSpacing: '0.04em',
 };
 const tdStyle = {
-  padding: '9px 12px', fontSize: '12px', borderBottom: '1px solid #2B2B4322',
+  padding: '9px 12px', fontSize: '12px', borderBottom: '1px solid var(--border)',
 };
 
 export default Fundamentals;

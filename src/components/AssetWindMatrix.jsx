@@ -57,13 +57,13 @@ function AssetWindMatrix({ phase, loading }) {
   const [expandedAsset, setExpandedAsset] = useState(null);
 
   const assets = PHASE_MATRIX[phase] ?? [];
-  const phaseColor = PHASE_COLORS[phase] ?? '#8a919e';
+  const phaseColor = PHASE_COLORS[phase] ?? 'var(--text3)';
 
   return (
     <div style={cardStyle}>
       {/* Titre + bouton info */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #2B2B43', paddingBottom: '10px' }}>
-        <h3 style={{ margin: 0, color: '#d1d4dc', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.06em' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+        <h3 style={{ margin: 0, color: 'var(--text2)', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.06em' }}>
           VENTS PORTEURS PAR CLASSE D'ACTIFS
         </h3>
         <button
@@ -71,8 +71,8 @@ function AssetWindMatrix({ phase, loading }) {
           title="Comment lire cette matrice ?"
           style={{
             background: showInfo ? '#2962FF22' : 'transparent',
-            border: `1px solid ${showInfo ? '#2962FF' : '#2B2B43'}`,
-            color: showInfo ? '#2962FF' : '#8a919e',
+            border: `1px solid ${showInfo ? '#2962FF' : 'var(--border)'}`,
+            color: showInfo ? '#2962FF' : 'var(--text3)',
             borderRadius: '50%', width: '22px', height: '22px',
             cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -86,19 +86,19 @@ function AssetWindMatrix({ phase, loading }) {
       {/* Panneau d'explication générale */}
       {showInfo && (
         <div style={infoPanelStyle}>
-          <div style={{ color: '#d1d4dc', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
+          <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
             Comment lire cette matrice ?
           </div>
           <p style={{ ...infoTextStyle, marginBottom: '10px' }}>
-            Cette matrice est inspirée du modèle de cycle économique de <strong style={{ color: '#d1d4dc' }}>Fidelity Investments</strong> et
-            de la théorie des <strong style={{ color: '#d1d4dc' }}>All Weather</strong> de Ray Dalio. Elle associe chaque phase du cycle
+            Cette matrice est inspirée du modèle de cycle économique de <strong style={{ color: 'var(--text2)' }}>Fidelity Investments</strong> et
+            de la théorie des <strong style={{ color: 'var(--text2)' }}>All Weather</strong> de Ray Dalio. Elle associe chaque phase du cycle
             économique aux classes d'actifs historiquement favorisées ou pénalisées.
           </p>
           <p style={{ ...infoTextStyle, marginBottom: '10px' }}>
             Les positionnements sont basés sur les performances médianes observées depuis 1970. Ce ne sont pas des
             recommandations d'investissement, mais des biais statistiques à connaître pour orienter son allocation.
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: '#8a919e', padding: '8px 10px', backgroundColor: '#131722', borderRadius: '6px', border: '1px solid #2B2B43' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: 'var(--text3)', padding: '8px 10px', backgroundColor: 'var(--bg1)', borderRadius: '6px', border: '1px solid var(--border)' }}>
             <span>💡</span>
             <span>Cliquez sur chaque ligne pour voir l'explication détaillée du positionnement.</span>
           </div>
@@ -106,21 +106,21 @@ function AssetWindMatrix({ phase, loading }) {
       )}
 
       {loading ? (
-        <div style={{ color: '#8a919e', fontSize: '13px', padding: '20px 0', textAlign: 'center' }}>
+        <div style={{ color: 'var(--text3)', fontSize: '13px', padding: '20px 0', textAlign: 'center' }}>
           Chargement…
         </div>
       ) : !phase ? (
-        <div style={{ color: '#8a919e', fontSize: '13px', padding: '20px 0', textAlign: 'center' }}>
+        <div style={{ color: 'var(--text3)', fontSize: '13px', padding: '20px 0', textAlign: 'center' }}>
           Phase indéterminée — données API indisponibles
         </div>
       ) : (
         <>
           {/* Contexte de phase */}
           <div style={{ marginBottom: '14px', fontSize: '13px', lineHeight: '1.5' }}>
-            <span style={{ color: '#8a919e' }}>En phase de </span>
+            <span style={{ color: 'var(--text3)' }}>En phase de </span>
             <span style={{ color: phaseColor, fontWeight: 'bold' }}>{phase}</span>
-            <span style={{ color: '#8a919e' }}>  — </span>
-            <span style={{ color: '#8a919e' }}>{PHASE_CONTEXT[phase]}</span>
+            <span style={{ color: 'var(--text3)' }}>  — </span>
+            <span style={{ color: 'var(--text3)' }}>{PHASE_CONTEXT[phase]}</span>
           </div>
 
           {/* Tableau avec raisons dépliables */}
@@ -140,21 +140,21 @@ function AssetWindMatrix({ phase, loading }) {
                       cursor: 'pointer', transition: 'border-color 0.2s',
                     }}
                   >
-                    <span style={{ color: '#d1d4dc', fontSize: '13px' }}>{label}</span>
+                    <span style={{ color: 'var(--text2)', fontSize: '13px' }}>{label}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: cfg.color, fontSize: '12px', fontWeight: 'bold' }}>
                         <span
                           style={{
                             width: '20px', height: '20px', borderRadius: '50%',
                             backgroundColor: cfg.color, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: 'white', fontSize: '11px', fontWeight: 'bold', flexShrink: 0,
+                            color: '#ffffff', fontSize: '11px', fontWeight: 'bold', flexShrink: 0,
                           }}
                         >
                           {cfg.icon}
                         </span>
                         {cfg.label}
                       </span>
-                      <span style={{ color: '#8a919e', fontSize: '11px', transition: 'transform 0.2s', display: 'inline-block', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                      <span style={{ color: 'var(--text3)', fontSize: '11px', transition: 'transform 0.2s', display: 'inline-block', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
                     </div>
                   </div>
                   {isOpen && (
@@ -174,9 +174,9 @@ function AssetWindMatrix({ phase, loading }) {
           </div>
 
           {/* Légende */}
-          <div style={{ display: 'flex', gap: '20px', marginTop: '14px', paddingTop: '12px', borderTop: '1px solid #2B2B43' }}>
+          <div style={{ display: 'flex', gap: '20px', marginTop: '14px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
             {Object.entries(STATUS).map(([key, cfg]) => (
-              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#8a919e' }}>
+              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text3)' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: cfg.color, flexShrink: 0 }} />
                 {cfg.label}
               </div>
@@ -189,14 +189,14 @@ function AssetWindMatrix({ phase, loading }) {
 }
 
 const cardStyle = {
-  backgroundColor: '#131722', padding: '20px', borderRadius: '12px', border: '1px solid #2B2B43',
+  backgroundColor: 'var(--bg1)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)',
 };
 const infoPanelStyle = {
-  backgroundColor: '#0d1117', border: '1px solid #2B2B43', borderRadius: '8px',
+  backgroundColor: 'var(--bg0)', border: '1px solid var(--border)', borderRadius: '8px',
   padding: '14px 16px', marginBottom: '16px',
 };
 const infoTextStyle = {
-  margin: 0, color: '#8a919e', fontSize: '11px', lineHeight: '1.6',
+  margin: 0, color: 'var(--text3)', fontSize: '11px', lineHeight: '1.6',
 };
 
 export default AssetWindMatrix;

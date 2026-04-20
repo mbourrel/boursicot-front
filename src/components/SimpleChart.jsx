@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { createChart, AreaSeries, LineSeries } from 'lightweight-charts';
 import { ASSET_COLORS } from './CompareBar';
+import { useTheme } from '../context/ThemeContext';
 
 function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
+  const { theme, isDark } = useTheme();
   const getName = (ticker) => allAssets.find(a => a.ticker === ticker)?.name || ticker;
   const chartContainerRef = useRef();
   const chartInstanceRef = useRef(null);
@@ -65,12 +67,12 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
     allDataRef.current = {};
 
     const chart = createChart(chartContainerRef.current, {
-      layout: { background: { type: 'solid', color: '#131722' }, textColor: '#d1d4dc' },
-      grid: { vertLines: { color: '#2B2B43' }, horzLines: { color: '#2B2B43' } },
+      layout: { background: { type: 'solid', color: theme.chartBg }, textColor: theme.chartText },
+      grid: { vertLines: { color: theme.chartGrid }, horzLines: { color: theme.chartGrid } },
       width: chartContainerRef.current.clientWidth,
       height: 500,
-      timeScale: { timeVisible: true, borderColor: '#2B2B43', minBarSpacing: 0.001 },
-      rightPriceScale: { borderColor: '#2B2B43' },
+      timeScale: { timeVisible: true, borderColor: theme.chartGrid, minBarSpacing: 0.001 },
+      rightPriceScale: { borderColor: theme.chartGrid },
       crosshair: { vertLine: { color: '#758696' }, horzLine: { color: '#758696' } },
     });
 
@@ -232,11 +234,11 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [selectedSymbol, compareSymbols.join(','), candleInterval, individualScales, API_URL]);
+  }, [selectedSymbol, compareSymbols.join(','), candleInterval, individualScales, isDark, API_URL]);
 
   const btnStyle = (active, activeColor = '#2962FF') => ({
     padding: '6px 10px', background: active ? activeColor : 'transparent',
-    color: active ? 'white' : '#8a919e', border: `1px solid ${active ? activeColor : '#2B2B43'}`,
+    color: active ? 'white' : 'var(--text3)', border: `1px solid ${active ? activeColor : 'var(--border)'}`,
     borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', transition: 'all 0.2s',
   });
 
@@ -247,13 +249,13 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   };
 
   return (
-    <div style={{ backgroundColor: '#131722', padding: '15px', borderRadius: '12px', border: '1px solid #2B2B43' }}>
+    <div style={{ backgroundColor: 'var(--bg1)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border)' }}>
 
       {/* BARRE DE CONTRÔLE */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '15px', borderBottom: '1px solid #2B2B43', paddingBottom: '15px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '15px' }}>
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: '#8a919e', marginRight: '5px' }}>INTERVALLE :</span>
+            <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '5px' }}>INTERVALLE :</span>
             {['15m', '1h', '1D', '1W'].map(iv => (
               <button key={iv} style={btnStyle(candleInterval === iv)} onClick={() => setCandleInterval(iv)}>
                 {iv === '15m' ? '15 Min' : iv === '1h' ? '1 Heure' : iv === '1D' ? 'Jour' : 'Semaine'}
@@ -261,7 +263,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             ))}
           </div>
           <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: '#8a919e', marginRight: '5px' }}>ZOOM :</span>
+            <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '5px' }}>ZOOM :</span>
             {['1W', '1M', '3M', '6M', '1Y', '5Y', 'ALL'].map(r => (
               <button key={r} style={btnStyle(timeRange === r)} onClick={() => { setTimeRange(r); applyTimeRange(r); }}>
                 {r === 'ALL' ? 'Tout' : r}
@@ -286,10 +288,10 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             const color = ASSET_COLORS[i];
             const changeColor = s.change >= 0 ? '#26a69a' : '#ef5350';
             return (
-              <div key={sym} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', backgroundColor: '#1e222d', padding: '5px 10px', borderRadius: '6px', border: `1px solid ${color}40` }}>
+              <div key={sym} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', backgroundColor: 'var(--bg3)', padding: '5px 10px', borderRadius: '6px', border: `1px solid ${color}40` }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color, display: 'inline-block', flexShrink: 0, alignSelf: 'center' }} />
-                <span style={{ color: 'white', fontWeight: 'bold', fontSize: '13px' }}>{getName(sym)}</span>
-                <span style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>{formatPrice(s.price)}</span>
+                <span style={{ color: 'var(--text1)', fontWeight: 'bold', fontSize: '13px' }}>{getName(sym)}</span>
+                <span style={{ color: 'var(--text1)', fontWeight: 'bold', fontSize: '14px' }}>{formatPrice(s.price)}</span>
                 <span style={{ color: changeColor, fontWeight: 'bold', fontSize: '12px' }}>
                   {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
                 </span>
@@ -318,12 +320,12 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center',
             backgroundColor: 'rgba(19, 23, 34, 0.9)', padding: '7px 12px',
             borderRadius: '6px', fontSize: '12px', fontWeight: 'bold',
-            border: '1px solid #2B2B43', pointerEvents: 'none',
+            border: '1px solid var(--border)', pointerEvents: 'none',
           }}>
             {allSymbols.map((sym, i) => hoverData[sym] !== undefined && (
               <span key={sym}>
                 <span style={{ color: ASSET_COLORS[i] }}>● </span>
-                <span style={{ color: '#8a919e' }}>{getName(sym)} </span>
+                <span style={{ color: 'var(--text3)' }}>{getName(sym)} </span>
                 <span style={{ color: 'white' }}>
                   {/* En mode normalisé : afficher le % ; en mode individuel : le prix réel */}
                   {isComparing && !individualScales

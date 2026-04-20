@@ -40,18 +40,13 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
   ).slice(0, 12);
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: '8px',
-      flexWrap: 'wrap', marginBottom: '12px',
-    }}>
-      {/* Chip actif primaire */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
       <Chip
         label={allAssets.find(a => a.ticker === primarySymbol)?.name || primarySymbol}
         color={ASSET_COLORS[0]}
         isPrimary
       />
 
-      {/* Chips actifs de comparaison */}
       {compareSymbols.map((ticker, i) => (
         <Chip
           key={ticker}
@@ -61,19 +56,18 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
         />
       ))}
 
-      {/* Bouton + Ajouter */}
       {canAdd && (
         <div ref={dropdownRef} style={{ position: 'relative' }}>
           <button
             onClick={() => { setIsOpen(o => !o); setSearchTerm(''); }}
             style={{
               padding: '5px 12px', borderRadius: '20px', cursor: 'pointer',
-              border: '1px dashed #2B2B43', background: 'transparent',
-              color: '#8a919e', fontSize: '12px', fontWeight: 'bold',
+              border: '1px dashed var(--border)', background: 'transparent',
+              color: 'var(--text3)', fontSize: '12px', fontWeight: 'bold',
               transition: 'all 0.2s',
             }}
             onMouseEnter={e => e.currentTarget.style.borderColor = '#2962FF'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = '#2B2B43'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
           >
             + Comparer
           </button>
@@ -81,10 +75,9 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
           {isOpen && (
             <div style={{
               position: 'absolute', top: '110%', left: 0, zIndex: 100,
-              width: '240px', backgroundColor: '#1e222d',
-              border: '1px solid #2B2B43', borderRadius: '8px',
-              boxShadow: '0 10px 20px rgba(0,0,0,0.5)',
-              overflow: 'hidden',
+              width: '240px', backgroundColor: 'var(--bg3)',
+              border: '1px solid var(--border)', borderRadius: '8px',
+              boxShadow: '0 10px 20px rgba(0,0,0,0.5)', overflow: 'hidden',
             }}>
               <div style={{ padding: '8px' }}>
                 <input
@@ -95,8 +88,8 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
                   placeholder="Rechercher..."
                   style={{
                     width: '100%', padding: '7px 10px', borderRadius: '4px',
-                    backgroundColor: '#131722', color: 'white',
-                    border: '1px solid #2B2B43', outline: 'none',
+                    backgroundColor: 'var(--bg1)', color: 'var(--text1)',
+                    border: '1px solid var(--border)', outline: 'none',
                     fontSize: '12px', boxSizing: 'border-box',
                   }}
                 />
@@ -110,11 +103,11 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
                     onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2962FF'}
                     onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <span style={{ color: 'white', fontWeight: 'bold', fontSize: '13px' }}>{a.name || a.ticker}</span>
+                    <span style={{ color: 'var(--text1)', fontWeight: 'bold', fontSize: '13px' }}>{a.name || a.ticker}</span>
                     <span style={{ color: '#00bcd4', fontSize: '11px' }}>({a.ticker})</span>
                   </li>
                 )) : (
-                  <li style={{ padding: '8px 12px', color: '#8a919e', fontSize: '12px', fontStyle: 'italic' }}>
+                  <li style={{ padding: '8px 12px', color: 'var(--text3)', fontSize: '12px', fontStyle: 'italic' }}>
                     Aucun résultat
                   </li>
                 )}
@@ -124,9 +117,8 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
         </div>
       )}
 
-      {/* Indication max atteint */}
       {!canAdd && (
-        <span style={{ fontSize: '11px', color: '#8a919e', fontStyle: 'italic' }}>
+        <span style={{ fontSize: '11px', color: 'var(--text3)', fontStyle: 'italic' }}>
           Maximum 5 actifs
         </span>
       )}
@@ -144,18 +136,14 @@ function Chip({ label, color, isPrimary, onRemove }) {
       fontSize: '12px', fontWeight: 'bold',
     }}>
       <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color, flexShrink: 0 }} />
-      <span style={{ color: 'white' }}>{label}</span>
-      {isPrimary && <span style={{ color: color, fontSize: '10px' }}>primaire</span>}
+      <span style={{ color: 'var(--text1)' }}>{label}</span>
+      {isPrimary && <span style={{ color, fontSize: '10px' }}>primaire</span>}
       {onRemove && (
         <button
           onClick={onRemove}
-          style={{
-            background: 'none', border: 'none', color: '#8a919e',
-            cursor: 'pointer', padding: '0', fontSize: '14px', lineHeight: 1,
-            marginLeft: '2px',
-          }}
+          style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: '0', fontSize: '14px', lineHeight: 1, marginLeft: '2px' }}
           onMouseEnter={e => e.currentTarget.style.color = '#ef5350'}
-          onMouseLeave={e => e.currentTarget.style.color = '#8a919e'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text3)'}
         >
           ×
         </button>
