@@ -357,9 +357,14 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
                   </div>
                   <CycleHistoryChart history={history} height={280} />
                 </div>
-                {/* Titre axe X */}
-                <div style={{ textAlign: 'center', fontSize: '10px', color: 'var(--text3)', marginTop: '4px', letterSpacing: '0.04em' }}>
-                  Période · données mensuelles (INDPRO)
+                {/* Titre axe X + hint interaction */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--text3)', letterSpacing: '0.04em' }}>
+                    Période · données mensuelles (INDPRO)
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'var(--text3)', opacity: 0.6 }}>
+                    molette pour zoomer · double-clic pour réinitialiser
+                  </div>
                 </div>
               </div>
           }
@@ -404,8 +409,6 @@ function CycleHistoryChart({ history, height = 280 }) {
       timeScale: { borderColor: '#2a2f3a', timeVisible: true },
       rightPriceScale: { borderColor: '#2a2f3a' },
       crosshair: { vertLine: { color: '#758696aa' }, horzLine: { color: '#758696aa' } },
-      handleScroll: false,
-      handleScale: false,
     });
 
     // Ligne de référence à 0 %
