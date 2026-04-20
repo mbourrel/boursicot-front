@@ -254,7 +254,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             {d.sector}{d.industry && d.industry !== d.sector ? ` — ${d.industry}` : ''}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '24px', alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'stretch' }}>
             {/* Description */}
             <p style={{ color: 'var(--text3)', lineHeight: '1.7', fontSize: '13px', margin: 0 }}>{d.description}</p>
 
@@ -262,6 +262,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             <div style={{
               backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
               borderRadius: '10px', overflow: 'hidden', flexShrink: 0,
+              display: 'flex', flexDirection: 'column',
             }}>
               <div style={{
                 padding: '10px 14px', borderBottom: '1px solid var(--border)',
@@ -270,12 +271,12 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
               }}>
                 Informations générales
               </div>
-              <div style={{ padding: '4px 0' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 {identityItems.map(({ icon, label, value, isLink }) => (
                   <div key={label} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '8px 14px', borderBottom: '1px solid var(--border)',
-                    gap: '12px',
+                    padding: '10px 14px', borderBottom: '1px solid var(--border)',
+                    flex: 1, gap: '12px',
                   }}>
                     <span style={{ color: 'var(--text3)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}>
                       <span>{icon}</span>{label}
