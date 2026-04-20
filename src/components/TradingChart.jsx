@@ -185,7 +185,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
       grid: { vertLines: { color: '#2B2B43' }, horzLines: { color: '#2B2B43' } },
       width: chartContainerRef.current.clientWidth,
       height: CHART_HEIGHT,
-      timeScale: { timeVisible: true },
+      timeScale: { timeVisible: true, minBarSpacing: 0.001 },
     });
     chartInstanceRef.current = chart;
 

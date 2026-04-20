@@ -65,7 +65,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
       grid: { vertLines: { color: '#2B2B43' }, horzLines: { color: '#2B2B43' } },
       width: chartContainerRef.current.clientWidth,
       height: 500,
-      timeScale: { timeVisible: true, borderColor: '#2B2B43' },
+      timeScale: { timeVisible: true, borderColor: '#2B2B43', minBarSpacing: 0.001 },
       rightPriceScale: { borderColor: '#2B2B43' },
       crosshair: { vertLine: { color: '#758696' }, horzLine: { color: '#758696' } },
     });
