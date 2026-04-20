@@ -254,7 +254,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             {d.sector}{d.industry && d.industry !== d.sector ? ` — ${d.industry}` : ''}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '24px', alignItems: 'stretch' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 480px', gap: '24px', alignItems: 'stretch' }}>
             {/* Description */}
             <p style={{ color: 'var(--text3)', lineHeight: '1.7', fontSize: '13px', margin: 0 }}>{d.description}</p>
 
