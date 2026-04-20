@@ -7,7 +7,8 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   const chartContainerRef = useRef();
   const chartInstanceRef = useRef(null);
   const allDataRef = useRef({});
-  const debounceTimerRef = useRef(null);
+  const debounceTimerRef   = useRef(null);
+  const candleIntervalRef  = useRef(candleInterval);
 
   const [timeRange, setTimeRange] = useState('1Y');
   const [candleInterval, setCandleInterval] = useState('1D');
@@ -53,6 +54,9 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
     if (!base) return data;
     return data.map(d => ({ ...d, value: ((d.value - base) / base) * 100 }));
   };
+
+  // Garde le ref à jour pour éviter les closures périmées dans les callbacks
+  useEffect(() => { candleIntervalRef.current = candleInterval; }, [candleInterval]);
 
   // Recrée le graphique quand les actifs, l'intervalle ou le mode d'échelle changent
   useEffect(() => {
@@ -106,6 +110,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
 
     let isMounted = true;
     let loadedCount = 0;
+    let upgradeScheduled = false;
 
     const fetchAndDraw = (ticker, colorIndex) => {
       return fetch(`${API_URL}/api/prices?ticker=${encodeURIComponent(ticker)}&interval=${candleInterval}`)
@@ -169,9 +174,15 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             setAssetStats(stats);
             applyTimeRange(timeRange, chart);
 
-            // % dynamique sur la fenêtre visible
+            // % dynamique sur la fenêtre visible + auto-upgrade d'intervalle
             chart.timeScale().subscribeVisibleLogicalRangeChange((lr) => {
               if (!lr) return;
+              // Si le dézoom dépasse le début des données, passer à l'intervalle supérieur
+              if (lr.from < -0.5 && !upgradeScheduled) {
+                const curr = candleIntervalRef.current;
+                if (curr === '15m') { upgradeScheduled = true; setTimeRange('ALL'); setCandleInterval('1h'); }
+                else if (curr === '1h') { upgradeScheduled = true; setTimeRange('ALL'); setCandleInterval('1D'); }
+              }
               clearTimeout(debounceTimerRef.current);
               debounceTimerRef.current = setTimeout(() => {
                 const newStats = {};

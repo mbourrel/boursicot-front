@@ -39,7 +39,8 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
   const chartInstanceRef  = useRef(null);
   const mainSeriesRef     = useRef(null);
   const currentDataRef    = useRef([]);
-  const svgFrameRef       = useRef(null);
+  const svgFrameRef        = useRef(null);
+  const candleIntervalRef  = useRef(candleInterval);
 
   const volumeSeriesRef  = useRef(null);
   const ma10SeriesRef    = useRef(null);
@@ -68,6 +69,9 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
   const API_URL = window.location.hostname === 'localhost'
     ? 'http://127.0.0.1:8000'
     : import.meta.env.VITE_API_URL;
+
+  // Garde le ref à jour pour éviter les closures périmées dans les callbacks
+  useEffect(() => { candleIntervalRef.current = candleInterval; }, [candleInterval]);
 
   // ── Visibilité des indicateurs ───────────────────────────────────────────────
   useEffect(() => {
@@ -189,10 +193,17 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
     });
     chartInstanceRef.current = chart;
 
-    // Abonnement scroll/zoom → re-render SVG (RAF pour throttler)
-    const onScroll = () => {
+    // Abonnement scroll/zoom → re-render SVG + auto-upgrade d'intervalle
+    let upgradeScheduled = false;
+    const onScroll = (lr) => {
       cancelAnimationFrame(svgFrameRef.current);
       svgFrameRef.current = requestAnimationFrame(() => setSvgTick(t => t + 1));
+      // Si le dézoum dépasse le début des données, passer à l'intervalle supérieur
+      if (lr && lr.from < -0.5 && !upgradeScheduled) {
+        const curr = candleIntervalRef.current;
+        if (curr === '15m') { upgradeScheduled = true; setTimeRange('ALL'); setCandleInterval('1h'); }
+        else if (curr === '1h') { upgradeScheduled = true; setTimeRange('ALL'); setCandleInterval('1D'); }
+      }
     };
     chart.timeScale().subscribeVisibleLogicalRangeChange(onScroll);
 
