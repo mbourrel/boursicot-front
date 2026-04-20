@@ -33,15 +33,8 @@ function ThemeToggle({ isDark, onToggle }) {
           borderRadius: '50%',
           boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
           transition: 'left 0.25s ease',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '9px',
-          lineHeight: 1,
         }}
-      >
-        {isDark ? '🌙' : '☀️'}
-      </span>
+      />
     </button>
   );
 }
@@ -247,7 +240,12 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
         </div>
 
         {/* TOGGLE DARK / LIGHT */}
-        <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text3)', letterSpacing: '0.04em', userSelect: 'none' }}>
+            DARK
+          </span>
+          <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+        </div>
       </div>
     </div>
   );
