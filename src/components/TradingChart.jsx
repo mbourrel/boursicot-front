@@ -533,7 +533,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
       <div style={{ position: 'relative', overflow: 'hidden' }}>
 
         {/* Légende crosshair */}
-        <div style={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', flexWrap: 'wrap', gap: '10px', backgroundColor: 'rgba(19, 23, 34, 0.8)', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', maxWidth: '90%', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', flexWrap: 'wrap', gap: '10px', backgroundColor: isDark ? 'rgba(19,23,34,0.85)' : 'rgba(255,255,255,0.92)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', maxWidth: '90%', pointerEvents: 'none' }}>
           <span style={{ color: 'var(--text2)' }}>{getName(selectedSymbol)} {legendData.close && `$${legendData.close}`}</span>
           {indicators.volume && legendData.volume !== undefined && <span style={{ color: 'var(--text3)' }}>Vol: {formatVal(legendData.volume)}</span>}
           {indicators.ma10   && legendData.ma10    && <span style={{ color: '#00bcd4' }}>MM10: {legendData.ma10}</span>}

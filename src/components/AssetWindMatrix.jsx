@@ -163,7 +163,7 @@ function AssetWindMatrix({ phase, loading }) {
                       border: `1px solid ${cfg.color}`, borderTop: 'none',
                       borderRadius: '0 0 8px 8px',
                     }}>
-                      <p style={{ margin: 0, color: '#b0b8c4', fontSize: '12px', lineHeight: '1.6' }}>
+                      <p style={{ margin: 0, color: 'var(--text3)', fontSize: '12px', lineHeight: '1.6' }}>
                         {reason}
                       </p>
                     </div>

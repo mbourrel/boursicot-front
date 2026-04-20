@@ -31,7 +31,7 @@ function MetricInfo({ name }) {
         onClick={handleClick}
         style={{
           background: pos ? '#2962FF22' : 'transparent',
-          border: `1px solid ${pos ? '#2962FF88' : '#3a3f5a'}`,
+          border: `1px solid ${pos ? '#2962FF88' : 'var(--border)'}`,
           color: pos ? '#2962FF' : 'var(--text3)',
           borderRadius: '50%', width: '14px', height: '14px',
           fontSize: '9px', fontWeight: 'bold', cursor: 'pointer',
@@ -108,8 +108,8 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
   // ── Formateur de valeurs ───────────────────────────────────────────────────
   const fmt = (val, unit) => {
-    if (val === null || val === undefined) return <span style={{ color: '#4a5568' }}>—</span>;
-    if (val === 0) return <span style={{ color: '#4a5568' }}>—</span>;
+    if (val === null || val === undefined) return <span style={{ color: 'var(--text3)' }}>—</span>;
+    if (val === 0) return <span style={{ color: 'var(--text3)' }}>—</span>;
     if (unit === '%') return `${val.toFixed(2)}%`;
     if (unit === 'x') return `${val.toFixed(2)}x`;
     const abs = Math.abs(val);
@@ -229,7 +229,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     return (
       <div>
         <div style={{ marginBottom: '28px' }}>
-          <h2 style={{ color: '#fff', fontSize: '26px', marginBottom: '4px' }}>{primaryData.name}</h2>
+          <h2 style={{ color: 'var(--text1)', fontSize: '26px', marginBottom: '4px' }}>{primaryData.name}</h2>
           <div style={{ color: '#2962FF', fontWeight: 'bold', marginBottom: '12px', fontSize: '13px' }}>
             Secteur : {primaryData.sector}
           </div>

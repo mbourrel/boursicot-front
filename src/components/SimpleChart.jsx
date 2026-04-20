@@ -318,7 +318,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
           <div style={{
             position: 'absolute', top: 12, left: 12, zIndex: 10,
             display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center',
-            backgroundColor: 'rgba(19, 23, 34, 0.9)', padding: '7px 12px',
+            backgroundColor: isDark ? 'rgba(19,23,34,0.9)' : 'rgba(255,255,255,0.92)', padding: '7px 12px',
             borderRadius: '6px', fontSize: '12px', fontWeight: 'bold',
             border: '1px solid var(--border)', pointerEvents: 'none',
           }}>
@@ -326,7 +326,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
               <span key={sym}>
                 <span style={{ color: ASSET_COLORS[i] }}>● </span>
                 <span style={{ color: 'var(--text3)' }}>{getName(sym)} </span>
-                <span style={{ color: 'white' }}>
+                <span style={{ color: 'var(--text1)' }}>
                   {/* En mode normalisé : afficher le % ; en mode individuel : le prix réel */}
                   {isComparing && !individualScales
                     ? `${hoverData[sym] >= 0 ? '+' : ''}${hoverData[sym].toFixed(2)}%`
