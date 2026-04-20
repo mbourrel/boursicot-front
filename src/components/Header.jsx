@@ -4,36 +4,45 @@ import { useTheme } from '../context/ThemeContext';
 // ── Bouton toggle dark/light ──────────────────────────────────────────────────
 function ThemeToggle({ isDark, onToggle }) {
   return (
-    <div
+    <button
       onClick={onToggle}
       title={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
       style={{
         position: 'relative',
-        width: '74px',
-        height: '38px',
-        backgroundColor: isDark ? '#0d1117' : '#b8c4d8',
-        borderRadius: '19px',
+        width: '44px',
+        height: '24px',
+        backgroundColor: isDark ? '#2962FF' : '#d0d5e3',
+        borderRadius: '12px',
         cursor: 'pointer',
         flexShrink: 0,
-        border: `2px solid ${isDark ? '#2B2B43' : '#8090a8'}`,
-        transition: 'background-color 0.35s cubic-bezier(0.4,0,0.2,1), border-color 0.35s',
+        border: 'none',
+        padding: 0,
+        transition: 'background-color 0.25s ease',
+        outline: 'none',
       }}
     >
-      {/* Thumb — grand rectangle arrondi qui glisse */}
-      <div
+      {/* Thumb circulaire */}
+      <span
         style={{
           position: 'absolute',
-          top: '4px',
-          left: isDark ? '24px' : '4px',
-          width: '42px',
-          height: '26px',
+          top: '3px',
+          left: isDark ? '23px' : '3px',
+          width: '18px',
+          height: '18px',
           backgroundColor: '#ffffff',
-          borderRadius: '13px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
-          transition: 'left 0.35s cubic-bezier(0.4,0,0.2,1)',
+          borderRadius: '50%',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+          transition: 'left 0.25s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '9px',
+          lineHeight: 1,
         }}
-      />
-    </div>
+      >
+        {isDark ? '🌙' : '☀️'}
+      </span>
+    </button>
   );
 }
 
