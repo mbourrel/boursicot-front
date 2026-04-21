@@ -8,3 +8,12 @@ export async function fetchFundamentals(ticker, signal) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
+
+export async function fetchSectorAverages(sector, signal) {
+  const res = await fetch(
+    `${API_URL}/api/fundamentals/sector-averages/${encodeURIComponent(sector)}`,
+    { signal }
+  );
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}

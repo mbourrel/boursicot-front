@@ -3,11 +3,15 @@ import MetricInfo from './fundamentals/MetricInfo';
 import MetricCard from './fundamentals/MetricCard';
 import FinancialStatement from './fundamentals/FinancialStatement';
 import { useFundamentals } from '../hooks/useFundamentals';
+import { useSectorAverages } from '../hooks/useSectorAverages';
 
 // ── Composant principal ────────────────────────────────────────────────────
 function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
   const allSymbols = [selectedSymbol, ...compareSymbols];
   const { dataMap, loading, errors } = useFundamentals(allSymbols);
+  const isSoloMode = allSymbols.length === 1;
+  const primarySector = isSoloMode ? dataMap[selectedSymbol]?.sector : null;
+  const sectorAvg = useSectorAverages(primarySector);
 
   // ── Formateur de valeurs ───────────────────────────────────────────────────
   const fmt = (val, unit) => {
@@ -30,7 +34,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
   if (loading) return <p style={{ color: 'var(--text3)' }}>Chargement...</p>;
 
-  const isSolo      = allSymbols.length === 1;
+  const isSolo = isSoloMode;
   const primaryData = dataMap[selectedSymbol];
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -40,15 +44,16 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     if (errors[selectedSymbol]) return <p style={{ color: '#ef5350' }}>Aucune donnée disponible pour {selectedSymbol}</p>;
     if (!primaryData)           return <p style={{ color: 'var(--text3)' }}>Aucune donnée disponible.</p>;
 
-    const renderCategory = (title, dataArray) => {
+    const renderCategory = (title, dataArray, catKey) => {
       if (!dataArray || dataArray.length === 0) return null;
       return (
         <div style={{ marginBottom: '36px' }}>
           <h3 style={h3Style}>{title}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
-            {dataArray.map((metric, i) => (
-              <MetricCard key={i} metric={metric} fmt={fmt} fmtRaw={fmtRaw} />
-            ))}
+            {dataArray.map((metric, i) => {
+              const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
+              return <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
+            })}
           </div>
         </div>
       );
@@ -123,12 +128,12 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           </div>
         </div>
 
-        {renderCategory('1. Analyse de Marché',               d.market_analysis)}
-        {renderCategory('2. Santé Financière',                d.financial_health)}
-        {renderCategory('3. Valorisation Avancée',            d.advanced_valuation)}
-        {renderCategory('4. Compte de Résultat & Croissance', d.income_growth)}
-        {renderCategory('5. Bilan & Liquidité',               d.balance_cash)}
-        {renderCategory('6. Risque & Marché',                 d.risk_market)}
+        {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}
+        {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health')}
+        {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation')}
+        {renderCategory('4. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
+        {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash')}
+        {renderCategory('6. Risque & Marché',                 d.risk_market,        'risk_market')}
 
         <FinancialStatement title="7. Compte de Résultat — Historique (4 ans)" stmtData={d.income_stmt_data}   fmt={fmt} />
         <FinancialStatement title="8. Bilan Comptable — Historique (4 ans)"     stmtData={d.balance_sheet_data} fmt={fmt} />
