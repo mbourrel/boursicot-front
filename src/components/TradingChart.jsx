@@ -295,7 +295,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [selectedSymbol, candleInterval, isDark, API_URL]);
+  }, [selectedSymbol, candleInterval, isDark]);
 
   // ── Rendu SVG : calcul des éléments ────────────────────────────────────────
   void svgTick; // référencé pour déclencher le re-render au scroll
