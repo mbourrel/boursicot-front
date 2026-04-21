@@ -57,7 +57,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
       return (
         <div>
           <h3 style={h3Style}>{title}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px' }}>
             {dataArray.map((metric, i) => {
               const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
               return <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
@@ -140,9 +140,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}
           {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health')}
           {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation')}
-          {renderCategory('4. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
+          {renderCategory('4. Risque & Marché',                 d.risk_market,        'risk_market')}
           {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash')}
-          {renderCategory('6. Risque & Marché',                 d.risk_market,        'risk_market')}
+          {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
         </div>
 
         <FinancialStatement title="7. Compte de Résultat — Historique (4 ans)" stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data} />
