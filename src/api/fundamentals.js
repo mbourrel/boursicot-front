@@ -1,7 +1,7 @@
-import { API_URL } from './config';
+import { API_URL, authFetch } from './config';
 
 export async function fetchFundamentals(ticker, signal) {
-  const res = await fetch(
+  const res = await authFetch(
     `${API_URL}/api/fundamentals/${encodeURIComponent(ticker)}`,
     { signal }
   );
@@ -10,7 +10,7 @@ export async function fetchFundamentals(ticker, signal) {
 }
 
 export async function fetchSectorAverages(sector, signal) {
-  const res = await fetch(
+  const res = await authFetch(
     `${API_URL}/api/fundamentals/sector-averages/${encodeURIComponent(sector)}`,
     { signal }
   );

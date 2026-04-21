@@ -1,7 +1,7 @@
-import { API_URL } from './config';
+import { API_URL, authFetch } from './config';
 
 async function fetchWithDetail(url, signal) {
-  const res = await fetch(url, { signal });
+  const res = await authFetch(url, { signal });
   if (!res.ok) {
     let detail = `HTTP ${res.status}`;
     try { const body = await res.json(); detail = body.detail ?? detail; } catch {}

@@ -1,4 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
+import { registerTokenGetter } from './api/config';
+import ProtectedRoute from './components/ProtectedRoute';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import Header from './components/Header';
 import CompareBar from './components/CompareBar';
 import TradingChart from './components/TradingChart';
@@ -8,7 +14,8 @@ import MacroEnvironment from './components/MacroEnvironment';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAssets } from './hooks/useAssets';
 
-function App() {
+// ── Dashboard (contenu protégé) ──────────────────────────────────────────────
+function Dashboard() {
   const [selectedSymbol, setSelectedSymbol] = useState('AI.PA');
   const [compareSymbols, setCompareSymbols] = useState([]);
   const [viewMode,       setViewMode]       = useState('chart');
@@ -103,6 +110,23 @@ function App() {
       )}
       </div>
     </div>
+  );
+}
+
+// ── Router racine ─────────────────────────────────────────────────────────────
+function App() {
+  const { getToken, isLoaded } = useAuth();
+
+  useEffect(() => {
+    if (isLoaded) registerTokenGetter(getToken);
+  }, [getToken, isLoaded]);
+
+  return (
+    <Routes>
+      <Route path="/login"    element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/*"        element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    </Routes>
   );
 }
 

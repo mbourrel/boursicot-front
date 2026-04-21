@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { UserButton } from '@clerk/clerk-react';
 
 // ── Bouton toggle dark/light ──────────────────────────────────────────────────
 function ThemeToggle({ isDark, onToggle }) {
@@ -399,6 +400,9 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
           </span>
           <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
         </div>
+
+        {/* BOUTON UTILISATEUR CLERK (profil + déconnexion) */}
+        <UserButton />
       </div>
     </div>
   );

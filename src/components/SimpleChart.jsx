@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createChart, AreaSeries, LineSeries } from 'lightweight-charts';
 import { ASSET_COLORS } from './CompareBar';
 import { useTheme } from '../context/ThemeContext';
+import { API_URL, authFetch } from '../api/config';
 
 function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   const { theme, isDark } = useTheme();
@@ -19,9 +20,6 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   // false = normalisé base 100 (défaut), true = cours réels chacun sur sa propre échelle
   const [individualScales, setIndividualScales] = useState(false);
 
-  const API_URL = window.location.hostname === 'localhost'
-    ? 'http://127.0.0.1:8000'
-    : import.meta.env.VITE_API_URL;
 
   const allSymbols = [selectedSymbol, ...compareSymbols];
   const isComparing = compareSymbols.length > 0;
@@ -115,7 +113,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
     let upgradeScheduled = false;
 
     const fetchAndDraw = (ticker, colorIndex) => {
-      return fetch(`${API_URL}/api/prices?ticker=${encodeURIComponent(ticker)}&interval=${candleInterval}`)
+      return authFetch(`${API_URL}/api/prices?ticker=${encodeURIComponent(ticker)}&interval=${candleInterval}`)
         .then(res => res.json())
         .then(data => {
           if (!isMounted || !Array.isArray(data)) return;
