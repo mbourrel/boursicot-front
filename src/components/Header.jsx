@@ -88,7 +88,6 @@ function FilterDropdown({ label, items, filters, onChange, dropdownRef }) {
           {items.map(({ key, label: fl }) => (
             <label
               key={key}
-              onClick={() => onChange(key)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '8px 14px', cursor: 'pointer', fontSize: '13px',
@@ -102,7 +101,6 @@ function FilterDropdown({ label, items, filters, onChange, dropdownRef }) {
                 type="checkbox"
                 checked={!!filters?.[key]}
                 onChange={() => onChange(key)}
-                onClick={e => e.stopPropagation()}
                 style={{ accentColor: '#2962FF', cursor: 'pointer', width: '14px', height: '14px' }}
               />
               {fl}
@@ -265,7 +263,6 @@ const name = company.name || '';
                   {TYPE_FILTERS.map(({ key, label: fl }) => (
                     <label
                       key={key}
-                      onClick={() => setAssetFilters(prev => ({ ...prev, [key]: !prev[key] }))}
                       style={{
                         display: 'flex', alignItems: 'center', gap: '10px',
                         padding: '8px 14px', cursor: 'pointer', fontSize: '13px',
@@ -279,7 +276,6 @@ const name = company.name || '';
                         type="checkbox"
                         checked={assetFilters[key]}
                         onChange={() => setAssetFilters(prev => ({ ...prev, [key]: !prev[key] }))}
-                        onClick={e => e.stopPropagation()}
                         style={{ accentColor: '#2962FF', cursor: 'pointer', width: '14px', height: '14px' }}
                       />
                       {fl}
