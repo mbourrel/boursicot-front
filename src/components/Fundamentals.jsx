@@ -57,7 +57,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
       return (
         <div>
           <h3 style={h3Style}>{title}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '8px' }}>
             {dataArray.map((metric, i) => {
               const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
               return <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
