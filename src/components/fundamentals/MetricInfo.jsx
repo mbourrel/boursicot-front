@@ -12,9 +12,14 @@ function MetricInfo({ name }) {
     e.stopPropagation();
     if (pos) { setPos(null); return; }
     const rect = btnRef.current.getBoundingClientRect();
+    const tooltipWidth = 260;
     const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceRight = window.innerWidth - rect.left;
+    const left = spaceRight >= tooltipWidth + 8
+      ? rect.left
+      : Math.max(8, rect.right - tooltipWidth);
     setPos({
-      left: Math.min(rect.left, window.innerWidth - 276),
+      left,
       ...(spaceBelow >= 180
         ? { top: rect.bottom + 6 }
         : { top: rect.top - 6, transform: 'translateY(-100%)' }),

@@ -47,9 +47,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     const renderCategory = (title, dataArray, catKey) => {
       if (!dataArray || dataArray.length === 0) return null;
       return (
-        <div style={{ marginBottom: '20px' }}>
+        <div>
           <h3 style={h3Style}>{title}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
             {dataArray.map((metric, i) => {
               const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
               return <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
@@ -128,12 +128,14 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           </div>
         </div>
 
-        {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}
-        {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health')}
-        {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation')}
-        {renderCategory('4. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
-        {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash')}
-        {renderCategory('6. Risque & Marché',                 d.risk_market,        'risk_market')}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 32px', marginBottom: '32px' }}>
+          {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}
+          {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health')}
+          {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation')}
+          {renderCategory('4. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
+          {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash')}
+          {renderCategory('6. Risque & Marché',                 d.risk_market,        'risk_market')}
+        </div>
 
         <FinancialStatement title="7. Compte de Résultat — Historique (4 ans)" stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data} />
         <FinancialStatement title="8. Bilan Comptable — Historique (4 ans)"     stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} />
