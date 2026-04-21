@@ -6,6 +6,10 @@ const cardStyle = {
 };
 
 function MetricCard({ metric, fmt, fmtRaw }) {
+  const hasVal = metric.val !== null && metric.val !== undefined && metric.val !== 0;
+  const hasAvg = metric.avg !== null && metric.avg !== undefined && metric.avg !== 0;
+  if (!hasVal && !hasAvg) return null;
+
   return (
     <div style={cardStyle}>
       <span style={{ color: 'var(--text3)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>

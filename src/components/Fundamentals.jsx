@@ -49,7 +49,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
       return (
         <div style={{ marginBottom: '36px' }}>
           <h3 style={h3Style}>{title}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
             {dataArray.map((metric, i) => {
               const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
               return <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
@@ -135,9 +135,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
         {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash')}
         {renderCategory('6. Risque & Marché',                 d.risk_market,        'risk_market')}
 
-        <FinancialStatement title="7. Compte de Résultat — Historique (4 ans)" stmtData={d.income_stmt_data}   fmt={fmt} />
-        <FinancialStatement title="8. Bilan Comptable — Historique (4 ans)"     stmtData={d.balance_sheet_data} fmt={fmt} />
-        <FinancialStatement title="9. Flux de Trésorerie — Historique (4 ans)"  stmtData={d.cashflow_data}     fmt={fmt} />
+        <FinancialStatement title="7. Compte de Résultat — Historique (4 ans)" stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data} />
+        <FinancialStatement title="8. Bilan Comptable — Historique (4 ans)"     stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} />
+        <FinancialStatement title="9. Flux de Trésorerie — Historique (4 ans)"  stmtData={d.cashflow_data}     fmt={fmt} stmtAvg={sectorAvg?.cashflow_data} />
       </div>
     );
   }
