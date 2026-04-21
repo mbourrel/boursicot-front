@@ -136,7 +136,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 32px', alignItems: 'start', marginBottom: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
           {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}
           {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health')}
           {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation')}
