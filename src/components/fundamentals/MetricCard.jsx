@@ -20,9 +20,7 @@ function MetricCard({ metric, fmt, fmtRaw }) {
         <span style={{ fontSize: '17px', fontWeight: 'bold', color: 'var(--text1)' }}>{fmt(metric.val, metric.unit)}</span>
         {metric.avg !== 0 && metric.avg !== undefined && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <span style={{ fontSize: '9px', color: 'var(--text3)', display: 'inline-flex', alignItems: 'center' }}>
-                Moy. Secteur<MetricInfo name="Moy. Secteur" />
-              </span>
+            <span style={{ fontSize: '9px', color: 'var(--text3)' }}>Moy. Secteur</span>
             <span style={{ fontSize: '12px', fontWeight: 'bold', color: metric.val >= metric.avg ? '#26a69a' : '#ef5350' }}>
               {fmtRaw(metric.avg, metric.unit)}
             </span>

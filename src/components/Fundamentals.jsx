@@ -44,19 +44,18 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     if (errors[selectedSymbol]) return <p style={{ color: '#ef5350' }}>Aucune donnée disponible pour {selectedSymbol}</p>;
     if (!primaryData)           return <p style={{ color: 'var(--text3)' }}>Aucune donnée disponible.</p>;
 
-    const renderCategory = (title, dataArray, catKey) => {
+    // Retourne un fragment : titre pleine largeur + cartes pour le grid global
+    const categoryItems = (title, dataArray, catKey) => {
       if (!dataArray || dataArray.length === 0) return null;
-      return (
-        <div>
-          <h3 style={h3Style}>{title}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
-            {dataArray.map((metric, i) => {
-              const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
-              return <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
-            })}
-          </div>
-        </div>
-      );
+      return [
+        <div key={`title-${catKey}`} style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
+          <h3 style={{ ...h3Style, margin: 0 }}>{title}</h3>
+        </div>,
+        ...dataArray.map((metric, i) => {
+          const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
+          return <MetricCard key={`${catKey}-${i}`} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
+        }),
+      ];
     };
 
     const d = primaryData;
@@ -128,13 +127,13 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 32px', marginBottom: '32px' }}>
-          {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}
-          {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health')}
-          {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation')}
-          {renderCategory('4. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
-          {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash')}
-          {renderCategory('6. Risque & Marché',                 d.risk_market,        'risk_market')}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '8px', marginBottom: '32px' }}>
+          {categoryItems('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}
+          {categoryItems('2. Santé Financière',                d.financial_health,   'financial_health')}
+          {categoryItems('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation')}
+          {categoryItems('4. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
+          {categoryItems('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash')}
+          {categoryItems('6. Risque & Marché',                 d.risk_market,        'risk_market')}
         </div>
 
         <FinancialStatement title="7. Compte de Résultat — Historique (4 ans)" stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data} />
