@@ -54,11 +54,14 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
     const renderCategory = (title, dataArray, catKey) => {
       if (!dataArray || dataArray.length === 0) return null;
+      // Exclure les métriques sans valeur pour éviter les colonnes vides
+      const visible = dataArray.filter(m => m.val !== null && m.val !== undefined && m.val !== 0);
+      if (visible.length === 0) return null;
       return (
         <div>
           <h3 style={h3Style}>{title}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${dataArray.length}, 1fr)`, gap: '8px' }}>
-            {dataArray.map((metric, i) => {
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${visible.length}, 1fr)`, gap: '8px' }}>
+            {visible.map((metric, i) => {
               const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
               return <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
             })}
