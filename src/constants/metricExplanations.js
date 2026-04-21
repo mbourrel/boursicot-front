@@ -125,6 +125,9 @@ const EXPLANATIONS = {
     "Charge comptable non-cash liée à l'usure des actifs (immobilisations). Réduit le bénéfice net mais pas la trésorerie. Réintégrée dans le flux opérationnel. Amortissements élevés = secteur capitalistique.",
   'Variation du BFR':
     "Impact du cycle d'exploitation sur la trésorerie. Négatif = le BFR augmente (croissance de l'activité consomme du cash). Positif = compression du BFR (libère du cash).",
+
+  'Moy. Secteur':
+    "Moyenne calculée en temps réel à partir des données de toutes les entreprises du même secteur présentes en base. Valeurs nulles ou manquantes exclues du calcul.",
 };
 
 export default EXPLANATIONS;

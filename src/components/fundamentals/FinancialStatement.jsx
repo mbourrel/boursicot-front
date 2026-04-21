@@ -33,7 +33,10 @@ function FinancialStatement({ title, stmtData, fmt, stmtAvg }) {
               ))}
               {hasAvg && (
                 <th style={{ ...thStyle, textAlign: 'right', color: '#8c7ae6', borderLeft: '1px solid var(--border)' }}>
-                  Moy. Secteur
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                    Moy. Secteur
+                    <MetricInfo name="Moy. Secteur" />
+                  </span>
                 </th>
               )}
             </tr>

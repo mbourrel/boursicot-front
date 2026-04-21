@@ -47,9 +47,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     const renderCategory = (title, dataArray, catKey) => {
       if (!dataArray || dataArray.length === 0) return null;
       return (
-        <div style={{ marginBottom: '36px' }}>
+        <div style={{ marginBottom: '20px' }}>
           <h3 style={h3Style}>{title}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
             {dataArray.map((metric, i) => {
               const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
               return <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
