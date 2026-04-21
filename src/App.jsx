@@ -1,50 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Header from './components/Header';
 import CompareBar from './components/CompareBar';
 import TradingChart from './components/TradingChart';
 import SimpleChart from './components/SimpleChart';
 import Fundamentals from './components/Fundamentals';
 import MacroEnvironment from './components/MacroEnvironment';
+import ErrorBoundary from './components/ErrorBoundary';
+import { useAssets } from './hooks/useAssets';
 
 function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('AI.PA');
   const [compareSymbols, setCompareSymbols] = useState([]);
-  const [viewMode, setViewMode] = useState('chart');
-  const [chartMode, setChartMode] = useState('trading');
-  const [fundamentalsData, setFundamentalsData] = useState([]);
+  const [viewMode,       setViewMode]       = useState('chart');
+  const [chartMode,      setChartMode]      = useState('trading');
 
-  // Réinitialiser les comparaisons quand on change d'actif primaire
+  const { assets: fundamentalsData } = useAssets();
+
   const handleSelectSymbol = (ticker) => {
     setSelectedSymbol(ticker);
     setCompareSymbols([]);
   };
-
-  useEffect(() => {
-    const assetDictionary = {
-      // --- CAC 40 ---
-      "AC.PA": "Accor", "AI.PA": "Air Liquide", "AIR.PA": "Airbus", "MT.AS": "ArcelorMittal", "CS.PA": "AXA",
-      "BNP.PA": "BNP Paribas", "EN.PA": "Bouygues", "BVI.PA": "Bureau Veritas", "CAP.PA": "Capgemini", "CA.PA": "Carrefour",
-      "ACA.PA": "Crédit Agricole", "BN.PA": "Danone", "DSY.PA": "Dassault Systèmes", "EDF.PA": "EDF", "ENGI.PA": "Engie",
-      "EL.PA": "EssilorLuxottica", "ERF.PA": "Eurofins Scientific", "ENX.PA": "Euronext", "RMS.PA": "Hermès", "KER.PA": "Kering",
-      "OR.PA": "L'Oréal", "LR.PA": "Legrand", "MC.PA": "LVMH", "ML.PA": "Michelin", "ORA.PA": "Orange",
-      "RI.PA": "Pernod Ricard", "PUB.PA": "Publicis", "RNO.PA": "Renault", "SAF.PA": "Safran", "SGO.PA": "Saint-Gobain",
-      "SAN.PA": "Sanofi", "SU.PA": "Schneider Electric", "GLE.PA": "Société Générale", "STLAP.PA": "Stellantis", "STMPA.PA": "STMicroelectronics",
-      "HO.PA": "Thales", "TTE.PA": "TotalEnergies", "URW.PA": "Unibail-Rodamco-Westfield", "VIE.PA": "Veolia", "DG.PA": "Vinci",
-      // --- LES 7 FANTASTIQUES ---
-      "AAPL": "Apple", "MSFT": "Microsoft", "GOOGL": "Alphabet", "AMZN": "Amazon", "META": "Meta", "NVDA": "NVIDIA", "TSLA": "Tesla",
-      // --- INDICES ET CRYPTOS ---
-      "^FCHI": "CAC 40", "^GSPC": "S&P 500", "^IXIC": "Nasdaq Composite", "^DJI": "Dow Jones",
-      "^STOXX50E": "Euro Stoxx 50", "^N225": "Nikkei 225", "^VIX": "VIX Volatility Index",
-      "BTC-USD": "Bitcoin",
-      // --- MATIÈRES PREMIÈRES ET ÉNERGIE ---
-      "GC=F": "Or (Gold)", "SI=F": "Argent (Silver)", "CL=F": "Pétrole Brut WTI", "BZ=F": "Pétrole Brent",
-      "NG=F": "Gaz Naturel", "ZC=F": "Maïs (Corn)", "ZW=F": "Blé (Wheat)", "CT=F": "Coton",
-    };
-
-    setFundamentalsData(
-      Object.keys(assetDictionary).map(ticker => ({ ticker, name: assetDictionary[ticker] }))
-    );
-  }, []);
 
   const toggleBtnStyle = (active) => ({
     padding: '7px 16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
@@ -73,7 +48,6 @@ function App() {
         setViewMode={setViewMode}
       />
 
-      {/* Barre de comparaison — masquée sur la vue Macro */}
       {viewMode !== 'macro' && (
         <CompareBar
           primarySymbol={selectedSymbol}
@@ -84,10 +58,11 @@ function App() {
       )}
 
       {viewMode === 'macro' ? (
-        <MacroEnvironment />
+        <ErrorBoundary label="Macro">
+          <MacroEnvironment />
+        </ErrorBoundary>
       ) : viewMode === 'chart' ? (
         <>
-          {/* Toggle Trading / Simple */}
           <div style={{ display: 'flex', gap: '0', marginBottom: '12px' }}>
             <button
               onClick={() => setChartMode('trading')}
@@ -103,13 +78,17 @@ function App() {
             </button>
           </div>
 
-          {chartMode === 'trading'
-            ? <TradingChart selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} allAssets={fundamentalsData} />
-            : <SimpleChart selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} allAssets={fundamentalsData} />
-          }
+          <ErrorBoundary label="Graphique">
+            {chartMode === 'trading'
+              ? <TradingChart selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} allAssets={fundamentalsData} />
+              : <SimpleChart  selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} allAssets={fundamentalsData} />
+            }
+          </ErrorBoundary>
         </>
       ) : (
-        <Fundamentals selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} />
+        <ErrorBoundary label="Fondamentaux">
+          <Fundamentals selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} />
+        </ErrorBoundary>
       )}
     </div>
   );

@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, CandlestickSeries, LineSeries, HistogramSeries } from 'lightweight-charts';
 import { useTheme } from '../context/ThemeContext';
+import { fetchPrices } from '../api/prices';
+import ChartControls from './chart/ChartControls';
+import DrawingToolbar from './chart/DrawingToolbar';
 
 const CHART_HEIGHT = 550;
 
@@ -67,10 +70,6 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
   const [pendingPoint,  setPendingPoint]  = useState(null);
   const [cursorPos,     setCursorPos]     = useState({ x: 0, y: 0 });
   const [svgTick,       setSvgTick]       = useState(0);
-
-  const API_URL = window.location.hostname === 'localhost'
-    ? 'http://127.0.0.1:8000'
-    : import.meta.env.VITE_API_URL;
 
   // Garde le ref à jour pour éviter les closures périmées dans les callbacks
   useEffect(() => { candleIntervalRef.current = candleInterval; }, [candleInterval]);
@@ -227,8 +226,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
 
     let isMounted = true;
 
-    fetch(`${API_URL}/api/prices?ticker=${selectedSymbol}&interval=${candleInterval}`)
-      .then(res => res.json())
+    fetchPrices(selectedSymbol, candleInterval)
       .then(data => {
         if (!isMounted || !Array.isArray(data)) return;
         let rawData = data.map(i => ({
@@ -389,14 +387,6 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
     if (p) anchorDot = <circle cx={p.x} cy={p.y} r={4} fill={drawColor} opacity={0.9} />;
   }
 
-  // ── Styles ──────────────────────────────────────────────────────────────────
-  const filterBtnStyle = (isActive, activeColor = '#2962FF') => ({
-    padding: '6px 10px', background: isActive ? activeColor : 'transparent',
-    color: isActive ? 'white' : 'var(--text3)',
-    border: `1px solid ${isActive ? activeColor : 'var(--border)'}`,
-    borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', transition: 'all 0.2s',
-  });
-
   const formatVal = (val) => {
     if (val === null || val === undefined) return 'N/A';
     if (val > 1e9) return (val / 1e9).toFixed(2) + ' Md';
@@ -417,117 +407,34 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
     <div style={{ backgroundColor: 'var(--bg1)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border)' }}>
 
       {/* ── BARRE DE CONTRÔLE ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '15px' }}>
+      <ChartControls
+        candleInterval={candleInterval}
+        setCandleInterval={setCandleInterval}
+        timeRange={timeRange}
+        onTimeRangeChange={(r) => { setTimeRange(r); applyTimeRange(r); }}
+        indicators={indicators}
+        toggleIndicator={toggleIndicator}
+        showDrawTools={showDrawTools}
+        onToggleDrawTools={() => {
+          setShowDrawTools(v => !v);
+          if (showDrawTools) { setActiveTool(null); setPendingPoint(null); }
+        }}
+      />
 
-        {/* Ligne 1 : Bougies + Zoom */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px' }}>
-          <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '5px' }}>BOUGIES :</span>
-              {['15m', '1h', '1D', '1W'].map(iv => (
-                <button key={iv} style={filterBtnStyle(candleInterval === iv)} onClick={() => setCandleInterval(iv)}>
-                  {iv === '15m' ? '15 Min' : iv === '1h' ? '1 Heure' : iv === '1D' ? 'Jour' : 'Semaine'}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '5px' }}>ZOOM :</span>
-              {['1W', '1M', '3M', '6M', '1Y', '5Y', 'ALL'].map(r => (
-                <button key={r} style={filterBtnStyle(timeRange === r)} onClick={() => { setTimeRange(r); applyTimeRange(r); }}>
-                  {r === 'ALL' ? 'Tout' : r}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* ── PALETTE DE DESSIN (conditionnelle) ── */}
+      {showDrawTools && (
+        <div style={{ marginBottom: '15px' }}>
+          <DrawingToolbar
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+            drawColor={drawColor}
+            setDrawColor={setDrawColor}
+            onUndo={() => { setDrawings(prev => prev.slice(0, -1)); setPendingPoint(null); }}
+            onClear={() => { setDrawings([]); setPendingPoint(null); }}
+            hintText={hintText}
+          />
         </div>
-
-        {/* Ligne 2 : Indicateurs + bouton Dessiner */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '5px' }}>INDICATEURS :</span>
-            <button style={filterBtnStyle(indicators.volume)}              onClick={() => toggleIndicator('volume')}>Volumes</button>
-            <button style={filterBtnStyle(indicators.bb)}                  onClick={() => toggleIndicator('bb')}>Bollinger</button>
-            <button style={filterBtnStyle(indicators.atr, '#e91e63')}     onClick={() => toggleIndicator('atr')}>Volatilité (ATR)</button>
-            <button style={filterBtnStyle(indicators.ma10, '#00bcd4')}    onClick={() => toggleIndicator('ma10')}>MM 10</button>
-            <button style={filterBtnStyle(indicators.ma100, '#ff9800')}   onClick={() => toggleIndicator('ma100')}>MM 100</button>
-            <button style={filterBtnStyle(indicators.ma200, '#9c27b0')}   onClick={() => toggleIndicator('ma200')}>MM 200</button>
-          </div>
-
-          {/* Toggle dessin */}
-          <button
-            style={{ ...filterBtnStyle(showDrawTools, '#374151'), display: 'flex', alignItems: 'center', gap: '5px' }}
-            onClick={() => {
-              setShowDrawTools(v => !v);
-              if (showDrawTools) { setActiveTool(null); setPendingPoint(null); }
-            }}
-          >
-            ✏ Dessiner
-          </button>
-        </div>
-
-        {/* Ligne 3 : Palette de dessin (conditionnelle) */}
-        {showDrawTools && (
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', padding: '10px 14px', backgroundColor: 'var(--bg2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-
-            {/* Outils */}
-            <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '4px' }}>OUTIL :</span>
-              {DRAW_TOOLS.map(t => (
-                <button
-                  key={t.id}
-                  style={filterBtnStyle(activeTool === t.id, '#374151')}
-                  onClick={() => setActiveTool(activeTool === t.id ? null : t.id)}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)', flexShrink: 0 }} />
-
-            {/* Couleurs */}
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text3)', marginRight: '2px' }}>COULEUR :</span>
-              {DRAW_COLORS.map(c => (
-                <button
-                  key={c}
-                  onClick={() => setDrawColor(c)}
-                  title={c === '#ef5350' ? 'Rouge — gap baissier' : c === '#26a69a' ? 'Vert — gap haussier' : c}
-                  style={{
-                    width: '18px', height: '18px', borderRadius: '50%',
-                    backgroundColor: c, border: `2px solid ${drawColor === c ? 'white' : 'transparent'}`,
-                    cursor: 'pointer', padding: 0, flexShrink: 0, transition: 'border 0.15s',
-                  }}
-                />
-              ))}
-            </div>
-
-            <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)', flexShrink: 0 }} />
-
-            {/* Actions */}
-            <button
-              style={{ ...filterBtnStyle(false), color: '#f59e0b', borderColor: '#f59e0b40' }}
-              onClick={() => { setDrawings(prev => prev.slice(0, -1)); setPendingPoint(null); }}
-              title="Annuler le dernier dessin"
-            >
-              ↩ Annuler
-            </button>
-            <button
-              style={{ ...filterBtnStyle(false), color: '#ef5350', borderColor: '#ef535040' }}
-              onClick={() => { setDrawings([]); setPendingPoint(null); }}
-            >
-              Tout effacer
-            </button>
-
-            {/* Hint contextuel */}
-            {hintText && (
-              <span style={{ fontSize: '11px', color: 'var(--text3)', fontStyle: 'italic', marginLeft: '4px' }}>
-                {hintText}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* ── ZONE DU GRAPHIQUE ── */}
       <div style={{ position: 'relative', overflow: 'hidden' }}>

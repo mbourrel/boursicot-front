@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTheme } from '../context/ThemeContext';
 
 // ── Bouton toggle dark/light ──────────────────────────────────────────────────
@@ -21,7 +21,6 @@ function ThemeToggle({ isDark, onToggle }) {
         outline: 'none',
       }}
     >
-      {/* Thumb circulaire */}
       <span
         style={{
           position: 'absolute',
@@ -39,6 +38,83 @@ function ThemeToggle({ isDark, onToggle }) {
   );
 }
 
+// ── Composant filtre déroulant générique ──────────────────────────────────────
+function FilterDropdown({ label, items, filters, onChange, dropdownRef }) {
+  const [open, setOpen] = useState(false);
+
+  const activeCount = filters ? Object.values(filters).filter(Boolean).length : 0;
+  const total = items.length;
+  const summary = activeCount === 0
+    ? `Aucun`
+    : activeCount === total
+      ? `Tous`
+      : items.filter(i => filters?.[i.key]).map(i => i.label).join(' · ');
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownRef]);
+
+  return (
+    <div ref={dropdownRef} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          padding: '8px 12px', backgroundColor: 'var(--bg3)',
+          border: `1px solid ${open ? '#2962FF' : 'var(--border)'}`,
+          borderRadius: '6px', cursor: 'pointer', color: 'var(--text1)',
+          fontSize: '12px', whiteSpace: 'nowrap',
+        }}
+      >
+        <span style={{ color: 'var(--text3)', fontSize: '11px', fontWeight: 'bold' }}>{label}</span>
+        <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{summary}</span>
+        <span style={{ color: 'var(--text3)', fontSize: '10px' }}>{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 6px)', left: 0,
+          backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
+          borderRadius: '6px', padding: '6px 0',
+          zIndex: 50, minWidth: '170px', maxHeight: '260px', overflowY: 'auto',
+          boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
+        }}>
+          {items.map(({ key, label: fl }) => (
+            <label
+              key={key}
+              onClick={() => onChange(key)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '8px 14px', cursor: 'pointer', fontSize: '13px',
+                color: filters?.[key] ? 'var(--text1)' : 'var(--text3)',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--border)'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <input
+                type="checkbox"
+                checked={!!filters?.[key]}
+                onChange={() => onChange(key)}
+                onClick={e => e.stopPropagation()}
+                style={{ accentColor: '#2962FF', cursor: 'pointer', width: '14px', height: '14px' }}
+              />
+              {fl}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Header principal ──────────────────────────────────────────────────────────
 function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode, setViewMode }) {
   const { isDark, toggleTheme } = useTheme();
 
@@ -47,11 +123,60 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   const [filterOpen, setFilterOpen] = useState(false);
   const dropdownRef = useRef(null);
   const filterRef = useRef(null);
+  const countryFilterRef = useRef(null);
+  const sectorFilterRef = useRef(null);
 
+  // ── Filtre par type ──────────────────────────────────────────────────────────
   const [assetFilters, setAssetFilters] = useState({
     stock: true, index: true, crypto: true, commodity: true,
   });
 
+  const getAssetType = (ticker) => {
+    if (!ticker) return 'stock';
+    const t = ticker.toUpperCase();
+    if (t.includes('-USD')) return 'crypto';
+    if (t.startsWith('^')) return 'index';
+    if (t.endsWith('=F')) return 'commodity';
+    return 'stock';
+  };
+
+  // ── Filtre par pays ──────────────────────────────────────────────────────────
+  const availableCountries = useMemo(() => {
+    const set = new Set();
+    fundamentalsData.forEach(c => set.add(c.country || 'International'));
+    return Array.from(set).sort((a, b) => {
+      if (a === 'International') return 1;
+      if (b === 'International') return -1;
+      return a.localeCompare(b, 'fr');
+    });
+  }, [fundamentalsData]);
+
+  const [countryFilters, setCountryFilters] = useState(null);
+  useEffect(() => {
+    if (availableCountries.length > 0 && countryFilters === null) {
+      const init = {};
+      availableCountries.forEach(c => { init[c] = true; });
+      setCountryFilters(init);
+    }
+  }, [availableCountries, countryFilters]);
+
+  // ── Filtre par secteur ───────────────────────────────────────────────────────
+  const availableSectors = useMemo(() => {
+    const set = new Set();
+    fundamentalsData.forEach(c => { if (c.sector) set.add(c.sector); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'fr'));
+  }, [fundamentalsData]);
+
+  const [sectorFilters, setSectorFilters] = useState(null);
+  useEffect(() => {
+    if (availableSectors.length > 0 && sectorFilters === null) {
+      const init = {};
+      availableSectors.forEach(s => { init[s] = true; });
+      setSectorFilters(init);
+    }
+  }, [availableSectors, sectorFilters]);
+
+  // ── Synchronise le champ de recherche avec le symbole sélectionné ────────────
   useEffect(() => {
     const selectedCompany = fundamentalsData.find(c => c.ticker === selectedSymbol);
     if (selectedCompany) {
@@ -76,21 +201,16 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [selectedSymbol, fundamentalsData]);
 
-  const handleFilterChange = (assetType) => {
-    setAssetFilters(prev => ({ ...prev, [assetType]: !prev[assetType] }));
-  };
-
-  const getAssetType = (ticker) => {
-    if (!ticker) return 'stock';
-    const t = ticker.toUpperCase();
-    if (t.includes('-USD')) return 'crypto';
-    if (t.startsWith('^')) return 'index';
-    if (t.endsWith('=F')) return 'commodity';
-    return 'stock';
-  };
-
+  // ── Données filtrées pour la liste déroulante ────────────────────────────────
   const filteredData = fundamentalsData.filter(company => {
     if (!assetFilters[getAssetType(company.ticker)]) return false;
+    if (countryFilters) {
+      const country = company.country || 'International';
+      if (!countryFilters[country]) return false;
+    }
+    if (sectorFilters && company.sector) {
+      if (!sectorFilters[company.sector]) return false;
+    }
     const name = company.name || '';
     const ticker = company.ticker || '';
     return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,27 +222,32 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     setIsOpen(false);
   };
 
+  // ── Items pour les filtres génériques ────────────────────────────────────────
+  const TYPE_FILTERS = [
+    { key: 'stock',     label: 'Actions' },
+    { key: 'index',     label: 'Indices' },
+    { key: 'crypto',    label: 'Cryptos' },
+    { key: 'commodity', label: 'Matières' },
+  ];
+
+  const countryItems = availableCountries.map(c => ({ key: c, label: c }));
+  const sectorItems = availableSectors.map(s => ({ key: s, label: s }));
+
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
       <h1 style={{ margin: 0, color: 'var(--text1)' }}>Boursicot Pro 📈</h1>
 
-      <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
 
-        {/* FILTRE DÉROULANT */}
+        {/* FILTRE TYPE */}
         {(() => {
-          const FILTERS = [
-            { key: 'stock',     label: 'Actions' },
-            { key: 'index',     label: 'Indices' },
-            { key: 'crypto',    label: 'Cryptos' },
-            { key: 'commodity', label: 'Matières' },
-          ];
           const activeCount = Object.values(assetFilters).filter(Boolean).length;
-          const total = FILTERS.length;
+          const total = TYPE_FILTERS.length;
           const label = activeCount === 0
             ? 'Aucun type'
             : activeCount === total
               ? 'Tous les types'
-              : FILTERS.filter(f => assetFilters[f.key]).map(f => f.label).join(' · ');
+              : TYPE_FILTERS.filter(f => assetFilters[f.key]).map(f => f.label).join(' · ');
           return (
             <div ref={filterRef} style={{ position: 'relative' }}>
               <button
@@ -135,7 +260,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
                   fontSize: '12px', whiteSpace: 'nowrap',
                 }}
               >
-                <span style={{ color: 'var(--text3)', fontSize: '11px', fontWeight: 'bold' }}>FILTRER</span>
+                <span style={{ color: 'var(--text3)', fontSize: '11px', fontWeight: 'bold' }}>TYPE</span>
                 <span>{label}</span>
                 <span style={{ color: 'var(--text3)', fontSize: '10px' }}>{filterOpen ? '▲' : '▼'}</span>
               </button>
@@ -148,10 +273,10 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
                   zIndex: 50, minWidth: '150px',
                   boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
                 }}>
-                  {FILTERS.map(({ key, label: fl }) => (
+                  {TYPE_FILTERS.map(({ key, label: fl }) => (
                     <label
                       key={key}
-                      onClick={() => handleFilterChange(key)}
+                      onClick={() => setAssetFilters(prev => ({ ...prev, [key]: !prev[key] }))}
                       style={{
                         display: 'flex', alignItems: 'center', gap: '10px',
                         padding: '8px 14px', cursor: 'pointer', fontSize: '13px',
@@ -164,7 +289,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
                       <input
                         type="checkbox"
                         checked={assetFilters[key]}
-                        onChange={() => handleFilterChange(key)}
+                        onChange={() => setAssetFilters(prev => ({ ...prev, [key]: !prev[key] }))}
                         onClick={e => e.stopPropagation()}
                         style={{ accentColor: '#2962FF', cursor: 'pointer', width: '14px', height: '14px' }}
                       />
@@ -176,6 +301,28 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
             </div>
           );
         })()}
+
+        {/* FILTRE PAYS */}
+        {countryItems.length > 0 && countryFilters && (
+          <FilterDropdown
+            label="PAYS"
+            items={countryItems}
+            filters={countryFilters}
+            onChange={key => setCountryFilters(prev => ({ ...prev, [key]: !prev[key] }))}
+            dropdownRef={countryFilterRef}
+          />
+        )}
+
+        {/* FILTRE SECTEUR */}
+        {sectorItems.length > 0 && sectorFilters && (
+          <FilterDropdown
+            label="SECTEUR"
+            items={sectorItems}
+            filters={sectorFilters}
+            onChange={key => setSectorFilters(prev => ({ ...prev, [key]: !prev[key] }))}
+            dropdownRef={sectorFilterRef}
+          />
+        )}
 
         {/* BARRE DE RECHERCHE */}
         <div ref={dropdownRef} style={{ position: 'relative', width: '280px' }}>

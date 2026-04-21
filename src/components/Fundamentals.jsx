@@ -1,110 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { ASSET_COLORS } from './CompareBar';
-import EXPLANATIONS from '../constants/metricExplanations';
-
-// ── Composant tooltip réutilisable ─────────────────────────────────────────
-function MetricInfo({ name }) {
-  const [pos, setPos] = useState(null);
-  const btnRef = useRef(null);
-  const text = EXPLANATIONS[name];
-  if (!text) return null;
-
-  const handleClick = (e) => {
-    e.stopPropagation();
-    if (pos) { setPos(null); return; }
-    const rect = btnRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    // Tooltip en dessous si assez de place, sinon au-dessus
-    setPos({
-      left: Math.min(rect.left, window.innerWidth - 276),
-      ...(spaceBelow >= 180
-        ? { top: rect.bottom + 6 }
-        : { top: rect.top - 6, transform: 'translateY(-100%)' }),
-    });
-  };
-
-  return (
-    <span style={{ position: 'relative', display: 'inline-flex', verticalAlign: 'middle', marginLeft: '5px' }}>
-      <button
-        ref={btnRef}
-        onClick={handleClick}
-        style={{
-          background: pos ? '#2962FF22' : 'transparent',
-          border: `1px solid ${pos ? '#2962FF88' : 'var(--border)'}`,
-          color: pos ? '#2962FF' : 'var(--text3)',
-          borderRadius: '50%', width: '14px', height: '14px',
-          fontSize: '9px', fontWeight: 'bold', cursor: 'pointer',
-          padding: 0, lineHeight: 1, flexShrink: 0,
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'all 0.15s',
-        }}
-      >
-        i
-      </button>
-
-      {pos && createPortal(
-        <>
-          {/* Backdrop */}
-          <div
-            style={{ position: 'fixed', inset: 0, zIndex: 998 }}
-            onClick={() => setPos(null)}
-          />
-          {/* Tooltip */}
-          <div style={{
-            position: 'fixed',
-            top: pos.top, left: pos.left,
-            transform: pos.transform ?? 'none',
-            zIndex: 999, width: '260px',
-            backgroundColor: 'var(--bg2)', border: '1px solid #2962FF44',
-            borderRadius: '8px', padding: '10px 12px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
-            fontSize: '11px', color: '#b0b8c4', lineHeight: '1.65',
-          }}>
-            <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '11px', marginBottom: '5px' }}>{name}</div>
-            {text}
-          </div>
-        </>,
-        document.body
-      )}
-    </span>
-  );
-}
+import MetricInfo from './fundamentals/MetricInfo';
+import MetricCard from './fundamentals/MetricCard';
+import FinancialStatement from './fundamentals/FinancialStatement';
+import { useFundamentals } from '../hooks/useFundamentals';
 
 // ── Composant principal ────────────────────────────────────────────────────
 function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
-  const [dataMap, setDataMap] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors]   = useState({});
-
-  const API_URL = window.location.hostname === 'localhost'
-    ? 'http://127.0.0.1:8000'
-    : import.meta.env.VITE_API_URL;
-
   const allSymbols = [selectedSymbol, ...compareSymbols];
-
-  useEffect(() => {
-    if (allSymbols.length === 0) return;
-    setLoading(true);
-    setErrors({});
-    Promise.all(
-      allSymbols.map(sym =>
-        fetch(`${API_URL}/api/fundamentals/${encodeURIComponent(sym)}`)
-          .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
-          .then(data => ({ sym, data }))
-          .catch(() => ({ sym, data: null }))
-      )
-    ).then(results => {
-      const newMap = {}, newErrors = {};
-      results.forEach(({ sym, data }) => {
-        if (data) newMap[sym] = data;
-        else newErrors[sym] = true;
-      });
-      setDataMap(newMap);
-      setErrors(newErrors);
-      setLoading(false);
-    });
-  }, [allSymbols.join(','), API_URL]);
+  const { dataMap, loading, errors } = useFundamentals(allSymbols);
 
   // ── Formateur de valeurs ───────────────────────────────────────────────────
   const fmt = (val, unit) => {
@@ -144,83 +47,8 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           <h3 style={h3Style}>{title}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '14px' }}>
             {dataArray.map((metric, i) => (
-              <div key={i} style={cardStyle}>
-                <span style={{ color: 'var(--text3)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
-                  {metric.name}
-                  <MetricInfo name={metric.name} />
-                </span>
-                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '10px' }}>
-                  <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text1)' }}>{fmt(metric.val, metric.unit)}</span>
-                  {metric.avg !== 0 && metric.avg !== undefined && (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                      <span style={{ fontSize: '10px', color: 'var(--text3)' }}>Moy. Secteur</span>
-                      <span style={{ fontSize: '13px', fontWeight: 'bold', color: metric.val >= metric.avg ? '#26a69a' : '#ef5350' }}>
-                        {fmtRaw(metric.avg, metric.unit)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <MetricCard key={i} metric={metric} fmt={fmt} fmtRaw={fmtRaw} />
             ))}
-          </div>
-        </div>
-      );
-    };
-
-    const renderStatement = (title, stmtData) => {
-      if (!stmtData || !stmtData.items || stmtData.items.length === 0) return null;
-      const { years, items } = stmtData;
-      const cols = years.slice(0, 4);
-      return (
-        <div style={{ marginBottom: '36px' }}>
-          <h3 style={h3Style}>{title}</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
-              <thead>
-                <tr style={{ backgroundColor: 'var(--bg2)' }}>
-                  <th style={{ ...thStyle, textAlign: 'left', width: '38%' }}>Indicateur</th>
-                  {cols.map((y, i) => (
-                    <th key={i} style={{ ...thStyle, textAlign: 'right' }}>
-                      {y.slice(0, 4)}
-                      {i === 0 && <span style={{ marginLeft: '4px', fontSize: '9px', color: '#2962FF', fontWeight: 'normal' }}>↑ récent</span>}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item, rowIdx) => {
-                  const vals = item.vals.slice(0, 4);
-                  return (
-                    <tr key={rowIdx} style={{ backgroundColor: rowIdx % 2 === 0 ? 'var(--bg1)' : 'var(--bg2)' }}>
-                      <td style={{ ...tdStyle, color: 'var(--text2)' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0' }}>
-                          {item.name}
-                          <MetricInfo name={item.name} />
-                        </span>
-                      </td>
-                      {vals.map((val, colIdx) => {
-                        const next = vals[colIdx + 1];
-                        let trend = null;
-                        if (colIdx === 0 && val !== null && next !== null && next !== 0) {
-                          const pct = ((val - next) / Math.abs(next)) * 100;
-                          trend = { pct, up: pct >= 0 };
-                        }
-                        return (
-                          <td key={colIdx} style={{ ...tdStyle, textAlign: 'right', fontWeight: colIdx === 0 ? 'bold' : 'normal', color: colIdx === 0 ? 'var(--text1)' : 'var(--text3)' }}>
-                            {fmt(val, item.unit)}
-                            {trend && (
-                              <span style={{ marginLeft: '6px', fontSize: '10px', color: trend.up ? '#26a69a' : '#ef5350' }}>
-                                {trend.up ? '▲' : '▼'} {Math.abs(trend.pct).toFixed(1)}%
-                              </span>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
           </div>
         </div>
       );
@@ -302,9 +130,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
         {renderCategory('5. Bilan & Liquidité',               d.balance_cash)}
         {renderCategory('6. Risque & Marché',                 d.risk_market)}
 
-        {renderStatement('7. Compte de Résultat — Historique (4 ans)', d.income_stmt_data)}
-        {renderStatement('8. Bilan Comptable — Historique (4 ans)',     d.balance_sheet_data)}
-        {renderStatement('9. Flux de Trésorerie — Historique (4 ans)',  d.cashflow_data)}
+        <FinancialStatement title="7. Compte de Résultat — Historique (4 ans)" stmtData={d.income_stmt_data}   fmt={fmt} />
+        <FinancialStatement title="8. Bilan Comptable — Historique (4 ans)"     stmtData={d.balance_sheet_data} fmt={fmt} />
+        <FinancialStatement title="9. Flux de Trésorerie — Historique (4 ans)"  stmtData={d.cashflow_data}     fmt={fmt} />
       </div>
     );
   }
@@ -499,14 +327,6 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 // ── Styles partagés ────────────────────────────────────────────────────────
 const h3Style = {
   margin: '0 0 14px', color: '#2962FF', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em',
-};
-const cardStyle = {
-  backgroundColor: 'var(--bg3)', padding: '15px', borderRadius: '8px',
-  border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-};
-const thStyle = {
-  padding: '10px 12px', color: 'var(--text3)', fontSize: '11px',
-  borderBottom: '1px solid var(--border)', fontWeight: 'bold', letterSpacing: '0.04em',
 };
 const tdStyle = {
   padding: '9px 12px', fontSize: '12px', borderBottom: '1px solid var(--border)',

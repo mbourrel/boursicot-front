@@ -1,0 +1,30 @@
+import MetricInfo from './MetricInfo';
+
+const cardStyle = {
+  backgroundColor: 'var(--bg3)', padding: '15px', borderRadius: '8px',
+  border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+};
+
+function MetricCard({ metric, fmt, fmtRaw }) {
+  return (
+    <div style={cardStyle}>
+      <span style={{ color: 'var(--text3)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+        {metric.name}
+        <MetricInfo name={metric.name} />
+      </span>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '10px' }}>
+        <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text1)' }}>{fmt(metric.val, metric.unit)}</span>
+        {metric.avg !== 0 && metric.avg !== undefined && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <span style={{ fontSize: '10px', color: 'var(--text3)' }}>Moy. Secteur</span>
+            <span style={{ fontSize: '13px', fontWeight: 'bold', color: metric.val >= metric.avg ? '#26a69a' : '#ef5350' }}>
+              {fmtRaw(metric.avg, metric.unit)}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default MetricCard;
