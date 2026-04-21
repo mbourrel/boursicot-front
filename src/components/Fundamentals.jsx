@@ -1,4 +1,12 @@
 import { ASSET_COLORS } from './CompareBar';
+
+const LOWER_IS_BETTER = new Set([
+  'PER', 'Forward PE', 'Price to Book', 'EV / EBITDA', 'PEG Ratio',
+  'Dette/Fonds Propres', 'Actions Shortées',
+]);
+const NEUTRAL_METRICS = new Set([
+  'Capitalisation', 'Beta', 'Plus Haut 52w', 'Plus Bas 52w',
+]);
 import MetricInfo from './fundamentals/MetricInfo';
 import MetricCard from './fundamentals/MetricCard';
 import FinancialStatement from './fundamentals/FinancialStatement';
@@ -259,6 +267,10 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           const maxVal = numerics.length > 1 ? Math.max(...numerics) : null;
           const minVal = numerics.length > 1 ? Math.min(...numerics) : null;
           const unit = vals.find(Boolean)?.unit ?? '';
+          const isNeutral = NEUTRAL_METRICS.has(name);
+          const lowerBetter = LOWER_IS_BETTER.has(name);
+          const bestVal  = lowerBetter ? minVal : maxVal;
+          const worstVal = lowerBetter ? maxVal : minVal;
           return (
             <tr key={name} style={{ backgroundColor: rowIdx % 2 === 0 ? 'var(--bg1)' : 'var(--bg2)' }}>
               <MetricNameCell name={name} />
@@ -266,9 +278,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                 const metric = getSimpleMetric(sym, cat.key, name);
                 const val = metric?.val ?? null;
                 let color = 'white';
-                if (maxVal !== null && val !== null && val !== 0) {
-                  if (val === maxVal) color = '#26a69a';
-                  else if (val === minVal) color = '#ef5350';
+                if (!isNeutral && bestVal !== null && val !== null && val !== 0) {
+                  if (val === bestVal)  color = '#26a69a';
+                  else if (val === worstVal) color = '#ef5350';
                 }
                 return (
                   <td key={sym} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', fontSize: '13px', color }}>
