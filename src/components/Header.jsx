@@ -140,10 +140,21 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     return 'stock';
   };
 
+  // Pays dérivé du ticker (lieu de cotation), pas de la base
+  const getCountry = (ticker) => {
+    if (!ticker) return 'International';
+    const t = ticker.toUpperCase();
+    if (t.startsWith('^') || t.includes('-USD') || t.endsWith('=F')) return 'International';
+    if (t.endsWith('.PA')) return 'France';
+    if (t.endsWith('.AS')) return 'Pays-Bas';
+    // Ticker sans suffixe = coté aux US
+    return 'États-Unis';
+  };
+
   // ── Filtre par pays ──────────────────────────────────────────────────────────
   const availableCountries = useMemo(() => {
     const set = new Set();
-    fundamentalsData.forEach(c => set.add(c.country || 'International'));
+    fundamentalsData.forEach(c => set.add(getCountry(c.ticker)));
     return Array.from(set).sort((a, b) => {
       if (a === 'International') return 1;
       if (b === 'International') return -1;
@@ -205,8 +216,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   const filteredData = fundamentalsData.filter(company => {
     if (!assetFilters[getAssetType(company.ticker)]) return false;
     if (countryFilters) {
-      const country = company.country || 'International';
-      if (!countryFilters[country]) return false;
+      if (!countryFilters[getCountry(company.ticker)]) return false;
     }
     if (sectorFilters && company.sector) {
       if (!sectorFilters[company.sector]) return false;
