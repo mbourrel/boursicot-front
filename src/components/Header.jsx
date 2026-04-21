@@ -124,7 +124,6 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   const dropdownRef = useRef(null);
   const filterRef = useRef(null);
   const countryFilterRef = useRef(null);
-  const sectorFilterRef = useRef(null);
 
   // ── Filtre par type ──────────────────────────────────────────────────────────
   const [assetFilters, setAssetFilters] = useState({
@@ -171,23 +170,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     }
   }, [availableCountries, countryFilters]);
 
-  // ── Filtre par secteur ───────────────────────────────────────────────────────
-  const availableSectors = useMemo(() => {
-    const set = new Set();
-    fundamentalsData.forEach(c => { if (c.sector) set.add(c.sector); });
-    return Array.from(set).sort((a, b) => a.localeCompare(b, 'fr'));
-  }, [fundamentalsData]);
-
-  const [sectorFilters, setSectorFilters] = useState(null);
-  useEffect(() => {
-    if (availableSectors.length > 0 && sectorFilters === null) {
-      const init = {};
-      availableSectors.forEach(s => { init[s] = true; });
-      setSectorFilters(init);
-    }
-  }, [availableSectors, sectorFilters]);
-
-  // ── Synchronise le champ de recherche avec le symbole sélectionné ────────────
+// ── Synchronise le champ de recherche avec le symbole sélectionné ────────────
   useEffect(() => {
     const selectedCompany = fundamentalsData.find(c => c.ticker === selectedSymbol);
     if (selectedCompany) {
@@ -218,10 +201,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     if (countryFilters) {
       if (!countryFilters[getCountry(company.ticker)]) return false;
     }
-    if (sectorFilters && company.sector) {
-      if (!sectorFilters[company.sector]) return false;
-    }
-    const name = company.name || '';
+const name = company.name || '';
     const ticker = company.ticker || '';
     return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
            ticker.toLowerCase().includes(searchTerm.toLowerCase());
@@ -241,7 +221,6 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   ];
 
   const countryItems = availableCountries.map(c => ({ key: c, label: c }));
-  const sectorItems = availableSectors.map(s => ({ key: s, label: s }));
 
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
@@ -320,17 +299,6 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
             filters={countryFilters}
             onChange={key => setCountryFilters(prev => ({ ...prev, [key]: !prev[key] }))}
             dropdownRef={countryFilterRef}
-          />
-        )}
-
-        {/* FILTRE SECTEUR */}
-        {sectorItems.length > 0 && sectorFilters && (
-          <FilterDropdown
-            label="SECTEUR"
-            items={sectorItems}
-            filters={sectorFilters}
-            onChange={key => setSectorFilters(prev => ({ ...prev, [key]: !prev[key] }))}
-            dropdownRef={sectorFilterRef}
           />
         )}
 
