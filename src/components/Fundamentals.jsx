@@ -52,12 +52,12 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     if (errors[selectedSymbol]) return <p style={{ color: '#ef5350' }}>Aucune donnée disponible pour {selectedSymbol}</p>;
     if (!primaryData)           return <p style={{ color: 'var(--text3)' }}>Aucune donnée disponible.</p>;
 
-    const renderCategory = (title, dataArray, catKey) => {
+    const renderCategory = (title, dataArray, catKey, minCardWidth = 110) => {
       if (!dataArray || dataArray.length === 0) return null;
       return (
         <div>
           <h3 style={h3Style}>{title}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${minCardWidth}px, 1fr))`, gap: '8px' }}>
             {dataArray.map((metric, i) => {
               const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
               return <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
@@ -136,13 +136,13 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
-          {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}
-          {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health')}
-          {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation')}
-          {renderCategory('4. Risque & Marché',                 d.risk_market,        'risk_market')}
-          {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash')}
-          {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
+        <div style={{ display: 'grid', gridTemplateColumns: '3fr 3fr 4fr', gap: '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
+          {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis',    105)}
+          {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health',   105)}
+          {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation', 120)}
+          {renderCategory('4. Risque & Marché',                 d.risk_market,        'risk_market',        105)}
+          {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash',       105)}
+          {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth',      120)}
         </div>
 
         <FinancialStatement title="7. Compte de Résultat — Historique (4 ans)" stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data} />
