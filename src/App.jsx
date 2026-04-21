@@ -29,24 +29,35 @@ function App() {
   });
 
   return (
-    <div style={{ backgroundColor: 'var(--bg0)', minHeight: '100vh', padding: '20px', color: 'var(--text1)', fontFamily: 'sans-serif' }}>
+    <div style={{ backgroundColor: 'var(--bg0)', minHeight: '100vh', color: 'var(--text1)', fontFamily: 'sans-serif' }}>
 
+      {/* ── ZONE STICKY : bannière + header ── */}
       <div style={{
-        backgroundColor: '#1a1400', border: '1px solid #f59e0b40',
-        borderRadius: '6px', padding: '8px 14px', marginBottom: '14px',
-        fontSize: '12px', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '8px',
+        position: 'sticky', top: 0, zIndex: 100,
+        backgroundColor: 'var(--bg0)',
+        borderBottom: '1px solid var(--border)',
+        padding: '12px 20px 10px',
       }}>
-        <span>⚠</span>
-        <span>Version bêta gratuite — si les données ne s'affichent pas, patientez environ une minute le temps que le serveur démarre.</span>
+        <div style={{
+          backgroundColor: '#1a1400', border: '1px solid #f59e0b40',
+          borderRadius: '6px', padding: '6px 14px', marginBottom: '10px',
+          fontSize: '12px', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '8px',
+        }}>
+          <span>⚠</span>
+          <span>Version bêta gratuite — si les données ne s'affichent pas, patientez environ une minute le temps que le serveur démarre.</span>
+        </div>
+
+        <Header
+          selectedSymbol={selectedSymbol}
+          setSelectedSymbol={handleSelectSymbol}
+          fundamentalsData={fundamentalsData}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+        />
       </div>
 
-      <Header
-        selectedSymbol={selectedSymbol}
-        setSelectedSymbol={handleSelectSymbol}
-        fundamentalsData={fundamentalsData}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-      />
+      {/* ── CONTENU SCROLLABLE ── */}
+      <div style={{ padding: '20px' }}>
 
       {viewMode !== 'macro' && (
         <CompareBar
@@ -90,6 +101,7 @@ function App() {
           <Fundamentals selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} />
         </ErrorBoundary>
       )}
+      </div>
     </div>
   );
 }
