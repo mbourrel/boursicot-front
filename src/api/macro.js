@@ -18,3 +18,7 @@ export async function fetchMacroAll(signal) {
   ]);
   return { cycle, history: historyResult.history, liquidity };
 }
+
+export async function fetchMacroRates(signal) {
+  return fetchWithDetail(`${API_URL}/macro/rates`, signal);
+}

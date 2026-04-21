@@ -1,10 +1,15 @@
 import EconomicClock from './EconomicClock';
 import LiquidityMonitor from './LiquidityMonitor';
 import AssetWindMatrix from './AssetWindMatrix';
+import CentralBanksThermometer from './CentralBanksThermometer';
+import YieldCurveChart from './YieldCurveChart';
+import SovereignSpreadsChart from './SovereignSpreadsChart';
 import { useMacro } from '../hooks/useMacro';
+import { useRates } from '../hooks/useRates';
 
 function MacroEnvironment() {
   const { cycleData, cycleHistory, liquidityData, loading, error } = useMacro();
+  const { data: ratesData, loading: ratesLoading, error: ratesError } = useRates();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -19,7 +24,7 @@ function MacroEnvironment() {
             Environnement Macro Global
           </div>
           <div style={{ color: 'var(--text3)', fontSize: '12px', marginTop: '2px' }}>
-            Cycle économique · Liquidité mondiale · Positionnement recommandé par classe d'actifs
+            Cycle économique · Liquidité mondiale · Taux directeurs · Dettes souveraines
           </div>
         </div>
       </div>
@@ -34,6 +39,26 @@ function MacroEnvironment() {
         error={error}
         history={cycleHistory}
         historyLoading={loading}
+      />
+
+      <CentralBanksThermometer
+        centralBanks={ratesData?.central_banks}
+        loading={ratesLoading}
+        error={ratesError}
+      />
+
+      <YieldCurveChart
+        yieldCurve={ratesData?.yield_curve}
+        bondYields={ratesData?.bond_yields}
+        loading={ratesLoading}
+        error={ratesError}
+      />
+
+      <SovereignSpreadsChart
+        history={ratesData?.history}
+        bondYields={ratesData?.bond_yields}
+        loading={ratesLoading}
+        error={ratesError}
       />
 
       <LiquidityMonitor
