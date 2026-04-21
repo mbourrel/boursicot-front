@@ -15,17 +15,19 @@ export default function LoginPage() {
       <button
         onClick={continueAsGuest}
         style={{
-          padding: '10px 24px',
+          padding: '11px 28px',
           backgroundColor: 'transparent',
-          border: '1px solid var(--border)',
+          border: '1px solid #2962FF',
           borderRadius: '6px',
-          color: 'var(--text3)',
+          color: '#2962FF',
           fontSize: '13px',
+          fontWeight: '600',
           cursor: 'pointer',
           transition: 'all 0.2s',
+          letterSpacing: '0.02em',
         }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = '#2962FF'; e.currentTarget.style.color = 'var(--text1)'; }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text3)'; }}
+        onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#2962FF20'; e.currentTarget.style.color = '#5b8cff'; }}
+        onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#2962FF'; }}
       >
         Continuer sans compte →
       </button>
