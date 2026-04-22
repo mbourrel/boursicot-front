@@ -74,6 +74,16 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
     const d = primaryData;
 
+    // Métriques de dividende (avec avg sectorielle pré-injectée)
+    const dd = d.dividends_data || {};
+    const divSectorAvg = sectorAvg?.dividends_data || {};
+    const dividendMetrics = [
+      { name: 'Rendement Div.',     val: dd.dividend_yield,      unit: '%', avg: divSectorAvg.dividend_yield },
+      { name: 'Dividende/Action',   val: dd.dividend_rate,       unit: '$', avg: divSectorAvg.dividend_rate },
+      { name: 'Ratio Distribution', val: dd.payout_ratio,        unit: '%', avg: divSectorAvg.payout_ratio },
+      { name: 'Rend. Moy. 5 ans',   val: dd.five_year_avg_yield, unit: '%', avg: divSectorAvg.five_year_avg_yield },
+    ].filter(m => m.val != null && m.val !== 0);
+
     // Formatage effectif
     const fmtEmployees = (n) => {
       if (!n) return null;
@@ -148,11 +158,38 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           {renderCategory('4. Risque & Marché',                 d.risk_market,        'risk_market')}
           {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash')}
           {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
+          {dividendMetrics.length > 0 && (
+            <div>
+              <h3 style={h3Style}>7. Politique de Dividende</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${dividendMetrics.length}, 1fr)`, gap: '8px' }}>
+                {dividendMetrics.map((metric, i) => (
+                  <MetricCard key={i} metric={metric} fmt={fmt} fmtRaw={fmtRaw} />
+                ))}
+              </div>
+              {dd.ex_dividend_date && (
+                <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text3)' }}>
+                  Date ex-dividende : <span style={{ color: 'var(--text2)', fontWeight: '600' }}>
+                    {new Date(dd.ex_dividend_date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        <FinancialStatement title="7. Compte de Résultat — Historique" stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data}   stmtAvgHistory={sectorHistory?.income_stmt_data}   companyName={d.name} />
-        <FinancialStatement title="8. Bilan Comptable — Historique"    stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} stmtAvgHistory={sectorHistory?.balance_sheet_data} companyName={d.name} />
-        <FinancialStatement title="9. Flux de Trésorerie — Historique" stmtData={d.cashflow_data}     fmt={fmt} stmtAvg={sectorAvg?.cashflow_data}      stmtAvgHistory={sectorHistory?.cashflow_data}      companyName={d.name} />
+        <FinancialStatement title="8. Compte de Résultat — Historique"  stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data}   stmtAvgHistory={sectorHistory?.income_stmt_data}   companyName={d.name} />
+        <FinancialStatement title="9. Bilan Comptable — Historique"     stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} stmtAvgHistory={sectorHistory?.balance_sheet_data} companyName={d.name} />
+        <FinancialStatement title="10. Flux de Trésorerie — Historique" stmtData={d.cashflow_data}      fmt={fmt} stmtAvg={sectorAvg?.cashflow_data}      stmtAvgHistory={sectorHistory?.cashflow_data}      companyName={d.name} />
+        {dd.annual?.items?.length > 0 && (
+          <FinancialStatement
+            title="11. Historique des Dividendes"
+            stmtData={dd.annual}
+            fmt={fmt}
+            stmtAvg={{ 'Dividende Annuel': divSectorAvg.dividend_rate }}
+            stmtAvgHistory={{ 'Dividende Annuel': sectorHistory?.dividends_data?.annual_dividend }}
+            companyName={d.name}
+          />
+        )}
       </div>
     );
   }
@@ -168,6 +205,20 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     { key: 'balance_cash',       label: '5. Bilan & Liquidité' },
     { key: 'risk_market',        label: '6. Risque & Marché' },
   ];
+
+  // Métriques de dividende pour la vue comparaison
+  const DIVIDEND_COMPARE_METRICS = [
+    { name: 'Rendement Div.',     field: 'dividend_yield',      unit: '%' },
+    { name: 'Dividende/Action',   field: 'dividend_rate',       unit: '$' },
+    { name: 'Ratio Distribution', field: 'payout_ratio',        unit: '%' },
+    { name: 'Rend. Moy. 5 ans',   field: 'five_year_avg_yield', unit: '%' },
+  ];
+
+  const getDividendMetric = (sym, field, unit) => {
+    const d = dataMap[sym];
+    const val = d?.dividends_data?.[field] ?? null;
+    return val !== null && val !== 0 ? { val, unit } : null;
+  };
 
   const STMT_CATEGORIES = [
     { key: 'income_stmt_data',   label: '7. Compte de Résultat — Historique' },
@@ -297,6 +348,34 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             </tr>
           );
         });
+      })}
+
+      {/* Dividendes */}
+      {renderCompareTable('7. Politique de Dividende', DIVIDEND_COMPARE_METRICS.map(m => m.name), (name, rowIdx) => {
+        const def = DIVIDEND_COMPARE_METRICS.find(m => m.name === name);
+        const vals = allSymbols.map(sym => getDividendMetric(sym, def.field, def.unit));
+        const numerics = vals.map(m => m?.val ?? null).filter(v => v !== null);
+        const maxVal = numerics.length > 1 ? Math.max(...numerics) : null;
+        const minVal = numerics.length > 1 ? Math.min(...numerics) : null;
+        return (
+          <tr key={name} style={{ backgroundColor: rowIdx % 2 === 0 ? 'var(--bg1)' : 'var(--bg2)' }}>
+            <MetricNameCell name={name} />
+            {allSymbols.map(sym => {
+              const m = getDividendMetric(sym, def.field, def.unit);
+              const val = m?.val ?? null;
+              let color = 'white';
+              if (maxVal !== null && val !== null) {
+                if (val === maxVal) color = '#26a69a';
+                else if (val === minVal) color = '#ef5350';
+              }
+              return (
+                <td key={sym} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', fontSize: '13px', color }}>
+                  {fmt(val, def.unit)}
+                </td>
+              );
+            })}
+          </tr>
+        );
       })}
 
       {/* États financiers */}
