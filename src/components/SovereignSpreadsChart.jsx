@@ -11,14 +11,26 @@ const SERIES = [
   { key: 'oat10y',  label: 'OAT 10Y',  color: '#26a69a' },
 ];
 
-function alignSeries(history) {
+const RANGES = ['3M', '6M', '1Y', '2Y'];
+
+function cutoffForRange(range) {
+  const d = new Date();
+  if (range === '3M') d.setMonth(d.getMonth() - 3);
+  else if (range === '6M') d.setMonth(d.getMonth() - 6);
+  else if (range === '1Y') d.setFullYear(d.getFullYear() - 1);
+  else return null;
+  return d.toISOString().slice(0, 10);
+}
+
+function alignSeries(history, range) {
   const sets = SERIES.map(s => history?.[s.key]).filter(Boolean);
   if (!sets.length) return null;
 
-  // Index commun = union des dates
+  const cutoff = cutoffForRange(range);
   const dateSet = new Set();
-  sets.forEach(s => s.dates.forEach(d => dateSet.add(d)));
+  sets.forEach(s => s.dates.forEach(d => { if (!cutoff || d >= cutoff) dateSet.add(d); }));
   const dates = [...dateSet].sort();
+  if (!dates.length) return null;
 
   const indexed = SERIES.map(s => {
     const map = {};
@@ -30,11 +42,12 @@ function alignSeries(history) {
 }
 
 export default function SovereignSpreadsChart({ history, bondYields, loading, error }) {
-  const [showInfo,   setShowInfo]   = useState(false);
-  const [hoverIdx,   setHoverIdx]   = useState(null);
+  const [showInfo,  setShowInfo]  = useState(false);
+  const [hoverIdx,  setHoverIdx]  = useState(null);
+  const [range,     setRange]     = useState('2Y');
 
   const computed = useMemo(() => {
-    const aligned = alignSeries(history);
+    const aligned = alignSeries(history, range);
     if (!aligned) return null;
     const { dates, series } = aligned;
 
@@ -63,17 +76,28 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
       return { y: yS(v), label: v.toFixed(1) };
     });
 
-    return { dates, series, polylines, xTicks, yTicks, xS, yS };
-  }, [history]);
+    // Stats par série sur la période
+    const stats = series.map(s => {
+      const vals = dates.map(d => s.map[d]).filter(v => v != null);
+      return {
+        key: s.key,
+        min: vals.length ? Math.min(...vals).toFixed(2) : null,
+        max: vals.length ? Math.max(...vals).toFixed(2) : null,
+      };
+    });
 
-  // Spread courant US 10Y – Bund 10Y
+    return { dates, series, polylines, xTicks, yTicks, xS, yS, stats };
+  }, [history, range]);
+
   const us10y   = bondYields?.find(b => b.name === 'US 10Y')?.rate;
   const bund10y = bondYields?.find(b => b.name === 'Bund 10Y')?.rate;
-  const spread  = us10y != null && bund10y != null ? (us10y - bund10y).toFixed(2) : null;
+  const oat10y  = bondYields?.find(b => b.name === 'OAT 10Y')?.rate;
+  const spreadUsDe  = us10y != null && bund10y != null ? (us10y - bund10y).toFixed(2) : null;
+  const spreadFrDe  = oat10y != null && bund10y != null ? (oat10y - bund10y).toFixed(2) : null;
 
-  const hoverX     = hoverIdx != null && computed ? computed.xS(hoverIdx) : null;
-  const hoverDate  = hoverIdx != null ? computed?.dates[hoverIdx] : null;
-  const hoverVals  = hoverIdx != null ? computed?.series.map(s => ({
+  const hoverX    = hoverIdx != null && computed ? computed.xS(hoverIdx) : null;
+  const hoverDate = hoverIdx != null ? computed?.dates[hoverIdx] : null;
+  const hoverVals = hoverIdx != null ? computed?.series.map(s => ({
     label: s.label, color: s.color,
     value: s.map[computed.dates[hoverIdx]],
   })) : null;
@@ -88,16 +112,24 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '18px' }}>🌍</span>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span style={{ color: 'var(--text1)', fontWeight: 'bold', fontSize: '14px' }}>
                 Baromètre de Confiance — Dettes Souveraines 10 ans
               </span>
-              {spread && (
+              {spreadUsDe && (
                 <span style={{
                   fontSize: '11px', padding: '2px 9px', borderRadius: '10px', fontWeight: '600',
                   backgroundColor: '#2962FF15', color: '#2962FF', border: '1px solid #2962FF44',
                 }}>
-                  Spread US–DE : +{spread}%
+                  US–DE : +{spreadUsDe}%
+                </span>
+              )}
+              {spreadFrDe && (
+                <span style={{
+                  fontSize: '11px', padding: '2px 9px', borderRadius: '10px', fontWeight: '600',
+                  backgroundColor: '#26a69a15', color: '#26a69a', border: '1px solid #26a69a44',
+                }}>
+                  FR–DE : +{spreadFrDe}%
                 </span>
               )}
             </div>
@@ -109,7 +141,8 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
         <button
           onClick={() => setShowInfo(v => !v)}
           style={{
-            background: 'none', border: '1px solid var(--border)', borderRadius: '50%',
+            background: showInfo ? 'var(--border)' : 'none',
+            border: '1px solid var(--border)', borderRadius: '50%',
             width: '24px', height: '24px', cursor: 'pointer', color: 'var(--text3)',
             fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
@@ -119,29 +152,92 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
       {/* ── Info rétractable ── */}
       {showInfo && (
         <div style={{
-          backgroundColor: 'var(--bg3)', borderRadius: '6px', padding: '10px 14px',
+          backgroundColor: 'var(--bg3)', borderRadius: '8px', padding: '14px 16px',
           marginBottom: '14px', borderLeft: '3px solid #f59e0b',
-          fontSize: '12px', color: 'var(--text3)', lineHeight: '1.6',
+          fontSize: '12px', color: 'var(--text3)', lineHeight: '1.7',
         }}>
-          Le taux à <strong>10 ans</strong> reflète la confiance des marchés dans la capacité d'un État à rembourser
-          ses dettes et les anticipations d'inflation futures. Un taux qui monte signale soit une économie dynamique,
-          soit une dette jugée risquée. L'<strong>écart (spread) entre les États-Unis et l'Europe</strong> indique
-          où les capitaux mondiaux se dirigent préférentiellement.
+          <div style={{ color: 'var(--text2)', fontWeight: '700', marginBottom: '8px', fontSize: '13px' }}>
+            Que mesurent les taux souverains à 10 ans ?
+          </div>
+          <p style={{ margin: '0 0 10px' }}>
+            Le taux à 10 ans d'un État est le prix que les marchés exigent pour lui prêter de l'argent
+            à long terme. Il reflète simultanément la <strong style={{ color: 'var(--text2)' }}>confiance
+            dans la solvabilité</strong> de cet État et les <strong style={{ color: 'var(--text2)' }}>anticipations
+            d'inflation</strong> dans sa zone économique. Un taux qui monte peut signaler une économie
+            dynamique… ou une dette jugée risquée.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+            <div style={{ backgroundColor: '#2962FF0D', borderRadius: '6px', padding: '10px 12px', border: '1px solid #2962FF33' }}>
+              <div style={{ color: '#2962FF', fontWeight: '700', marginBottom: '4px' }}>Spread US–Allemagne</div>
+              <div>Mesure le différentiel d'attractivité entre Treasuries et Bunds. Un spread élevé signale
+              que les capitaux mondiaux préfèrent les actifs américains → dollar fort, financement européen
+              plus coûteux. Actuellement autour de 2%, niveau historiquement élevé.</div>
+            </div>
+            <div style={{ backgroundColor: '#26a69a0D', borderRadius: '6px', padding: '10px 12px', border: '1px solid #26a69a33' }}>
+              <div style={{ color: '#26a69a', fontWeight: '700', marginBottom: '4px' }}>Spread France–Allemagne</div>
+              <div>Le Bund allemand est la référence sans risque en Europe. L'écart OAT–Bund est un
+              baromètre du risque politique français : il s'écarte lors des crises politiques ou
+              budgétaires (dissolution 2024, déficit &gt; 6% du PIB).</div>
+            </div>
+          </div>
+
+          <div style={{ backgroundColor: 'var(--bg2)', borderRadius: '6px', padding: '10px 12px', marginBottom: '10px' }}>
+            <div style={{ color: 'var(--text2)', fontWeight: '600', marginBottom: '6px', fontSize: '11px' }}>
+              Ce que les spreads révèlent sur le cycle :
+            </div>
+            {[
+              ['Spread US–DE qui monte', 'Divergence Fed/BCE, dollar fort, capitaux vers les États-Unis'],
+              ['Spread US–DE qui baisse', 'Convergence des politiques monétaires ou méfiance envers la dette américaine'],
+              ['OAT–Bund &gt; 0.8%', 'Signal de stress sur la dette française, prime de risque politique'],
+              ['Taux globalement en hausse', 'Inflation persistante ou resserrement monétaire, coût de la dette augmente pour tous'],
+            ].map(([signal, interpretation]) => (
+              <div key={signal} style={{ display: 'flex', gap: '8px', fontSize: '11px', marginBottom: '4px' }}>
+                <span style={{ color: '#f59e0b', fontWeight: '600', minWidth: '160px', flexShrink: 0 }}>{signal}</span>
+                <span>{interpretation}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '8px' }}>
+            <span style={{ color: 'var(--text2)', fontWeight: '600' }}>Source · </span>
+            Données FRED (Réserve Fédérale de Saint-Louis) — série IRLTLT01*M156N (OCDE),
+            actualisées mensuellement. La zone bleue représente le spread US–Bund.
+          </div>
         </div>
       )}
 
-      {/* ── Légende ── */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '8px' }}>
-        {SERIES.map(s => (
-          <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text2)' }}>
-            <span style={{ width: '20px', height: '2px', backgroundColor: s.color, display: 'inline-block', borderRadius: '1px' }} />
-            {s.label}
-            {s.key === 'us10y'   && us10y   != null && <strong style={{ color: s.color }}>{us10y.toFixed(2)}%</strong>}
-            {s.key === 'bund10y' && bund10y  != null && <strong style={{ color: s.color }}>{bund10y.toFixed(2)}%</strong>}
-            {s.key === 'oat10y'  && bondYields?.find(b => b.name === 'OAT 10Y')?.rate != null &&
-              <strong style={{ color: s.color }}>{bondYields.find(b => b.name === 'OAT 10Y').rate.toFixed(2)}%</strong>}
-          </div>
-        ))}
+      {/* ── Légende + range ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          {SERIES.map(s => {
+            const currentRate = s.key === 'us10y' ? us10y : s.key === 'bund10y' ? bund10y : oat10y;
+            const stat = computed?.stats?.find(st => st.key === s.key);
+            return (
+              <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text2)' }}>
+                <span style={{ width: '20px', height: '2px', backgroundColor: s.color, display: 'inline-block', borderRadius: '1px' }} />
+                {s.label}
+                {currentRate != null && <strong style={{ color: s.color }}>{currentRate.toFixed(2)}%</strong>}
+                {stat?.min && (
+                  <span style={{ color: 'var(--text3)', fontSize: '10px' }}>
+                    ({stat.min}–{stat.max})
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ display: 'flex', gap: '3px' }}>
+          {RANGES.map(r => (
+            <button key={r} onClick={() => setRange(r)} style={{
+              background: range === r ? 'var(--text3)' : 'none',
+              border: '1px solid var(--border)', borderRadius: '4px',
+              padding: '2px 7px', fontSize: '10px',
+              color: range === r ? 'var(--bg0)' : 'var(--text3)',
+              cursor: 'pointer',
+            }}>{r}</button>
+          ))}
+        </div>
       </div>
 
       {loading && <div style={{ color: 'var(--text3)', fontSize: '13px', padding: '30px 0', textAlign: 'center' }}>Chargement…</div>}
@@ -161,7 +257,6 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
             }}
             onMouseLeave={() => setHoverIdx(null)}
           >
-            {/* grille */}
             {computed.yTicks.map(({ y, label }) => (
               <g key={label}>
                 <line x1={ML} y1={y} x2={SVG_W - MR} y2={y} stroke="var(--border)" strokeDasharray="3,3" />
@@ -183,21 +278,14 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
                 const i = computed.dates.length - 1 - ri;
                 const v = bund.map[d]; return v != null ? `${computed.xS(i).toFixed(1)},${computed.yS(v).toFixed(1)}` : null;
               }).filter(Boolean);
-              return (
-                <polygon
-                  points={[...topPts, ...botPts].join(' ')}
-                  fill="#2962FF0D" stroke="none"
-                />
-              );
+              return <polygon points={[...topPts, ...botPts].join(' ')} fill="#2962FF0D" stroke="none" />;
             })()}
 
-            {/* lignes */}
             {computed.polylines.map(s => (
               <polyline key={s.key} points={s.points} fill="none"
                 stroke={s.color} strokeWidth="1.8" strokeLinejoin="round" />
             ))}
 
-            {/* crosshair */}
             {hoverX != null && (
               <line x1={hoverX} y1={MT} x2={hoverX} y2={SVG_H - MB} stroke="var(--text3)" strokeWidth="1" strokeDasharray="3,2" />
             )}
@@ -217,6 +305,20 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
                   {v.label} : <strong>{v.value.toFixed(2)}%</strong>
                 </div>
               ))}
+              {/* Spreads dans le tooltip */}
+              {(() => {
+                const usVal   = hoverVals.find(v => v.label === 'US 10Y')?.value;
+                const deVal   = hoverVals.find(v => v.label === 'Bund 10Y')?.value;
+                const frVal   = hoverVals.find(v => v.label === 'OAT 10Y')?.value;
+                const sUsDe   = usVal != null && deVal != null ? (usVal - deVal).toFixed(2) : null;
+                const sFrDe   = frVal != null && deVal != null ? (frVal - deVal).toFixed(2) : null;
+                return (
+                  <div style={{ borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
+                    {sUsDe && <div style={{ color: '#2962FF', fontSize: '10px' }}>US–DE : +{sUsDe}%</div>}
+                    {sFrDe && <div style={{ color: '#26a69a', fontSize: '10px' }}>FR–DE : +{sFrDe}%</div>}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>

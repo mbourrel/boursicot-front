@@ -1,13 +1,13 @@
 import { useState } from 'react';
 
-const MAX_RATE = 8; // borne haute de la jauge (%)
+const MAX_RATE = 8;
 
 function rateColor(rate) {
   if (rate === null || rate === undefined) return '#555';
-  if (rate < 1)  return '#2962FF'; // ultra-accommodant
-  if (rate < 3)  return '#26a69a'; // accommodant
-  if (rate < 5)  return '#f59e0b'; // restrictif
-  return '#ef5350';                // très restrictif
+  if (rate < 1)  return '#2962FF';
+  if (rate < 3)  return '#26a69a';
+  if (rate < 5)  return '#f59e0b';
+  return '#ef5350';
 }
 
 function rateLabel(rate) {
@@ -83,7 +83,8 @@ export default function CentralBanksThermometer({ centralBanks, loading, error }
           onClick={() => setShowInfo(v => !v)}
           title="Comprendre cet indicateur"
           style={{
-            background: 'none', border: '1px solid var(--border)', borderRadius: '50%',
+            background: showInfo ? 'var(--border)' : 'none',
+            border: '1px solid var(--border)', borderRadius: '50%',
             width: '24px', height: '24px', cursor: 'pointer', color: 'var(--text3)',
             fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
@@ -93,14 +94,45 @@ export default function CentralBanksThermometer({ centralBanks, loading, error }
       {/* ── Info rétractable ── */}
       {showInfo && (
         <div style={{
-          backgroundColor: 'var(--bg3)', borderRadius: '6px', padding: '10px 14px',
-          marginBottom: '14px', borderLeft: '3px solid #2962FF',
-          fontSize: '12px', color: 'var(--text3)', lineHeight: '1.6',
+          backgroundColor: 'var(--bg3)', borderRadius: '8px', padding: '14px 16px',
+          marginBottom: '14px', borderLeft: '3px solid #f59e0b',
+          fontSize: '12px', color: 'var(--text3)', lineHeight: '1.7',
         }}>
-          Les taux directeurs définissent le coût du crédit dans une économie. S'ils sont
-          élevés <span style={{ color: '#ef5350' }}>■</span>, emprunter coûte cher — cela freine
-          l'investissement et l'inflation. S'ils sont bas <span style={{ color: '#2962FF' }}>■</span>,
-          comme au Japon depuis des décennies, cela stimule la consommation mais peut alimenter les bulles d'actifs.
+          <div style={{ color: 'var(--text2)', fontWeight: '700', marginBottom: '8px', fontSize: '13px' }}>
+            Comment fonctionnent les taux directeurs ?
+          </div>
+          <p style={{ margin: '0 0 10px' }}>
+            Le taux directeur est le principal levier des banques centrales. En le relevant, elles
+            renchérissent le coût du crédit — ce qui freine l'investissement, la consommation et
+            l'inflation. En le baissant, elles stimulent l'activité mais risquent de créer des bulles d'actifs.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+            {[
+              { color: '#2962FF', range: '< 1%', label: 'Accommodant', desc: 'Politique ultra-stimulante. Typique des crises (2008–2015, COVID). Favorise actions, immobilier, crypto.' },
+              { color: '#26a69a', range: '1–3%', label: 'Neutre', desc: 'Zone d\'équilibre théorique. La Fed estime le taux neutre à ~2,5%. Ni frein ni accélérateur.' },
+              { color: '#f59e0b', range: '3–5%', label: 'Restrictif', desc: 'Frein délibéré à l\'économie. Entreprises endettées et immobilier sous pression. Réduire l\'inflation.' },
+              { color: '#ef5350', range: '> 5%', label: 'Très restrictif', desc: 'Territoire rare depuis les années 80. Risque de récession élevé à 12–18 mois.' },
+            ].map(z => (
+              <div key={z.label} style={{
+                backgroundColor: `${z.color}0D`, borderRadius: '6px',
+                padding: '8px 10px', border: `1px solid ${z.color}33`,
+              }}>
+                <div style={{ color: z.color, fontWeight: '700', fontSize: '11px', marginBottom: '3px' }}>
+                  {z.range} — {z.label}
+                </div>
+                <div style={{ fontSize: '11px', lineHeight: '1.5' }}>{z.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '8px', marginTop: '4px' }}>
+            <span style={{ color: 'var(--text2)', fontWeight: '600' }}>Contexte actuel · </span>
+            Après le cycle de hausse le plus rapide depuis 40 ans (2022–2023), la Fed et la BCE amorcent
+            une normalisation prudente. La BoJ est une exception historique : elle sort à peine d'une
+            décennie de taux négatifs après des années de déflation. La divergence Fed/BCE crée
+            un différentiel de taux qui soutient structurellement le dollar face à l'euro.
+          </div>
         </div>
       )}
 
