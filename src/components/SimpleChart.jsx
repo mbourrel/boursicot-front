@@ -19,6 +19,9 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   const [hoverData, setHoverData] = useState(null);
   // false = normalisé base 100 (défaut), true = cours réels chacun sur sa propre échelle
   const [individualScales, setIndividualScales] = useState(false);
+  const [showMa10,  setShowMa10]  = useState(true);
+  const [showMa100, setShowMa100] = useState(true);
+  const [showMa200, setShowMa200] = useState(true);
 
 
   const allSymbols = [selectedSymbol, ...compareSymbols];
@@ -155,12 +158,18 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             if (!isComparing) {
               const pd = allDataRef.current[selectedSymbol];
               if (pd) {
-                const ma10s  = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 1.5, crosshairMarkerVisible: false });
-                const ma100s = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 1.5, crosshairMarkerVisible: false });
-                const ma200s = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 1.5, crosshairMarkerVisible: false });
-                ma10s.setData(pd.filter(d => d.ma10   != null).map(d => ({ time: d.time, value: d.ma10 })));
-                ma100s.setData(pd.filter(d => d.ma100 != null).map(d => ({ time: d.time, value: d.ma100 })));
-                ma200s.setData(pd.filter(d => d.ma200 != null).map(d => ({ time: d.time, value: d.ma200 })));
+                if (showMa10) {
+                  const ma10s = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 1.5, crosshairMarkerVisible: false });
+                  ma10s.setData(pd.filter(d => d.ma10 != null).map(d => ({ time: d.time, value: d.ma10 })));
+                }
+                if (showMa100) {
+                  const ma100s = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 1.5, crosshairMarkerVisible: false });
+                  ma100s.setData(pd.filter(d => d.ma100 != null).map(d => ({ time: d.time, value: d.ma100 })));
+                }
+                if (showMa200) {
+                  const ma200s = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 1.5, crosshairMarkerVisible: false });
+                  ma200s.setData(pd.filter(d => d.ma200 != null).map(d => ({ time: d.time, value: d.ma200 })));
+                }
               }
             }
 
@@ -232,7 +241,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [selectedSymbol, compareSymbols.join(','), candleInterval, individualScales, isDark, API_URL]);
+  }, [selectedSymbol, compareSymbols.join(','), candleInterval, individualScales, isDark, API_URL, showMa10, showMa100, showMa200]);
 
   const btnStyle = (active, activeColor = '#2962FF') => ({
     padding: '6px 10px', background: active ? activeColor : 'transparent',
@@ -273,10 +282,26 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
         {/* Badges + bouton "Mutualiser les échelles" */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           {!isComparing && (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '12px' }}>
-              <span style={{ color: '#00bcd4', fontWeight: 'bold' }}>— MM10</span>
-              <span style={{ color: '#ff9800', fontWeight: 'bold' }}>— MM100</span>
-              <span style={{ color: '#9c27b0', fontWeight: 'bold' }}>— MM200</span>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', fontSize: '12px' }}>
+              {[
+                { label: 'MM10',  color: '#00bcd4', active: showMa10,  toggle: () => setShowMa10(v  => !v) },
+                { label: 'MM100', color: '#ff9800', active: showMa100, toggle: () => setShowMa100(v => !v) },
+                { label: 'MM200', color: '#9c27b0', active: showMa200, toggle: () => setShowMa200(v => !v) },
+              ].map(({ label, color, active, toggle }) => (
+                <button
+                  key={label}
+                  onClick={toggle}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '5px',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    padding: '3px 6px', borderRadius: '4px',
+                    opacity: active ? 1 : 0.35, transition: 'opacity 0.15s',
+                  }}
+                >
+                  <span style={{ display: 'inline-block', width: '18px', height: '2px', backgroundColor: color, borderRadius: '1px' }} />
+                  <span style={{ color, fontWeight: 'bold' }}>{label}</span>
+                </button>
+              ))}
             </div>
           )}
 
