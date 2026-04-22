@@ -50,14 +50,15 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
   const aligned = useMemo(() => buildAlignedDates(history), [history]);
   const allDates = aligned?.allDates ?? [];
 
-  const [viewWindow, setViewWindow] = useState([0, 0]);
+  // null = plage complète ; initialisé dès que allDates est disponible
+  const [viewWindow, setViewWindow] = useState(null);
 
-  // Init + sync viewWindow quand les données ou le range changent
   useEffect(() => {
     if (allDates.length) setViewWindow(idxForRange(allDates, range));
   }, [allDates.length, range]); // eslint-disable-line
 
-  const isFullView = viewWindow[0] === 0 && viewWindow[1] === allDates.length;
+  const effectiveWindow = viewWindow ?? [0, allDates.length];
+  const isFullView = effectiveWindow[0] === 0 && effectiveWindow[1] === allDates.length;
 
   // Scroll zoom
   const handleWheel = useCallback((e) => {
@@ -67,7 +68,8 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
     const total = allDates.length;
     if (total < 2) return;
 
-    setViewWindow(([s, en]) => {
+    setViewWindow((prev) => {
+      const [s, en] = prev ?? [0, total];
       const len = en - s;
       const factor = e.deltaY > 0 ? 1.25 : 0.8;
       const newLen = Math.min(total, Math.max(5, Math.round(len * factor)));
@@ -89,7 +91,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
   const computed = useMemo(() => {
     if (!aligned) return null;
     const { series } = aligned;
-    const dates = allDates.slice(viewWindow[0], viewWindow[1]);
+    const dates = allDates.slice(effectiveWindow[0], effectiveWindow[1]);
     if (!dates.length) return null;
 
     const allVals = series.flatMap(s => dates.map(d => s.map[d]).filter(v => v != null));
@@ -127,7 +129,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
     });
 
     return { dates, series, polylines, xTicks, yTicks, xS, yS, stats };
-  }, [aligned, allDates, viewWindow]);
+  }, [aligned, allDates, effectiveWindow]);
 
   const us10y   = bondYields?.find(b => b.name === 'US 10Y')?.rate;
   const bund10y = bondYields?.find(b => b.name === 'Bund 10Y')?.rate;
@@ -239,7 +241,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
         </div>
         <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
           {!isFullView && (
-            <button onClick={() => { setViewWindow([0, allDates.length]); setRange('Max'); }} style={{
+            <button onClick={() => { setViewWindow(null); setRange('Max'); }} style={{
               background: '#ef535022', border: '1px solid #ef535044', borderRadius: '4px',
               padding: '2px 7px', fontSize: '10px', color: '#ef5350', cursor: 'pointer', marginRight: '4px',
             }}>↺ Reset</button>
