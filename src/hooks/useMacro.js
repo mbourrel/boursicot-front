@@ -1,27 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useRetryFetch } from './useRetryFetch';
 import { fetchMacroAll } from '../api/macro';
 
 export function useMacro() {
-  const [cycleData,     setCycleData]     = useState(null);
-  const [cycleHistory,  setCycleHistory]  = useState(null);
-  const [liquidityData, setLiquidityData] = useState(null);
-  const [loading,       setLoading]       = useState(true);
-  const [error,         setError]         = useState(null);
+  const { data, loading, error } = useRetryFetch(fetchMacroAll, {
+    maxRetries: 4,
+    retryDelay: 5000,
+  });
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetchMacroAll(controller.signal)
-      .then(({ cycle, history, liquidity }) => {
-        setCycleData(cycle);
-        setCycleHistory(history);
-        setLiquidityData(liquidity);
-      })
-      .catch(err => { if (err.name !== 'AbortError') setError(err.message); })
-      .finally(() => setLoading(false));
-
-    return () => controller.abort();
-  }, []);
-
-  return { cycleData, cycleHistory, liquidityData, loading, error };
+  return {
+    cycleData:     data?.cycle     ?? null,
+    cycleHistory:  data?.history   ?? null,
+    liquidityData: data?.liquidity ?? null,
+    loading,
+    error,
+  };
 }
