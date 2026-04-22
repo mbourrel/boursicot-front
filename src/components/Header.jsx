@@ -40,7 +40,7 @@ function ThemeToggle({ isDark, onToggle }) {
 }
 
 // ── Composant filtre déroulant générique ──────────────────────────────────────
-function FilterDropdown({ label, items, filters, onChange, dropdownRef }) {
+function FilterDropdown({ label, items, filters, onChange, onSelectAll, onSelectNone, dropdownRef }) {
   const [open, setOpen] = useState(false);
 
   const activeCount = filters ? Object.values(filters).filter(Boolean).length : 0;
@@ -60,6 +60,13 @@ function FilterDropdown({ label, items, filters, onChange, dropdownRef }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownRef]);
+
+  const quickBtnStyle = (color) => ({
+    padding: '2px 8px', fontSize: '10px', fontWeight: 'bold',
+    border: `1px solid ${color}40`, borderRadius: '4px',
+    backgroundColor: `${color}18`, color: color,
+    cursor: 'pointer', lineHeight: '16px',
+  });
 
   return (
     <div ref={dropdownRef} style={{ position: 'relative' }}>
@@ -83,9 +90,18 @@ function FilterDropdown({ label, items, filters, onChange, dropdownRef }) {
           position: 'absolute', top: 'calc(100% + 6px)', left: 0,
           backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
           borderRadius: '6px', padding: '6px 0',
-          zIndex: 50, minWidth: '170px', maxHeight: '260px', overflowY: 'auto',
+          zIndex: 50, minWidth: '170px', maxHeight: '300px', overflowY: 'auto',
           boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
         }}>
+          {/* Boutons Tous / Aucun */}
+          <div style={{
+            display: 'flex', gap: '6px', padding: '6px 14px 8px',
+            borderBottom: '1px solid var(--border)',
+          }}>
+            <button style={quickBtnStyle('#26a69a')} onClick={onSelectAll}>Tous</button>
+            <button style={quickBtnStyle('#ef5350')} onClick={onSelectNone}>Aucun</button>
+          </div>
+
           {items.map(({ key, label: fl }) => (
             <label
               key={key}
@@ -119,9 +135,8 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterOpen, setFilterOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const filterRef = useRef(null);
+  const typeFilterRef = useRef(null);
   const countryFilterRef = useRef(null);
   const sectorFilterRef = useRef(null);
 
@@ -203,9 +218,6 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
           setSearchTerm(`${selectedCompany.name || selectedCompany.ticker} (${selectedCompany.ticker})`);
         }
       }
-      if (filterRef.current && !filterRef.current.contains(event.target)) {
-        setFilterOpen(false);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -249,65 +261,15 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
 
         {/* FILTRE TYPE */}
-        {(() => {
-          const activeCount = Object.values(assetFilters).filter(Boolean).length;
-          const total = TYPE_FILTERS.length;
-          const label = activeCount === 0
-            ? 'Aucun type'
-            : activeCount === total
-              ? 'Tous les types'
-              : TYPE_FILTERS.filter(f => assetFilters[f.key]).map(f => f.label).join(' · ');
-          return (
-            <div ref={filterRef} style={{ position: 'relative' }}>
-              <button
-                onClick={() => setFilterOpen(v => !v)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '8px 12px', backgroundColor: 'var(--bg3)',
-                  border: `1px solid ${filterOpen ? '#2962FF' : 'var(--border)'}`,
-                  borderRadius: '6px', cursor: 'pointer', color: 'var(--text1)',
-                  fontSize: '12px', whiteSpace: 'nowrap',
-                }}
-              >
-                <span style={{ color: 'var(--text3)', fontSize: '11px', fontWeight: 'bold' }}>TYPE</span>
-                <span>{label}</span>
-                <span style={{ color: 'var(--text3)', fontSize: '10px' }}>{filterOpen ? '▲' : '▼'}</span>
-              </button>
-
-              {filterOpen && (
-                <div style={{
-                  position: 'absolute', top: 'calc(100% + 6px)', left: 0,
-                  backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
-                  borderRadius: '6px', padding: '6px 0',
-                  zIndex: 50, minWidth: '150px',
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
-                }}>
-                  {TYPE_FILTERS.map(({ key, label: fl }) => (
-                    <label
-                      key={key}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '10px',
-                        padding: '8px 14px', cursor: 'pointer', fontSize: '13px',
-                        color: assetFilters[key] ? 'var(--text1)' : 'var(--text3)',
-                        transition: 'background 0.15s',
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--border)'}
-                      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={assetFilters[key]}
-                        onChange={() => setAssetFilters(prev => ({ ...prev, [key]: !prev[key] }))}
-                        style={{ accentColor: '#2962FF', cursor: 'pointer', width: '14px', height: '14px' }}
-                      />
-                      {fl}
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })()}
+        <FilterDropdown
+          label="TYPE"
+          items={TYPE_FILTERS}
+          filters={assetFilters}
+          onChange={key => setAssetFilters(prev => ({ ...prev, [key]: !prev[key] }))}
+          onSelectAll={() => setAssetFilters(Object.fromEntries(TYPE_FILTERS.map(f => [f.key, true])))}
+          onSelectNone={() => setAssetFilters(Object.fromEntries(TYPE_FILTERS.map(f => [f.key, false])))}
+          dropdownRef={typeFilterRef}
+        />
 
         {/* FILTRE PAYS */}
         {countryItems.length > 0 && countryFilters && (
@@ -316,6 +278,8 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
             items={countryItems}
             filters={countryFilters}
             onChange={key => setCountryFilters(prev => ({ ...prev, [key]: !prev[key] }))}
+            onSelectAll={() => setCountryFilters(Object.fromEntries(availableCountries.map(c => [c, true])))}
+            onSelectNone={() => setCountryFilters(Object.fromEntries(availableCountries.map(c => [c, false])))}
             dropdownRef={countryFilterRef}
           />
         )}
@@ -327,6 +291,8 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
             items={sectorItems}
             filters={sectorFilters}
             onChange={key => setSectorFilters(prev => ({ ...prev, [key]: !prev[key] }))}
+            onSelectAll={() => setSectorFilters(Object.fromEntries(availableSectors.map(s => [s, true])))}
+            onSelectNone={() => setSectorFilters(Object.fromEntries(availableSectors.map(s => [s, false])))}
             dropdownRef={sectorFilterRef}
           />
         )}
