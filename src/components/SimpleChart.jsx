@@ -12,6 +12,9 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   const allDataRef = useRef({});
   const debounceTimerRef   = useRef(null);
   const candleIntervalRef  = useRef('1D');
+  const ma10sRef  = useRef(null);
+  const ma100sRef = useRef(null);
+  const ma200sRef = useRef(null);
 
   const [timeRange, setTimeRange] = useState('1Y');
   const [candleInterval, setCandleInterval] = useState('1D');
@@ -158,18 +161,12 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             if (!isComparing) {
               const pd = allDataRef.current[selectedSymbol];
               if (pd) {
-                if (showMa10) {
-                  const ma10s = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 1.5, crosshairMarkerVisible: false });
-                  ma10s.setData(pd.filter(d => d.ma10 != null).map(d => ({ time: d.time, value: d.ma10 })));
-                }
-                if (showMa100) {
-                  const ma100s = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 1.5, crosshairMarkerVisible: false });
-                  ma100s.setData(pd.filter(d => d.ma100 != null).map(d => ({ time: d.time, value: d.ma100 })));
-                }
-                if (showMa200) {
-                  const ma200s = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 1.5, crosshairMarkerVisible: false });
-                  ma200s.setData(pd.filter(d => d.ma200 != null).map(d => ({ time: d.time, value: d.ma200 })));
-                }
+                ma10sRef.current  = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 1.5, crosshairMarkerVisible: false, visible: showMa10 });
+                ma100sRef.current = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 1.5, crosshairMarkerVisible: false, visible: showMa100 });
+                ma200sRef.current = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 1.5, crosshairMarkerVisible: false, visible: showMa200 });
+                ma10sRef.current.setData(pd.filter(d => d.ma10   != null).map(d => ({ time: d.time, value: d.ma10 })));
+                ma100sRef.current.setData(pd.filter(d => d.ma100 != null).map(d => ({ time: d.time, value: d.ma100 })));
+                ma200sRef.current.setData(pd.filter(d => d.ma200 != null).map(d => ({ time: d.time, value: d.ma200 })));
               }
             }
 
@@ -241,7 +238,12 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [selectedSymbol, compareSymbols.join(','), candleInterval, individualScales, isDark, API_URL, showMa10, showMa100, showMa200]);
+  }, [selectedSymbol, compareSymbols.join(','), candleInterval, individualScales, isDark, API_URL]);
+
+  // Toggles MA sans recréer le chart
+  useEffect(() => { ma10sRef.current?.applyOptions({ visible: showMa10 }); },  [showMa10]);
+  useEffect(() => { ma100sRef.current?.applyOptions({ visible: showMa100 }); }, [showMa100]);
+  useEffect(() => { ma200sRef.current?.applyOptions({ visible: showMa200 }); }, [showMa200]);
 
   const btnStyle = (active, activeColor = '#2962FF') => ({
     padding: '6px 10px', background: active ? activeColor : 'transparent',
