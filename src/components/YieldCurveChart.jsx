@@ -137,6 +137,7 @@ function CurveSnapshot({ bondYields }) {
 function SpreadHistory({ allDates, allValues, range, onRangeChange }) {
   const [viewWindow, setViewWindow] = useState(() => idxForRange(allDates, range));
   const svgRef = useRef(null);
+  const rafRef = useRef(null);
 
   // Sync viewWindow quand range change via bouton
   useEffect(() => {
@@ -148,23 +149,29 @@ function SpreadHistory({ allDates, allValues, range, onRangeChange }) {
   const dates  = useMemo(() => allDates?.slice(viewWindow[0], viewWindow[1]) ?? [], [allDates, viewWindow]);
   const values = useMemo(() => allValues?.slice(viewWindow[0], viewWindow[1]) ?? [], [allValues, viewWindow]);
 
-  // Scroll zoom
+  // Scroll zoom — throttlé à 60fps via requestAnimationFrame
   const handleWheel = useCallback((e) => {
     e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
+    if (rafRef.current) return;
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return;
     const mouseXPct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const deltaY = e.deltaY;
     const total = allDates?.length ?? 0;
     if (total < 2) return;
 
-    setViewWindow(([s, en]) => {
-      const len = en - s;
-      const factor = e.deltaY > 0 ? 1.25 : 0.8;
-      const newLen = Math.min(total, Math.max(30, Math.round(len * factor))); // min ~6 semaines (données journalières)
-      const anchor = s + mouseXPct * len;
-      let newStart = Math.max(0, Math.round(anchor - mouseXPct * newLen));
-      let newEnd = newStart + newLen;
-      if (newEnd > total) { newEnd = total; newStart = Math.max(0, newEnd - newLen); }
-      return [newStart, newEnd];
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      setViewWindow(([s, en]) => {
+        const len = en - s;
+        const factor = deltaY > 0 ? 1.25 : 0.8;
+        const newLen = Math.min(total, Math.max(30, Math.round(len * factor)));
+        const anchor = s + mouseXPct * len;
+        let newStart = Math.max(0, Math.round(anchor - mouseXPct * newLen));
+        let newEnd = newStart + newLen;
+        if (newEnd > total) { newEnd = total; newStart = Math.max(0, newEnd - newLen); }
+        return [newStart, newEnd];
+      });
     });
   }, [allDates]);
 
@@ -172,7 +179,10 @@ function SpreadHistory({ allDates, allValues, range, onRangeChange }) {
     const el = svgRef.current;
     if (!el) return;
     el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => el.removeEventListener('wheel', handleWheel);
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [handleWheel]);
 
   const computed = useMemo(() => {
