@@ -12,6 +12,7 @@ import MetricCard from './fundamentals/MetricCard';
 import FinancialStatement from './fundamentals/FinancialStatement';
 import { useFundamentals } from '../hooks/useFundamentals';
 import { useSectorAverages } from '../hooks/useSectorAverages';
+import { useSectorHistory } from '../hooks/useSectorHistory';
 
 // ── Composant principal ────────────────────────────────────────────────────
 function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
@@ -19,7 +20,8 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
   const { dataMap, loading, errors } = useFundamentals(allSymbols);
   const isSoloMode = allSymbols.length === 1;
   const primarySector = isSoloMode ? dataMap[selectedSymbol]?.sector : null;
-  const sectorAvg = useSectorAverages(primarySector);
+  const sectorAvg     = useSectorAverages(primarySector);
+  const sectorHistory = useSectorHistory(primarySector);
 
   // ── Formateur de valeurs ───────────────────────────────────────────────────
   const fmt = (val, unit) => {
@@ -148,9 +150,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
         </div>
 
-        <FinancialStatement title="7. Compte de Résultat — Historique (4 ans)" stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data} />
-        <FinancialStatement title="8. Bilan Comptable — Historique (4 ans)"     stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} />
-        <FinancialStatement title="9. Flux de Trésorerie — Historique (4 ans)"  stmtData={d.cashflow_data}     fmt={fmt} stmtAvg={sectorAvg?.cashflow_data} />
+        <FinancialStatement title="7. Compte de Résultat — Historique" stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data}   stmtAvgHistory={sectorHistory?.income_stmt_data}   companyName={d.name} />
+        <FinancialStatement title="8. Bilan Comptable — Historique"    stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} stmtAvgHistory={sectorHistory?.balance_sheet_data} companyName={d.name} />
+        <FinancialStatement title="9. Flux de Trésorerie — Historique" stmtData={d.cashflow_data}     fmt={fmt} stmtAvg={sectorAvg?.cashflow_data}      stmtAvgHistory={sectorHistory?.cashflow_data}      companyName={d.name} />
       </div>
     );
   }
