@@ -31,7 +31,7 @@ function GaugeBar({ rate }) {
   );
 }
 
-function BankRow({ name, rate, last_update }) {
+function BankRow({ name, rate, last_update, stale }) {
   const color = rateColor(rate);
   const flag  = { 'Fed (US)': '🇺🇸', 'BCE': '🇪🇺', 'BoE (UK)': '🇬🇧', 'BoJ (Japon)': '🇯🇵' }[name] ?? '🏦';
   return (
@@ -42,18 +42,28 @@ function BankRow({ name, rate, last_update }) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span style={{ fontSize: '16px' }}>{flag}</span>
-        <span style={{ color: 'var(--text2)', fontSize: '13px', fontWeight: '600' }}>{name}</span>
+        <div>
+          <span style={{ color: 'var(--text2)', fontSize: '13px', fontWeight: '600' }}>{name}</span>
+          {stale && last_update && (
+            <div style={{ fontSize: '9px', color: '#f59e0b', marginTop: '1px' }}>
+              données · {last_update.slice(0, 7)}
+            </div>
+          )}
+        </div>
       </div>
       <GaugeBar rate={rate} />
-      <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '15px', color, fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '15px', color, fontVariantNumeric: 'tabular-nums', opacity: stale ? 0.7 : 1 }}>
         {rate !== null && rate !== undefined ? `${rate.toFixed(2)}%` : '—'}
       </div>
       <div style={{ textAlign: 'right' }}>
         <span style={{
           fontSize: '10px', padding: '2px 7px', borderRadius: '10px',
-          backgroundColor: `${color}22`, color, fontWeight: '600',
+          backgroundColor: stale ? '#f59e0b22' : `${color}22`,
+          color: stale ? '#f59e0b' : color,
+          border: stale ? '1px solid #f59e0b44' : 'none',
+          fontWeight: '600',
         }}>
-          {rateLabel(rate)}
+          {stale ? `~${rateLabel(rate)}` : rateLabel(rate)}
         </span>
       </div>
     </div>
