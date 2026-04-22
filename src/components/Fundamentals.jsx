@@ -156,16 +156,35 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
         <FinancialStatement title="7. Compte de Résultat — Historique"  stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data}   stmtAvgHistory={sectorHistory?.income_stmt_data}   companyName={d.name} />
         <FinancialStatement title="8. Bilan Comptable — Historique"     stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} stmtAvgHistory={sectorHistory?.balance_sheet_data} companyName={d.name} />
         <FinancialStatement title="9. Flux de Trésorerie — Historique"  stmtData={d.cashflow_data}      fmt={fmt} stmtAvg={sectorAvg?.cashflow_data}      stmtAvgHistory={sectorHistory?.cashflow_data}      companyName={d.name} />
-        {dd.annual?.items?.length > 0 && (
-          <FinancialStatement
-            title="10. Politique de Dividende — Historique"
-            stmtData={dd.annual}
-            fmt={fmt}
-            stmtAvg={{ 'Dividende Annuel': divSectorAvg.dividend_rate }}
-            stmtAvgHistory={{ 'Dividende Annuel': sectorHistory?.dividends_data?.annual_dividend }}
-            companyName={d.name}
-          />
-        )}
+        {dd.annual?.items?.length > 0 && (() => {
+          const scalarRows = [
+            dd.dividend_yield      && { name: 'Rendement Div.',     vals: [dd.dividend_yield],      unit: '%' },
+            dd.dividend_rate       && { name: 'Dividende/Action',   vals: [dd.dividend_rate],       unit: '$' },
+            dd.payout_ratio        && { name: 'Ratio Distribution', vals: [dd.payout_ratio],        unit: '%' },
+            dd.five_year_avg_yield && { name: 'Rend. Moy. 5 ans',   vals: [dd.five_year_avg_yield], unit: '%' },
+          ].filter(Boolean);
+          const dividendStmtData = {
+            years: dd.annual.years,
+            items: [...dd.annual.items, ...scalarRows],
+          };
+          const dividendStmtAvg = {
+            'Dividende Annuel':  divSectorAvg.dividend_rate,
+            'Rendement Div.':    divSectorAvg.dividend_yield,
+            'Dividende/Action':  divSectorAvg.dividend_rate,
+            'Ratio Distribution':divSectorAvg.payout_ratio,
+            'Rend. Moy. 5 ans':  divSectorAvg.five_year_avg_yield,
+          };
+          return (
+            <FinancialStatement
+              title="10. Politique de Dividende — Historique"
+              stmtData={dividendStmtData}
+              fmt={fmt}
+              stmtAvg={dividendStmtAvg}
+              stmtAvgHistory={{ 'Dividende Annuel': sectorHistory?.dividends_data?.annual_dividend }}
+              companyName={d.name}
+            />
+          );
+        })()}
       </div>
     );
   }
