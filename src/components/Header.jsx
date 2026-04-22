@@ -61,10 +61,10 @@ function FilterDropdown({ label, items, filters, onChange, onSelectAll, onSelect
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownRef]);
 
-  const quickBtnStyle = (color) => ({
+  const quickBtnStyle = () => ({
     padding: '2px 8px', fontSize: '10px', fontWeight: 'bold',
-    border: `1px solid ${color}40`, borderRadius: '4px',
-    backgroundColor: `${color}18`, color: color,
+    border: '1px solid var(--border)', borderRadius: '4px',
+    backgroundColor: 'var(--bg2)', color: 'var(--text3)',
     cursor: 'pointer', lineHeight: '16px',
   });
 
@@ -98,8 +98,8 @@ function FilterDropdown({ label, items, filters, onChange, onSelectAll, onSelect
             display: 'flex', gap: '6px', padding: '6px 14px 8px',
             borderBottom: '1px solid var(--border)',
           }}>
-            <button style={quickBtnStyle('#26a69a')} onClick={onSelectAll}>Tous</button>
-            <button style={quickBtnStyle('#ef5350')} onClick={onSelectNone}>Aucun</button>
+            <button style={quickBtnStyle()} onClick={onSelectAll}>Tous</button>
+            <button style={quickBtnStyle()} onClick={onSelectNone}>Aucun</button>
           </div>
 
           {items.map(({ key, label: fl }) => (
