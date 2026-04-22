@@ -102,7 +102,7 @@ function SpreadHistory({ allDates, allValues, range, onRangeChange }) {
     setViewWindow(([s, en]) => {
       const len = en - s;
       const factor = e.deltaY > 0 ? 1.25 : 0.8;
-      const newLen = Math.min(total, Math.max(5, Math.round(len * factor)));
+      const newLen = Math.min(total, Math.max(30, Math.round(len * factor))); // min ~6 semaines (données journalières)
       const anchor = s + mouseXPct * len;
       let newStart = Math.max(0, Math.round(anchor - mouseXPct * newLen));
       let newEnd = newStart + newLen;
@@ -126,7 +126,9 @@ function SpreadHistory({ allDates, allValues, range, onRangeChange }) {
     const yS = v => MT + PH - ((v - yLo) / (yHi - yLo)) * PH;
     const y0 = yS(0);
     const polyline = values.map((v, i) => `${xS(i).toFixed(1)},${yS(v).toFixed(1)}`).join(' ');
-    const step = Math.max(1, Math.floor(dates.length / 8));
+    // Max 7 ticks, espacement minimum de 80 unités SVG pour éviter les chevauchements
+    const maxTicks = Math.min(7, Math.floor(PW / 80));
+    const step = Math.max(1, Math.ceil(dates.length / maxTicks));
     const xTicks = [];
     for (let i = 0; i < dates.length; i += step) xTicks.push({ x: xS(i), label: dates[i].slice(0, 7) });
     const yTicks = Array.from({ length: 5 }, (_, k) => {

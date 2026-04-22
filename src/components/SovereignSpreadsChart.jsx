@@ -72,7 +72,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
       const [s, en] = prev ?? [0, total];
       const len = en - s;
       const factor = e.deltaY > 0 ? 1.25 : 0.8;
-      const newLen = Math.min(total, Math.max(5, Math.round(len * factor)));
+      const newLen = Math.min(total, Math.max(6, Math.round(len * factor))); // min 6 mois (données mensuelles)
       const anchor = s + mouseXPct * len;
       let newStart = Math.max(0, Math.round(anchor - mouseXPct * newLen));
       let newEnd = newStart + newLen;
@@ -110,7 +110,9 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
       }).filter(Boolean).join(' '),
     }));
 
-    const step   = Math.max(1, Math.floor(dates.length / 8));
+    // Max 7 ticks, espacement minimum de 80 unités SVG pour éviter les chevauchements
+    const maxTicks = Math.min(7, Math.floor(PW / 80));
+    const step = Math.max(1, Math.ceil(dates.length / maxTicks));
     const xTicks = [];
     for (let i = 0; i < dates.length; i += step) xTicks.push({ x: xS(i), label: dates[i].slice(0, 7) });
 
