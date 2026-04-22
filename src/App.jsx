@@ -19,7 +19,7 @@ function Dashboard() {
   const [selectedSymbol, setSelectedSymbol] = useState('AI.PA');
   const [compareSymbols, setCompareSymbols] = useState([]);
   const [viewMode,       setViewMode]       = useState('chart');
-  const [chartMode,      setChartMode]      = useState('trading');
+  const [chartMode,      setChartMode]      = useState('simple');
 
   const { assets: fundamentalsData } = useAssets();
 
@@ -83,23 +83,23 @@ function Dashboard() {
         <>
           <div style={{ display: 'flex', gap: '0', marginBottom: '12px' }}>
             <button
-              onClick={() => setChartMode('trading')}
-              style={{ ...toggleBtnStyle(chartMode === 'trading'), borderRadius: '6px 0 0 6px' }}
-            >
-              Trading
-            </button>
-            <button
               onClick={() => setChartMode('simple')}
-              style={{ ...toggleBtnStyle(chartMode === 'simple'), borderRadius: '0 6px 6px 0', borderLeft: 'none' }}
+              style={{ ...toggleBtnStyle(chartMode === 'simple'), borderRadius: '6px 0 0 6px' }}
             >
               Simple
+            </button>
+            <button
+              onClick={() => setChartMode('trading')}
+              style={{ ...toggleBtnStyle(chartMode === 'trading'), borderRadius: '0 6px 6px 0', borderLeft: 'none' }}
+            >
+              Trading
             </button>
           </div>
 
           <ErrorBoundary label="Graphique">
-            {chartMode === 'trading'
-              ? <TradingChart selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} allAssets={fundamentalsData} />
-              : <SimpleChart  selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} allAssets={fundamentalsData} />
+            {chartMode === 'simple'
+              ? <SimpleChart  selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} allAssets={fundamentalsData} />
+              : <TradingChart selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} allAssets={fundamentalsData} />
             }
           </ErrorBoundary>
         </>
