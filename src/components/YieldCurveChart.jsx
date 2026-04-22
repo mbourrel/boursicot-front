@@ -5,14 +5,16 @@ const SVG_W = 780, SVG_H = 220;
 const PW = SVG_W - ML - MR;
 const PH = SVG_H - MT - MB;
 
-const RANGES = ['3M', '6M', '1Y', '2Y'];
+const RANGES = ['3M', '6M', '1Y', '2Y', '5Y', '10Y'];
 
 function cutoffForRange(range) {
   const d = new Date();
-  if (range === '3M') d.setMonth(d.getMonth() - 3);
-  else if (range === '6M') d.setMonth(d.getMonth() - 6);
-  else if (range === '1Y') d.setFullYear(d.getFullYear() - 1);
-  else return null;
+  if (range === '3M')  d.setMonth(d.getMonth() - 3);
+  else if (range === '6M')  d.setMonth(d.getMonth() - 6);
+  else if (range === '1Y')  d.setFullYear(d.getFullYear() - 1);
+  else if (range === '2Y')  d.setFullYear(d.getFullYear() - 2);
+  else if (range === '5Y')  d.setFullYear(d.getFullYear() - 5);
+  else return null; // 10Y = tout
   return d.toISOString().slice(0, 10);
 }
 
@@ -175,7 +177,7 @@ function SpreadHistory({ dates, values, range, onRangeChange }) {
 // ── Composant principal ───────────────────────────────────────────────────────
 export default function YieldCurveChart({ yieldCurve, bondYields, loading, error }) {
   const [showInfo, setShowInfo] = useState(false);
-  const [range,    setRange]    = useState('2Y');
+  const [range,    setRange]    = useState('10Y');
 
   const currentSpread = yieldCurve?.values?.at(-1) ?? null;
   const isInverted    = currentSpread !== null && currentSpread < 0;

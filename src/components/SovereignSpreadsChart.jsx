@@ -11,14 +11,16 @@ const SERIES = [
   { key: 'oat10y',  label: 'OAT 10Y',  color: '#26a69a' },
 ];
 
-const RANGES = ['3M', '6M', '1Y', '2Y'];
+const RANGES = ['3M', '6M', '1Y', '2Y', '5Y', '10Y'];
 
 function cutoffForRange(range) {
   const d = new Date();
-  if (range === '3M') d.setMonth(d.getMonth() - 3);
-  else if (range === '6M') d.setMonth(d.getMonth() - 6);
-  else if (range === '1Y') d.setFullYear(d.getFullYear() - 1);
-  else return null;
+  if (range === '3M')  d.setMonth(d.getMonth() - 3);
+  else if (range === '6M')  d.setMonth(d.getMonth() - 6);
+  else if (range === '1Y')  d.setFullYear(d.getFullYear() - 1);
+  else if (range === '2Y')  d.setFullYear(d.getFullYear() - 2);
+  else if (range === '5Y')  d.setFullYear(d.getFullYear() - 5);
+  else return null; // 10Y = tout
   return d.toISOString().slice(0, 10);
 }
 
@@ -44,7 +46,7 @@ function alignSeries(history, range) {
 export default function SovereignSpreadsChart({ history, bondYields, loading, error }) {
   const [showInfo,  setShowInfo]  = useState(false);
   const [hoverIdx,  setHoverIdx]  = useState(null);
-  const [range,     setRange]     = useState('2Y');
+  const [range,     setRange]     = useState('10Y');
 
   const computed = useMemo(() => {
     const aligned = alignSeries(history, range);
