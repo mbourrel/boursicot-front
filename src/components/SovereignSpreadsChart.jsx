@@ -11,7 +11,17 @@ const SERIES = [
   { key: 'us30y',   label: 'US 30Y',   color: '#9c27b0' },
   { key: 'bund10y', label: 'Bund 10Y', color: '#f59e0b' },
   { key: 'oat10y',  label: 'OAT 10Y',  color: '#26a69a' },
+  { key: 'gilt10y', label: 'Gilt 10Y', color: '#ef5350' },
 ];
+
+const SERIES_DEFINITIONS = {
+  us2y:    { title: 'US 2Y — Treasury américain 2 ans', desc: 'Très sensible aux décisions de la Fed. Monte quand les marchés anticipent des hausses de taux, baisse quand ils anticipent des baisses. Baromètre de la politique monétaire à court terme.' },
+  us10y:   { title: 'US 10Y — Treasury américain 10 ans', desc: 'Référence mondiale du coût de l\'argent à long terme. Influence les taux hypothécaires, le crédit corporate et la valorisation des actions (taux d\'actualisation). Un US 10Y élevé pèse sur les marchés actions.' },
+  us30y:   { title: 'US 30Y — Treasury américain 30 ans', desc: 'Reflète les anticipations d\'inflation et de croissance sur très long terme. Moins réactif que le 2Y. Très suivi par les fonds de pension et assureurs qui gèrent des passifs longs.' },
+  bund10y: { title: 'Bund 10Y — Obligation allemande 10 ans', desc: 'Référence sans risque de la zone euro. L\'Allemagne étant la première économie de la zone, son taux sert de plancher pour tous les spreads souverains européens. Un Bund qui monte signale une remontée des taux en Europe.' },
+  oat10y:  { title: 'OAT 10Y — Obligation française 10 ans', desc: 'Le spread OAT–Bund mesure la prime de risque française. Il s\'écarte lors des crises politiques ou budgétaires (dissolution, dégradation de note). Indicateur clé de la confiance des marchés envers la France.' },
+  gilt10y: { title: 'Gilt 10Y — Obligation britannique 10 ans', desc: 'Taux souverain du Royaume-Uni post-Brexit. Reflète à la fois la politique de la BoE et les risques spécifiques britanniques (inflation structurelle, déficit courant). L\'épisode Truss (2022) a illustré sa sensibilité aux chocs budgétaires.' },
+};
 
 const RANGES = ['3M', '6M', '1Y', '2Y', '5Y', '10Y', 'Max'];
 
@@ -254,29 +264,28 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
           marginBottom: '14px', borderLeft: '3px solid #f59e0b',
           fontSize: '12px', color: 'var(--text3)', lineHeight: '1.7',
         }}>
-          <div style={{ color: 'var(--text2)', fontWeight: '700', marginBottom: '8px', fontSize: '13px' }}>
-            Que mesurent les taux souverains à 10 ans ?
+          <div style={{ color: 'var(--text2)', fontWeight: '700', marginBottom: '12px', fontSize: '13px' }}>
+            Définition de chaque série
           </div>
-          <p style={{ margin: '0 0 10px' }}>
-            Le taux à 10 ans d'un État reflète simultanément la <strong style={{ color: 'var(--text2)' }}>confiance
-            dans sa solvabilité</strong> et les <strong style={{ color: 'var(--text2)' }}>anticipations
-            d'inflation</strong>. Un taux qui monte peut signaler une économie dynamique… ou une dette jugée risquée.
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
-            <div style={{ backgroundColor: '#2962FF0D', borderRadius: '6px', padding: '10px 12px', border: '1px solid #2962FF33' }}>
-              <div style={{ color: '#2962FF', fontWeight: '700', marginBottom: '4px' }}>Spread US–Allemagne</div>
-              <div>Mesure l'attractivité relative des Treasuries vs Bunds. Un spread élevé signale que les capitaux
-              préfèrent les actifs américains → dollar fort, financement européen plus coûteux.</div>
-            </div>
-            <div style={{ backgroundColor: '#26a69a0D', borderRadius: '6px', padding: '10px 12px', border: '1px solid #26a69a33' }}>
-              <div style={{ color: '#26a69a', fontWeight: '700', marginBottom: '4px' }}>Spread France–Allemagne</div>
-              <div>Le Bund est la référence sans risque en Europe. L'écart OAT–Bund mesure le risque politique
-              français — il s'écarte lors des crises budgétaires ou politiques.</div>
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+            {SERIES.map(s => {
+              const def = SERIES_DEFINITIONS[s.key];
+              return (
+                <div key={s.key} style={{
+                  backgroundColor: 'var(--bg2)', borderRadius: '6px', padding: '10px 12px',
+                  border: `1px solid ${s.color}44`,
+                }}>
+                  <div style={{ color: s.color, fontWeight: '700', marginBottom: '5px', fontSize: '11px' }}>
+                    {def.title}
+                  </div>
+                  <div style={{ fontSize: '11px', lineHeight: '1.6' }}>{def.desc}</div>
+                </div>
+              );
+            })}
           </div>
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '8px' }}>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '8px', fontSize: '11px' }}>
             <span style={{ color: 'var(--text2)', fontWeight: '600' }}>Source · </span>
-            Données FRED (St. Louis Fed) — séries IRLTLT01*M156N (OCDE), actualisées mensuellement.
+            FRED (St. Louis Fed) — DGS2/10/30 (quotidien), IRLTLT01*M156N OCDE (mensuel).
           </div>
         </div>
       )}
