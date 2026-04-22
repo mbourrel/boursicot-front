@@ -6,16 +6,16 @@ const PW = SVG_W - ML - MR;
 const PH = SVG_H - MT - MB;
 
 const SERIES = [
-  { key: 'us2y',    label: 'US 2Y',    color: '#e91e63', flag: '🇺🇸' },
-  { key: 'us10y',   label: 'US 10Y',   color: '#2962FF', flag: '🇺🇸' },
-  { key: 'us30y',   label: 'US 30Y',   color: '#9c27b0', flag: '🇺🇸' },
-  { key: 'us3m',    label: 'US 3M',    color: '#fb8c00', flag: '🇺🇸', dashed: true },
-  { key: 'bund10y', label: 'Bund 10Y', color: '#f59e0b', flag: '🇩🇪' },
-  { key: 'bund3m',  label: 'Bund 3M',  color: '#fdd835', flag: '🇩🇪', dashed: true },
-  { key: 'oat10y',  label: 'OAT 10Y',  color: '#26a69a', flag: '🇫🇷' },
-  { key: 'oat3m',   label: 'OAT 3M',   color: '#80cbc4', flag: '🇫🇷', dashed: true },
-  { key: 'gilt10y', label: 'Gilt 10Y', color: '#ef5350', flag: '🇬🇧' },
-  { key: 'gilt3m',  label: 'Gilt 3M',  color: '#ff7043', flag: '🇬🇧', dashed: true },
+  { key: 'us2y',    label: 'US 2Y',    color: '#e91e63', flag: 'us' },
+  { key: 'us10y',   label: 'US 10Y',   color: '#2962FF', flag: 'us' },
+  { key: 'us30y',   label: 'US 30Y',   color: '#9c27b0', flag: 'us' },
+  { key: 'us3m',    label: 'US 3M',    color: '#fb8c00', flag: 'us', dashed: true },
+  { key: 'bund10y', label: 'Bund 10Y', color: '#f59e0b', flag: 'de' },
+  { key: 'bund3m',  label: 'Bund 3M',  color: '#fdd835', flag: 'de', dashed: true },
+  { key: 'oat10y',  label: 'OAT 10Y',  color: '#26a69a', flag: 'fr' },
+  { key: 'oat3m',   label: 'OAT 3M',   color: '#80cbc4', flag: 'fr', dashed: true },
+  { key: 'gilt10y', label: 'Gilt 10Y', color: '#ef5350', flag: 'gb' },
+  { key: 'gilt3m',  label: 'Gilt 3M',  color: '#ff7043', flag: 'gb', dashed: true },
 ];
 
 // Mapping clé → nom dans bond_yields (backend)
@@ -122,7 +122,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
   const [showInfo,     setShowInfo]     = useState(false);
   const [hoverIdx,     setHoverIdx]     = useState(null);
   const [range,        setRange]        = useState('Max');
-  const [visibleKeys,  setVisibleKeys]  = useState(() => new Set(SERIES.map(s => s.key)));
+  const [visibleKeys,  setVisibleKeys]  = useState(() => new Set(['us2y', 'us10y', 'oat10y']));
   const svgRef = useRef(null);
 
   const toggleSeries = (key) => setVisibleKeys(prev => {
@@ -257,7 +257,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
               )}
             </div>
             <div style={{ color: 'var(--text3)', fontSize: '11px' }}>
-              Rendements souverains 3M / 2Y / 10Y / 30Y · 🇺🇸 🇩🇪 🇫🇷 🇬🇧 — tirets = taux 3 mois (marché monétaire)
+              Rendements souverains 3M / 2Y / 10Y / 30Y · US, DE, FR, UK — tirets = taux 3 mois (marché monétaire)
             </div>
           </div>
         </div>
@@ -291,7 +291,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
                   border: `1px solid ${s.color}44`,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>
-                    <span style={{ fontSize: '14px' }}>{s.flag}</span>
+                    <img src={`https://flagcdn.com/16x12/${s.flag}.png`} width="16" height="12" alt={s.flag} style={{ borderRadius: '1px', display: 'block' }} />
                     {s.dashed
                       ? <span style={{ width: '18px', height: '2px', display: 'inline-block', background: `repeating-linear-gradient(90deg, ${s.color} 0px, ${s.color} 4px, transparent 4px, transparent 7px)` }} />
                       : <span style={{ width: '18px', height: '2px', backgroundColor: s.color, display: 'inline-block', borderRadius: '1px' }} />
@@ -330,7 +330,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
                   transition: 'all 0.15s',
                 }}
               >
-                <span style={{ fontSize: '13px', lineHeight: 1 }}>{s.flag}</span>
+                <img src={`https://flagcdn.com/16x12/${s.flag}.png`} width="16" height="12" alt={s.flag} style={{ borderRadius: '1px', display: 'block' }} />
                 {s.dashed
                   ? <span style={{ width: '16px', height: '2px', display: 'inline-block', background: `repeating-linear-gradient(90deg, ${s.color} 0px, ${s.color} 4px, transparent 4px, transparent 7px)` }} />
                   : <span style={{ width: '16px', height: '2px', backgroundColor: s.color, display: 'inline-block', borderRadius: '1px' }} />
