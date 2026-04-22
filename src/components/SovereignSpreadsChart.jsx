@@ -6,7 +6,9 @@ const PW = SVG_W - ML - MR;
 const PH = SVG_H - MT - MB;
 
 const SERIES = [
+  { key: 'us2y',    label: 'US 2Y',    color: '#e91e63' },
   { key: 'us10y',   label: 'US 10Y',   color: '#2962FF' },
+  { key: 'us30y',   label: 'US 30Y',   color: '#9c27b0' },
   { key: 'bund10y', label: 'Bund 10Y', color: '#f59e0b' },
   { key: 'oat10y',  label: 'OAT 10Y',  color: '#26a69a' },
 ];
@@ -91,10 +93,18 @@ function buildAlignedDates(history) {
 }
 
 export default function SovereignSpreadsChart({ history, bondYields, loading, error }) {
-  const [showInfo,  setShowInfo]  = useState(false);
-  const [hoverIdx,  setHoverIdx]  = useState(null);
-  const [range,     setRange]     = useState('Max');
+  const [showInfo,     setShowInfo]     = useState(false);
+  const [hoverIdx,     setHoverIdx]     = useState(null);
+  const [range,        setRange]        = useState('Max');
+  const [visibleKeys,  setVisibleKeys]  = useState(() => new Set(SERIES.map(s => s.key)));
   const svgRef = useRef(null);
+
+  const toggleSeries = (key) => setVisibleKeys(prev => {
+    const next = new Set(prev);
+    if (next.has(key)) { if (next.size > 1) next.delete(key); }
+    else next.add(key);
+    return next;
+  });
 
   const aligned = useMemo(() => buildAlignedDates(history), [history]);
   const allDates = aligned?.allDates ?? [];
@@ -139,7 +149,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
 
   const computed = useMemo(() => {
     if (!aligned) return null;
-    const { series } = aligned;
+    const series = aligned.series.filter(s => visibleKeys.has(s.key));
     const dates = allDates.slice(effectiveWindow[0], effectiveWindow[1]);
     if (!dates.length) return null;
 
@@ -176,20 +186,23 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
     });
 
     return { dates, series, polylines, xTicks, yTicks, xS, yS, stats };
-  }, [aligned, allDates, effectiveWindow]);
+  }, [aligned, allDates, effectiveWindow, visibleKeys]);
 
-  const us10y   = bondYields?.find(b => b.name === 'US 10Y')?.rate;
-  const bund10y = bondYields?.find(b => b.name === 'Bund 10Y')?.rate;
-  const oat10y  = bondYields?.find(b => b.name === 'OAT 10Y')?.rate;
+  const rateByKey = useMemo(() => {
+    const map = { us2y: 'US 2Y', us10y: 'US 10Y', us30y: 'US 30Y', bund10y: 'Bund 10Y', oat10y: 'OAT 10Y' };
+    const out = {};
+    SERIES.forEach(s => { out[s.key] = bondYields?.find(b => b.name === map[s.key])?.rate ?? null; });
+    return out;
+  }, [bondYields]);
+  const { us10y, bund10y, oat10y } = rateByKey;
   const spreadUsDe = us10y != null && bund10y != null ? (us10y - bund10y).toFixed(2) : null;
   const spreadFrDe = oat10y != null && bund10y != null ? (oat10y - bund10y).toFixed(2) : null;
 
   const hoverX    = hoverIdx != null && computed ? computed.xS(hoverIdx) : null;
   const hoverDate = hoverIdx != null ? computed?.dates[hoverIdx] : null;
-  const hoverVals = hoverIdx != null && computed ? computed.series.map(s => ({
-    label: s.label, color: s.color,
-    value: s.map[computed.dates[hoverIdx]],
-  })) : null;
+  const hoverVals = hoverIdx != null && computed
+    ? computed.series.map(s => ({ label: s.label, color: s.color, value: s.map[computed.dates[hoverIdx]] }))
+    : null;
 
   return (
     <div style={{
@@ -268,21 +281,35 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
         </div>
       )}
 
-      {/* ── Légende + contrôles ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+      {/* ── Légende toggleable + contrôles ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {SERIES.map(s => {
-            const currentRate = s.key === 'us10y' ? us10y : s.key === 'bund10y' ? bund10y : oat10y;
+            const active = visibleKeys.has(s.key);
+            const currentRate = rateByKey[s.key];
             const stat = computed?.stats?.find(st => st.key === s.key);
             return (
-              <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text2)' }}>
-                <span style={{ width: '20px', height: '2px', backgroundColor: s.color, display: 'inline-block', borderRadius: '1px' }} />
-                {s.label}
-                {currentRate != null && <strong style={{ color: s.color }}>{currentRate.toFixed(2)}%</strong>}
-                {stat?.min && (
+              <button
+                key={s.key}
+                onClick={() => toggleSeries(s.key)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '5px',
+                  padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
+                  border: `1px solid ${active ? s.color : 'var(--border)'}`,
+                  backgroundColor: active ? `${s.color}18` : 'transparent',
+                  opacity: active ? 1 : 0.45,
+                  transition: 'all 0.15s',
+                }}
+              >
+                <span style={{ width: '16px', height: '2px', backgroundColor: s.color, display: 'inline-block', borderRadius: '1px' }} />
+                <span style={{ fontSize: '11px', color: active ? s.color : 'var(--text3)', fontWeight: '600' }}>{s.label}</span>
+                {currentRate != null && (
+                  <span style={{ fontSize: '11px', color: active ? s.color : 'var(--text3)' }}>{currentRate.toFixed(2)}%</span>
+                )}
+                {stat?.min && active && (
                   <span style={{ color: 'var(--text3)', fontSize: '10px' }}>({stat.min}–{stat.max})</span>
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
