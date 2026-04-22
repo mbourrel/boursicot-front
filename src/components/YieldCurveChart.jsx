@@ -7,21 +7,16 @@ const PH = SVG_H - MT - MB;
 
 const RANGES = ['3M', '6M', '1Y', '2Y', '5Y', '10Y', 'Max'];
 
-// Calcule des ticks à intervalles "propres" selon la plage de dates visible
+// Calcule des ticks à intervalles "propres" — cible 5-8 labels, jamais de chevauchement
 function niceXTicks(dates, xS) {
   if (dates.length < 2) return [];
-  const start  = new Date(dates[0]);
-  const end    = new Date(dates[dates.length - 1]);
-  const days   = Math.max(1, (end - start) / 86400000);
+  const start = new Date(dates[0]);
+  const end   = new Date(dates[dates.length - 1]);
+  const days  = Math.max(1, (end - start) / 86400000);
 
-  // Génère les dates de tick selon la densité adaptée
   const tickDates = [];
+
   if (days <= 90) {
-    // Bimensuel
-    const cur = new Date(start); cur.setDate(1);
-    for (; cur <= end; cur.setDate(cur.getDate() + 14))
-      tickDates.push(cur.toISOString().slice(0, 10));
-  } else if (days <= 365) {
     // Mensuel
     const cur = new Date(start.getFullYear(), start.getMonth() + 1, 1);
     for (; cur <= end; cur.setMonth(cur.getMonth() + 1))
@@ -31,34 +26,42 @@ function niceXTicks(dates, xS) {
     const cur = new Date(start.getFullYear(), Math.ceil(start.getMonth() / 3) * 3, 1);
     for (; cur <= end; cur.setMonth(cur.getMonth() + 3))
       tickDates.push(cur.toISOString().slice(0, 7));
-  } else if (days <= 6 * 365) {
-    // Semestriel
-    const cur = new Date(start.getFullYear(), Math.ceil(start.getMonth() / 6) * 6, 1);
-    for (; cur <= end; cur.setMonth(cur.getMonth() + 6))
-      tickDates.push(`${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`);
-  } else if (days <= 15 * 365) {
+  } else if (days <= 5 * 365) {
     // Annuel
     for (let y = start.getFullYear() + 1; y <= end.getFullYear(); y++)
       tickDates.push(`${y}`);
-  } else if (days <= 35 * 365) {
+  } else if (days <= 15 * 365) {
+    // Tous les 2 ans
+    const s = Math.ceil((start.getFullYear() + 1) / 2) * 2;
+    for (let y = s; y <= end.getFullYear(); y += 2)
+      tickDates.push(`${y}`);
+  } else if (days <= 40 * 365) {
     // Tous les 5 ans
-    const s5 = Math.ceil((start.getFullYear() + 1) / 5) * 5;
-    for (let y = s5; y <= end.getFullYear(); y += 5)
+    const s = Math.ceil((start.getFullYear() + 1) / 5) * 5;
+    for (let y = s; y <= end.getFullYear(); y += 5)
       tickDates.push(`${y}`);
   } else {
     // Tous les 10 ans
-    const s10 = Math.ceil((start.getFullYear() + 1) / 10) * 10;
-    for (let y = s10; y <= end.getFullYear(); y += 10)
+    const s = Math.ceil((start.getFullYear() + 1) / 10) * 10;
+    for (let y = s; y <= end.getFullYear(); y += 10)
       tickDates.push(`${y}`);
   }
 
-  // Mappe chaque tick sur l'index de données le plus proche → coordonnée SVG
-  return tickDates.map(td => {
+  // Mappe chaque date de tick sur l'index de données le plus proche
+  const mapped = tickDates.map(td => {
     const idx = dates.findIndex(d => d >= td);
     if (idx === -1) return null;
     const label = td.length <= 4 ? td : td.slice(0, 7);
     return { x: xS(idx), label };
   }).filter(Boolean);
+
+  // Filtre anti-chevauchement garanti : espacement minimum de 65 unités SVG
+  const result = [];
+  for (const tick of mapped) {
+    if (!result.length || tick.x - result[result.length - 1].x >= 65)
+      result.push(tick);
+  }
+  return result;
 }
 
 function idxForRange(dates, range) {

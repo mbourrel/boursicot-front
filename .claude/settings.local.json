@@ -4,7 +4,17 @@
       "Bash(python3 -c ' *)",
       "Bash(python -c ' *)",
       "Bash(ls c:/Users/mateo/boursicot-api/*.py)",
-      "Read(//c/Users/mateo/**)"
+      "Read(//c/Users/mateo/**)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(venv/Scripts/python.exe -c \"import fredapi; print\\('fredapi ok'\\)\")",
+      "Bash(venv/Scripts/pip.exe install *)",
+      "Bash(venv/Scripts/python.exe -c ' *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(curl -s https://boursicot-api.onrender.com/macro/rates)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(b\\) for b in d.get\\('central_banks',[]\\)]\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\mateo\\boursicot-api"

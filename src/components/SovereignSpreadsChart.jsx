@@ -20,11 +20,8 @@ function niceXTicks(dates, xS) {
   const days  = Math.max(1, (end - start) / 86400000);
 
   const tickDates = [];
+
   if (days <= 90) {
-    const cur = new Date(start.getFullYear(), start.getMonth() + 1, 1);
-    for (; cur <= end; cur.setDate(cur.getDate() + 14))
-      tickDates.push(cur.toISOString().slice(0, 7));
-  } else if (days <= 365) {
     const cur = new Date(start.getFullYear(), start.getMonth() + 1, 1);
     for (; cur <= end; cur.setMonth(cur.getMonth() + 1))
       tickDates.push(cur.toISOString().slice(0, 7));
@@ -32,29 +29,37 @@ function niceXTicks(dates, xS) {
     const cur = new Date(start.getFullYear(), Math.ceil(start.getMonth() / 3) * 3, 1);
     for (; cur <= end; cur.setMonth(cur.getMonth() + 3))
       tickDates.push(cur.toISOString().slice(0, 7));
-  } else if (days <= 6 * 365) {
-    const cur = new Date(start.getFullYear(), Math.ceil(start.getMonth() / 6) * 6, 1);
-    for (; cur <= end; cur.setMonth(cur.getMonth() + 6))
-      tickDates.push(`${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`);
-  } else if (days <= 15 * 365) {
+  } else if (days <= 5 * 365) {
     for (let y = start.getFullYear() + 1; y <= end.getFullYear(); y++)
       tickDates.push(`${y}`);
-  } else if (days <= 35 * 365) {
-    const s5 = Math.ceil((start.getFullYear() + 1) / 5) * 5;
-    for (let y = s5; y <= end.getFullYear(); y += 5)
+  } else if (days <= 15 * 365) {
+    const s = Math.ceil((start.getFullYear() + 1) / 2) * 2;
+    for (let y = s; y <= end.getFullYear(); y += 2)
+      tickDates.push(`${y}`);
+  } else if (days <= 40 * 365) {
+    const s = Math.ceil((start.getFullYear() + 1) / 5) * 5;
+    for (let y = s; y <= end.getFullYear(); y += 5)
       tickDates.push(`${y}`);
   } else {
-    const s10 = Math.ceil((start.getFullYear() + 1) / 10) * 10;
-    for (let y = s10; y <= end.getFullYear(); y += 10)
+    const s = Math.ceil((start.getFullYear() + 1) / 10) * 10;
+    for (let y = s; y <= end.getFullYear(); y += 10)
       tickDates.push(`${y}`);
   }
 
-  return tickDates.map(td => {
+  const mapped = tickDates.map(td => {
     const idx = dates.findIndex(d => d >= td);
     if (idx === -1) return null;
     const label = td.length <= 4 ? td : td.slice(0, 7);
     return { x: xS(idx), label };
   }).filter(Boolean);
+
+  // Filtre anti-chevauchement garanti
+  const result = [];
+  for (const tick of mapped) {
+    if (!result.length || tick.x - result[result.length - 1].x >= 65)
+      result.push(tick);
+  }
+  return result;
 }
 
 function idxForRange(dates, range) {
