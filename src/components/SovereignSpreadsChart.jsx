@@ -6,21 +6,37 @@ const PW = SVG_W - ML - MR;
 const PH = SVG_H - MT - MB;
 
 const SERIES = [
-  { key: 'us2y',    label: 'US 2Y',    color: '#e91e63' },
-  { key: 'us10y',   label: 'US 10Y',   color: '#2962FF' },
-  { key: 'us30y',   label: 'US 30Y',   color: '#9c27b0' },
-  { key: 'bund10y', label: 'Bund 10Y', color: '#f59e0b' },
-  { key: 'oat10y',  label: 'OAT 10Y',  color: '#26a69a' },
-  { key: 'gilt10y', label: 'Gilt 10Y', color: '#ef5350' },
+  { key: 'us2y',    label: 'US 2Y',    color: '#e91e63', flag: '🇺🇸' },
+  { key: 'us10y',   label: 'US 10Y',   color: '#2962FF', flag: '🇺🇸' },
+  { key: 'us30y',   label: 'US 30Y',   color: '#9c27b0', flag: '🇺🇸' },
+  { key: 'us3m',    label: 'US 3M',    color: '#fb8c00', flag: '🇺🇸', dashed: true },
+  { key: 'bund10y', label: 'Bund 10Y', color: '#f59e0b', flag: '🇩🇪' },
+  { key: 'bund3m',  label: 'Bund 3M',  color: '#fdd835', flag: '🇩🇪', dashed: true },
+  { key: 'oat10y',  label: 'OAT 10Y',  color: '#26a69a', flag: '🇫🇷' },
+  { key: 'oat3m',   label: 'OAT 3M',   color: '#80cbc4', flag: '🇫🇷', dashed: true },
+  { key: 'gilt10y', label: 'Gilt 10Y', color: '#ef5350', flag: '🇬🇧' },
+  { key: 'gilt3m',  label: 'Gilt 3M',  color: '#ff7043', flag: '🇬🇧', dashed: true },
 ];
+
+// Mapping clé → nom dans bond_yields (backend)
+const NAME_BY_KEY = {
+  us2y: 'US 2Y', us10y: 'US 10Y', us30y: 'US 30Y', us3m: 'US 3M',
+  bund10y: 'Bund 10Y', bund3m: 'Bund 3M',
+  oat10y: 'OAT 10Y',  oat3m: 'OAT 3M',
+  gilt10y: 'Gilt 10Y', gilt3m: 'Gilt 3M',
+};
 
 const SERIES_DEFINITIONS = {
   us2y:    { title: 'US 2Y — Treasury américain 2 ans', desc: 'Très sensible aux décisions de la Fed. Monte quand les marchés anticipent des hausses de taux, baisse quand ils anticipent des baisses. Baromètre de la politique monétaire à court terme.' },
   us10y:   { title: 'US 10Y — Treasury américain 10 ans', desc: 'Référence mondiale du coût de l\'argent à long terme. Influence les taux hypothécaires, le crédit corporate et la valorisation des actions (taux d\'actualisation). Un US 10Y élevé pèse sur les marchés actions.' },
   us30y:   { title: 'US 30Y — Treasury américain 30 ans', desc: 'Reflète les anticipations d\'inflation et de croissance sur très long terme. Moins réactif que le 2Y. Très suivi par les fonds de pension et assureurs qui gèrent des passifs longs.' },
+  us3m:    { title: 'US 3M — Bon du Trésor américain 3 mois', desc: 'Taux du marché monétaire américain (DGS3MO, quotidien). Colle très étroitement au taux directeur de la Fed. Utile pour lire l\'anticipation des marchés sur les prochaines décisions de politique monétaire à très court terme.' },
   bund10y: { title: 'Bund 10Y — Obligation allemande 10 ans', desc: 'Référence sans risque de la zone euro. L\'Allemagne étant la première économie de la zone, son taux sert de plancher pour tous les spreads souverains européens. Un Bund qui monte signale une remontée des taux en Europe.' },
+  bund3m:  { title: 'Bund 3M — Taux court allemand 3 mois', desc: 'Taux du marché monétaire de la zone euro (IRLTST01DEM, mensuel OCDE). Reflète les décisions de la BCE à court terme. Sert de référence pour les emprunts interbancaires et les fonds monétaires en euros.' },
   oat10y:  { title: 'OAT 10Y — Obligation française 10 ans', desc: 'Le spread OAT–Bund mesure la prime de risque française. Il s\'écarte lors des crises politiques ou budgétaires (dissolution, dégradation de note). Indicateur clé de la confiance des marchés envers la France.' },
+  oat3m:   { title: 'OAT 3M — Taux court français 3 mois', desc: 'Taux du marché monétaire français (IRLTST01FRM, mensuel OCDE). Suit de très près le Bund 3M au sein de la zone euro. Un écart persistant avec l\'Allemagne signalerait un stress de financement à court terme pour la France.' },
   gilt10y: { title: 'Gilt 10Y — Obligation britannique 10 ans', desc: 'Taux souverain du Royaume-Uni post-Brexit. Reflète à la fois la politique de la BoE et les risques spécifiques britanniques (inflation structurelle, déficit courant). L\'épisode Truss (2022) a illustré sa sensibilité aux chocs budgétaires.' },
+  gilt3m:  { title: 'Gilt 3M — Taux court britannique 3 mois', desc: 'Taux du marché monétaire UK (IRLTST01GBM, mensuel OCDE). Suit la Bank of England Rate. Depuis le Brexit, le UK pilote sa politique monétaire indépendamment de la BCE, ce qui peut créer des divergences notables.' },
 };
 
 const RANGES = ['3M', '6M', '1Y', '2Y', '5Y', '10Y', 'Max'];
@@ -199,9 +215,8 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
   }, [aligned, allDates, effectiveWindow, visibleKeys]);
 
   const rateByKey = useMemo(() => {
-    const map = { us2y: 'US 2Y', us10y: 'US 10Y', us30y: 'US 30Y', bund10y: 'Bund 10Y', oat10y: 'OAT 10Y' };
     const out = {};
-    SERIES.forEach(s => { out[s.key] = bondYields?.find(b => b.name === map[s.key])?.rate ?? null; });
+    SERIES.forEach(s => { out[s.key] = bondYields?.find(b => b.name === NAME_BY_KEY[s.key])?.rate ?? null; });
     return out;
   }, [bondYields]);
   const { us10y, bund10y, oat10y } = rateByKey;
@@ -226,7 +241,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span style={{ color: 'var(--text1)', fontWeight: 'bold', fontSize: '14px' }}>
-                Baromètre de Confiance — Dettes Souveraines 10 ans
+                Baromètre de Confiance — Dettes Souveraines
               </span>
               {spreadUsDe && (
                 <span style={{
@@ -242,7 +257,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
               )}
             </div>
             <div style={{ color: 'var(--text3)', fontSize: '11px' }}>
-              Rendements obligataires à 10 ans · USD, EUR
+              Rendements souverains 3M / 2Y / 10Y / 30Y · 🇺🇸 🇩🇪 🇫🇷 🇬🇧 — tirets = taux 3 mois (marché monétaire)
             </div>
           </div>
         </div>
@@ -267,7 +282,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
           <div style={{ color: 'var(--text2)', fontWeight: '700', marginBottom: '12px', fontSize: '13px' }}>
             Définition de chaque série
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
             {SERIES.map(s => {
               const def = SERIES_DEFINITIONS[s.key];
               return (
@@ -275,8 +290,13 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
                   backgroundColor: 'var(--bg2)', borderRadius: '6px', padding: '10px 12px',
                   border: `1px solid ${s.color}44`,
                 }}>
-                  <div style={{ color: s.color, fontWeight: '700', marginBottom: '5px', fontSize: '11px' }}>
-                    {def.title}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>
+                    <span style={{ fontSize: '14px' }}>{s.flag}</span>
+                    {s.dashed
+                      ? <span style={{ width: '18px', height: '2px', display: 'inline-block', background: `repeating-linear-gradient(90deg, ${s.color} 0px, ${s.color} 4px, transparent 4px, transparent 7px)` }} />
+                      : <span style={{ width: '18px', height: '2px', backgroundColor: s.color, display: 'inline-block', borderRadius: '1px' }} />
+                    }
+                    <span style={{ color: s.color, fontWeight: '700', fontSize: '11px' }}>{def.title}</span>
                   </div>
                   <div style={{ fontSize: '11px', lineHeight: '1.6' }}>{def.desc}</div>
                 </div>
@@ -285,7 +305,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
           </div>
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: '8px', fontSize: '11px' }}>
             <span style={{ color: 'var(--text2)', fontWeight: '600' }}>Source · </span>
-            FRED (St. Louis Fed) — DGS2/10/30 (quotidien), IRLTLT01*M156N OCDE (mensuel).
+            FRED (St. Louis Fed) — DGS2/10/30/3MO (quotidien), IRLTLT01*/IRLTST01* OCDE (mensuel). Les séries 3M mesurent les taux du marché monétaire, pas des obligations 3 mois stricto sensu.
           </div>
         </div>
       )}
@@ -310,7 +330,11 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
                   transition: 'all 0.15s',
                 }}
               >
-                <span style={{ width: '16px', height: '2px', backgroundColor: s.color, display: 'inline-block', borderRadius: '1px' }} />
+                <span style={{ fontSize: '13px', lineHeight: 1 }}>{s.flag}</span>
+                {s.dashed
+                  ? <span style={{ width: '16px', height: '2px', display: 'inline-block', background: `repeating-linear-gradient(90deg, ${s.color} 0px, ${s.color} 4px, transparent 4px, transparent 7px)` }} />
+                  : <span style={{ width: '16px', height: '2px', backgroundColor: s.color, display: 'inline-block', borderRadius: '1px' }} />
+                }
                 <span style={{ fontSize: '11px', color: active ? s.color : 'var(--text3)', fontWeight: '600' }}>{s.label}</span>
                 {currentRate != null && (
                   <span style={{ fontSize: '11px', color: active ? s.color : 'var(--text3)' }}>{currentRate.toFixed(2)}%</span>
@@ -388,7 +412,8 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
 
             {computed.polylines.map(s => (
               <polyline key={s.key} points={s.points} fill="none"
-                stroke={s.color} strokeWidth="1.8" strokeLinejoin="round" />
+                stroke={s.color} strokeWidth="1.8" strokeLinejoin="round"
+                strokeDasharray={s.dashed ? '6,4' : undefined} />
             ))}
 
             {hoverX != null && (
