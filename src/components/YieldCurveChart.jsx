@@ -1,68 +1,8 @@
-import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
-
-const ML = 46, MR = 20, MT = 20, MB = 36;
-const SVG_W = 780, SVG_H = 220;
-const PW = SVG_W - ML - MR;
-const PH = SVG_H - MT - MB;
+import { useMemo, useState, useRef, useEffect } from 'react';
+import { createChart, BaselineSeries } from 'lightweight-charts';
+import { useTheme } from '../context/ThemeContext';
 
 const RANGES = ['3M', '6M', '1Y', '2Y', '5Y', '10Y', 'Max'];
-
-// Calcule des ticks à intervalles "propres" — cible 5-8 labels, jamais de chevauchement
-function niceXTicks(dates, xS) {
-  if (dates.length < 2) return [];
-  const start = new Date(dates[0]);
-  const end   = new Date(dates[dates.length - 1]);
-  const days  = Math.max(1, (end - start) / 86400000);
-
-  const tickDates = [];
-
-  if (days <= 90) {
-    // Mensuel
-    const cur = new Date(start.getFullYear(), start.getMonth() + 1, 1);
-    for (; cur <= end; cur.setMonth(cur.getMonth() + 1))
-      tickDates.push(cur.toISOString().slice(0, 7));
-  } else if (days <= 2 * 365) {
-    // Trimestriel
-    const cur = new Date(start.getFullYear(), Math.ceil(start.getMonth() / 3) * 3, 1);
-    for (; cur <= end; cur.setMonth(cur.getMonth() + 3))
-      tickDates.push(cur.toISOString().slice(0, 7));
-  } else if (days <= 5 * 365) {
-    // Annuel
-    for (let y = start.getFullYear() + 1; y <= end.getFullYear(); y++)
-      tickDates.push(`${y}`);
-  } else if (days <= 15 * 365) {
-    // Tous les 2 ans
-    const s = Math.ceil((start.getFullYear() + 1) / 2) * 2;
-    for (let y = s; y <= end.getFullYear(); y += 2)
-      tickDates.push(`${y}`);
-  } else if (days <= 40 * 365) {
-    // Tous les 5 ans
-    const s = Math.ceil((start.getFullYear() + 1) / 5) * 5;
-    for (let y = s; y <= end.getFullYear(); y += 5)
-      tickDates.push(`${y}`);
-  } else {
-    // Tous les 10 ans
-    const s = Math.ceil((start.getFullYear() + 1) / 10) * 10;
-    for (let y = s; y <= end.getFullYear(); y += 10)
-      tickDates.push(`${y}`);
-  }
-
-  // Mappe chaque date de tick sur l'index de données le plus proche
-  const mapped = tickDates.map(td => {
-    const idx = dates.findIndex(d => d >= td);
-    if (idx === -1) return null;
-    const label = td.length <= 4 ? td : td.slice(0, 7);
-    return { x: xS(idx), label };
-  }).filter(Boolean);
-
-  // Filtre anti-chevauchement garanti : espacement minimum de 65 unités SVG
-  const result = [];
-  for (const tick of mapped) {
-    if (!result.length || tick.x - result[result.length - 1].x >= 65)
-      result.push(tick);
-  }
-  return result;
-}
 
 function idxForRange(dates, range) {
   if (!dates?.length || range === 'Max') return [0, dates.length];
@@ -78,7 +18,7 @@ function idxForRange(dates, range) {
   return [start, dates.length];
 }
 
-// ── Snapshot instantané ───────────────────────────────────────────────────────
+// ── Snapshot instantané (SVG, inchangé) ──────────────────────────────────────
 function CurveSnapshot({ bondYields }) {
   const MATURITIES = ['US 2Y', 'US 10Y', 'US 30Y'];
   const points = MATURITIES.map(name => bondYields?.find(b => b.name === name)).filter(Boolean);
@@ -133,90 +73,125 @@ function CurveSnapshot({ bondYields }) {
   );
 }
 
-// ── Historique spread ─────────────────────────────────────────────────────────
+// ── Historique spread (Canvas) ────────────────────────────────────────────────
 function SpreadHistory({ allDates, allValues, range, onRangeChange }) {
-  const [viewWindow, setViewWindow] = useState(() => idxForRange(allDates, range));
-  const svgRef = useRef(null);
-  const rafRef = useRef(null);
+  const containerRef = useRef(null);
+  const chartRef     = useRef(null);
+  const seriesRef    = useRef(null);
+  const { theme }    = useTheme();
 
-  // Sync viewWindow quand range change via bouton
-  useEffect(() => {
-    setViewWindow(idxForRange(allDates, range));
-  }, [range, allDates]);
-
-  const isFullView = viewWindow[0] === 0 && viewWindow[1] === (allDates?.length ?? 0);
-
-  const dates  = useMemo(() => allDates?.slice(viewWindow[0], viewWindow[1]) ?? [], [allDates, viewWindow]);
-  const values = useMemo(() => allValues?.slice(viewWindow[0], viewWindow[1]) ?? [], [allValues, viewWindow]);
-
-  // Scroll zoom — throttlé à 60fps via requestAnimationFrame
-  const handleWheel = useCallback((e) => {
-    e.preventDefault();
-    if (rafRef.current) return;
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const mouseXPct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const deltaY = e.deltaY;
-    const total = allDates?.length ?? 0;
-    if (total < 2) return;
-
-    rafRef.current = requestAnimationFrame(() => {
-      rafRef.current = null;
-      setViewWindow(([s, en]) => {
-        const len = en - s;
-        const factor = deltaY > 0 ? 1.25 : 0.8;
-        const newLen = Math.min(total, Math.max(30, Math.round(len * factor)));
-        const anchor = s + mouseXPct * len;
-        let newStart = Math.max(0, Math.round(anchor - mouseXPct * newLen));
-        let newEnd = newStart + newLen;
-        if (newEnd > total) { newEnd = total; newStart = Math.max(0, newEnd - newLen); }
-        return [newStart, newEnd];
-      });
-    });
-  }, [allDates]);
-
-  useEffect(() => {
-    const el = svgRef.current;
-    if (!el) return;
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => {
-      el.removeEventListener('wheel', handleWheel);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+  const stats = useMemo(() => {
+    const [s, e] = idxForRange(allDates, range);
+    const vals = allValues?.slice(s, e).filter(v => v != null) ?? [];
+    if (!vals.length) return null;
+    return {
+      min: Math.min(...vals).toFixed(2),
+      max: Math.max(...vals).toFixed(2),
+      inversionDays: vals.filter(v => v < 0).length,
     };
-  }, [handleWheel]);
+  }, [allDates, allValues, range]);
 
-  const computed = useMemo(() => {
-    if (!dates.length || !values.length) return null;
-    const yLo = Math.min(...values) - 0.2;
-    const yHi = Math.max(...values) + 0.2;
-    const xS = i => ML + (i / Math.max(dates.length - 1, 1)) * PW;
-    const yS = v => MT + PH - ((v - yLo) / (yHi - yLo)) * PH;
-    const y0 = yS(0);
-    const polyline = values.map((v, i) => `${xS(i).toFixed(1)},${yS(v).toFixed(1)}`).join(' ');
-    const xTicks = niceXTicks(dates, xS);
-    const yTicks = Array.from({ length: 5 }, (_, k) => {
-      const v = yLo + (k / 4) * (yHi - yLo);
-      return { y: yS(v), label: v.toFixed(1) };
+  // Crée le chart dès que les données arrivent
+  useEffect(() => {
+    if (!allDates?.length || !allValues?.length) return;
+    if (!containerRef.current || chartRef.current) return;
+
+    const chart = createChart(containerRef.current, {
+      layout: {
+        background: { type: 'solid', color: theme.bg2 },
+        textColor: theme.chartText,
+      },
+      grid: {
+        vertLines: { color: theme.chartGrid },
+        horzLines: { color: theme.chartGrid },
+      },
+      width: containerRef.current.clientWidth,
+      height: 200,
+      timeScale: { borderColor: theme.chartGrid },
+      rightPriceScale: { borderColor: theme.chartGrid },
     });
-    const minVal = Math.min(...values).toFixed(2);
-    const maxVal = Math.max(...values).toFixed(2);
-    const inversionDays = values.filter(v => v < 0).length;
-    return { polyline, y0, xTicks, yTicks, minVal, maxVal, inversionDays };
-  }, [dates, values]);
+    chartRef.current = chart;
 
-  if (!computed) return null;
-  const { polyline, y0, xTicks, yTicks, minVal, maxVal, inversionDays } = computed;
+    const series = chart.addSeries(BaselineSeries, {
+      baseValue: { type: 'price', price: 0 },
+      topLineColor: '#2962FF',
+      topFillColor1: 'rgba(41,98,255,0.22)',
+      topFillColor2: 'rgba(41,98,255,0.04)',
+      bottomLineColor: '#ef5350',
+      bottomFillColor1: 'rgba(239,83,80,0.04)',
+      bottomFillColor2: 'rgba(239,83,80,0.22)',
+      lineWidth: 2,
+      priceFormat: { type: 'custom', formatter: v => v.toFixed(2) + '%' },
+    });
+    seriesRef.current = series;
+
+    const data = allDates
+      .map((d, i) => ({ time: d, value: allValues[i] }))
+      .filter(p => p.value != null);
+    series.setData(data);
+
+    // Plage initiale
+    if (range === 'Max') {
+      chart.timeScale().fitContent();
+    } else {
+      const [startIdx] = idxForRange(allDates, range);
+      chart.timeScale().setVisibleRange({
+        from: allDates[startIdx],
+        to:   allDates[allDates.length - 1],
+      });
+    }
+
+    const ro = new ResizeObserver(() => {
+      if (containerRef.current && chartRef.current) {
+        chartRef.current.applyOptions({ width: containerRef.current.clientWidth });
+      }
+    });
+    ro.observe(containerRef.current);
+
+    return () => {
+      ro.disconnect();
+      chart.remove();
+      chartRef.current = null;
+      seriesRef.current = null;
+    };
+  }, [allDates, allValues]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Mise à jour du thème
+  useEffect(() => {
+    if (!chartRef.current) return;
+    chartRef.current.applyOptions({
+      layout: { background: { type: 'solid', color: theme.bg2 }, textColor: theme.chartText },
+      grid:   { vertLines: { color: theme.chartGrid }, horzLines: { color: theme.chartGrid } },
+      timeScale:       { borderColor: theme.chartGrid },
+      rightPriceScale: { borderColor: theme.chartGrid },
+    });
+  }, [theme]);
+
+  // Applique la plage quand elle change via bouton
+  useEffect(() => {
+    if (!chartRef.current || !allDates?.length) return;
+    if (range === 'Max') {
+      chartRef.current.timeScale().fitContent();
+    } else {
+      const [startIdx] = idxForRange(allDates, range);
+      chartRef.current.timeScale().setVisibleRange({
+        from: allDates[startIdx],
+        to:   allDates[allDates.length - 1],
+      });
+    }
+  }, [range]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>
+      {/* Contrôles */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
         <div style={{ fontSize: '11px', color: 'var(--text3)' }}>
           Historique spread 10Y–2Y
           <span style={{ marginLeft: '8px', color: '#ef535099', fontSize: '10px' }}>zone rouge = inversion</span>
         </div>
         <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
-          {!isFullView && (
-            <button onClick={() => { setViewWindow([0, allDates?.length ?? 0]); onRangeChange('Max'); }} style={{
+          {range !== 'Max' && (
+            <button onClick={() => onRangeChange('Max')} style={{
               background: '#ef535022', border: '1px solid #ef535044', borderRadius: '4px',
               padding: '2px 7px', fontSize: '10px', color: '#ef5350', cursor: 'pointer', marginRight: '4px',
             }}>↺ Reset</button>
@@ -233,39 +208,26 @@ function SpreadHistory({ allDates, allValues, range, onRangeChange }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '4px' }}>
-        {[
-          { label: 'Min période', value: `${minVal}%`, color: parseFloat(minVal) < 0 ? '#ef5350' : 'var(--text2)' },
-          { label: 'Max période', value: `${maxVal}%`, color: 'var(--text2)' },
-          { label: 'Jours en inversion', value: `${inversionDays}`, color: inversionDays > 0 ? '#ef5350' : '#26a69a' },
-        ].map(s => (
-          <div key={s.label} style={{ fontSize: '10px', color: 'var(--text3)' }}>
-            {s.label} : <span style={{ color: s.color, fontWeight: '600' }}>{s.value}</span>
+      {/* Statistiques */}
+      {stats && (
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '4px' }}>
+          {[
+            { label: 'Min période',       value: `${stats.min}%`, color: parseFloat(stats.min) < 0 ? '#ef5350' : 'var(--text2)' },
+            { label: 'Max période',       value: `${stats.max}%`, color: 'var(--text2)' },
+            { label: 'Mois en inversion', value: `${stats.inversionDays}`, color: stats.inversionDays > 0 ? '#ef5350' : '#26a69a' },
+          ].map(s => (
+            <div key={s.label} style={{ fontSize: '10px', color: 'var(--text3)' }}>
+              {s.label} : <span style={{ color: s.color, fontWeight: '600' }}>{s.value}</span>
+            </div>
+          ))}
+          <div style={{ fontSize: '10px', color: 'var(--text3)', marginLeft: 'auto', fontStyle: 'italic' }}>
+            scroll pour zoomer
           </div>
-        ))}
-        <div style={{ fontSize: '10px', color: 'var(--text3)', marginLeft: 'auto', fontStyle: 'italic' }}>
-          scroll pour zoomer
         </div>
-      </div>
+      )}
 
-      <svg ref={svgRef} width="100%" viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ display: 'block', cursor: 'crosshair' }}>
-        {yTicks.map(({ y, label }) => (
-          <g key={label}>
-            <line x1={ML} y1={y} x2={SVG_W - MR} y2={y} stroke="var(--border)" strokeDasharray="3,3" />
-            <text x={ML - 6} y={y + 4} textAnchor="end" fill="var(--text3)" fontSize="10">{label}%</text>
-          </g>
-        ))}
-        {xTicks.map(({ x, label }) => (
-          <text key={label} x={x} y={SVG_H - 4} textAnchor="middle" fill="var(--text3)" fontSize="9">{label}</text>
-        ))}
-        <clipPath id="below-zero-yc">
-          <rect x={ML} y={y0} width={PW} height={SVG_H - MB - y0 + MT} />
-        </clipPath>
-        <polyline points={`${ML},${y0} ${polyline} ${ML + PW},${y0}`} fill="#ef535020" stroke="none" clipPath="url(#below-zero-yc)" />
-        <line x1={ML} y1={y0} x2={SVG_W - MR} y2={y0} stroke="#ef535060" strokeWidth="1" strokeDasharray="4,3" />
-        <text x={ML - 6} y={y0 + 4} textAnchor="end" fill="#ef535099" fontSize="9">0%</text>
-        <polyline points={polyline} fill="none" stroke="#2962FF" strokeWidth="1.5" strokeLinejoin="round" />
-      </svg>
+      {/* Canvas */}
+      <div ref={containerRef} style={{ height: '200px' }} />
     </div>
   );
 }

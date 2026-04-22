@@ -1,9 +1,6 @@
-import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
-
-const ML = 46, MR = 20, MT = 20, MB = 36;
-const SVG_W = 780, SVG_H = 240;
-const PW = SVG_W - ML - MR;
-const PH = SVG_H - MT - MB;
+import { useMemo, useState, useRef, useEffect } from 'react';
+import { createChart, LineSeries } from 'lightweight-charts';
+import { useTheme } from '../context/ThemeContext';
 
 const SERIES = [
   { key: 'us2y',    label: 'US 2Y',    color: '#e91e63', flag: 'us' },
@@ -18,7 +15,6 @@ const SERIES = [
   { key: 'gilt3m',  label: 'Gilt 3M',  color: '#ff7043', flag: 'gb', dashed: true },
 ];
 
-// Mapping clé → nom dans bond_yields (backend)
 const NAME_BY_KEY = {
   us2y: 'US 2Y', us10y: 'US 10Y', us30y: 'US 30Y', us3m: 'US 3M',
   bund10y: 'Bund 10Y', bund3m: 'Bund 3M',
@@ -40,55 +36,6 @@ const SERIES_DEFINITIONS = {
 };
 
 const RANGES = ['3M', '6M', '1Y', '2Y', '5Y', '10Y', 'Max'];
-
-function niceXTicks(dates, xS) {
-  if (dates.length < 2) return [];
-  const start = new Date(dates[0]);
-  const end   = new Date(dates[dates.length - 1]);
-  const days  = Math.max(1, (end - start) / 86400000);
-
-  const tickDates = [];
-
-  if (days <= 90) {
-    const cur = new Date(start.getFullYear(), start.getMonth() + 1, 1);
-    for (; cur <= end; cur.setMonth(cur.getMonth() + 1))
-      tickDates.push(cur.toISOString().slice(0, 7));
-  } else if (days <= 2 * 365) {
-    const cur = new Date(start.getFullYear(), Math.ceil(start.getMonth() / 3) * 3, 1);
-    for (; cur <= end; cur.setMonth(cur.getMonth() + 3))
-      tickDates.push(cur.toISOString().slice(0, 7));
-  } else if (days <= 5 * 365) {
-    for (let y = start.getFullYear() + 1; y <= end.getFullYear(); y++)
-      tickDates.push(`${y}`);
-  } else if (days <= 15 * 365) {
-    const s = Math.ceil((start.getFullYear() + 1) / 2) * 2;
-    for (let y = s; y <= end.getFullYear(); y += 2)
-      tickDates.push(`${y}`);
-  } else if (days <= 40 * 365) {
-    const s = Math.ceil((start.getFullYear() + 1) / 5) * 5;
-    for (let y = s; y <= end.getFullYear(); y += 5)
-      tickDates.push(`${y}`);
-  } else {
-    const s = Math.ceil((start.getFullYear() + 1) / 10) * 10;
-    for (let y = s; y <= end.getFullYear(); y += 10)
-      tickDates.push(`${y}`);
-  }
-
-  const mapped = tickDates.map(td => {
-    const idx = dates.findIndex(d => d >= td);
-    if (idx === -1) return null;
-    const label = td.length <= 4 ? td : td.slice(0, 7);
-    return { x: xS(idx), label };
-  }).filter(Boolean);
-
-  // Filtre anti-chevauchement garanti
-  const result = [];
-  for (const tick of mapped) {
-    if (!result.length || tick.x - result[result.length - 1].x >= 65)
-      result.push(tick);
-  }
-  return result;
-}
 
 function idxForRange(dates, range) {
   if (!dates?.length || range === 'Max') return [0, dates.length];
@@ -119,12 +66,15 @@ function buildAlignedDates(history) {
 }
 
 export default function SovereignSpreadsChart({ history, bondYields, loading, error }) {
-  const [showInfo,     setShowInfo]     = useState(false);
-  const [hoverIdx,     setHoverIdx]     = useState(null);
-  const [range,        setRange]        = useState('Max');
-  const [visibleKeys,  setVisibleKeys]  = useState(() => new Set(['us2y', 'us10y', 'oat10y']));
-  const svgRef = useRef(null);
-  const rafRef = useRef(null);
+  const [showInfo,    setShowInfo]    = useState(false);
+  const [range,       setRange]       = useState('Max');
+  const [visibleKeys, setVisibleKeys] = useState(() => new Set(['us2y', 'us10y', 'oat10y']));
+  const [hoverData,   setHoverData]   = useState(null);
+
+  const containerRef  = useRef(null);
+  const chartRef      = useRef(null);
+  const seriesMapRef  = useRef({});  // { key -> series instance }
+  const { theme }     = useTheme();
 
   const toggleSeries = (key) => setVisibleKeys(prev => {
     const next = new Set(prev);
@@ -134,96 +84,22 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
   });
 
   const aligned = useMemo(() => buildAlignedDates(history), [history]);
-  const allDates = aligned?.allDates ?? [];
 
-  // null = plage complète ; initialisé dès que allDates est disponible
-  const [viewWindow, setViewWindow] = useState(null);
-
-  useEffect(() => {
-    if (allDates.length) setViewWindow(idxForRange(allDates, range));
-  }, [allDates.length, range]); // eslint-disable-line
-
-  const effectiveWindow = viewWindow ?? [0, allDates.length];
-  const isFullView = effectiveWindow[0] === 0 && effectiveWindow[1] === allDates.length;
-
-  // Scroll zoom — throttlé à 60fps via requestAnimationFrame
-  const handleWheel = useCallback((e) => {
-    e.preventDefault();
-    if (rafRef.current) return;
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const mouseXPct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const deltaY = e.deltaY;
-    const total = allDates.length;
-    if (total < 2) return;
-
-    rafRef.current = requestAnimationFrame(() => {
-      rafRef.current = null;
-      setViewWindow((prev) => {
-        const [s, en] = prev ?? [0, total];
-        const len = en - s;
-        const factor = deltaY > 0 ? 1.25 : 0.8;
-        const newLen = Math.min(total, Math.max(6, Math.round(len * factor)));
-        const anchor = s + mouseXPct * len;
-        let newStart = Math.max(0, Math.round(anchor - mouseXPct * newLen));
-        let newEnd = newStart + newLen;
-        if (newEnd > total) { newEnd = total; newStart = Math.max(0, newEnd - newLen); }
-        return [newStart, newEnd];
-      });
+  // Stats par série pour la plage active
+  const visibleStats = useMemo(() => {
+    if (!aligned) return {};
+    const [s, e] = idxForRange(aligned.allDates, range);
+    const slicedDates = aligned.allDates.slice(s, e);
+    const out = {};
+    aligned.series.forEach(ser => {
+      if (!visibleKeys.has(ser.key)) return;
+      const vals = slicedDates.map(d => ser.map[d]).filter(v => v != null);
+      if (vals.length) out[ser.key] = { min: Math.min(...vals).toFixed(2), max: Math.max(...vals).toFixed(2) };
     });
-  }, [allDates.length]);
+    return out;
+  }, [aligned, range, visibleKeys]);
 
-  useEffect(() => {
-    const el = svgRef.current;
-    if (!el) return;
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => {
-      el.removeEventListener('wheel', handleWheel);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [handleWheel]);
-
-  const computed = useMemo(() => {
-    if (!aligned) return null;
-    const series = aligned.series.filter(s => visibleKeys.has(s.key));
-    const dates = allDates.slice(effectiveWindow[0], effectiveWindow[1]);
-    if (!dates.length) return null;
-
-    const allVals = series.flatMap(s => dates.map(d => s.map[d]).filter(v => v != null));
-    if (!allVals.length) return null;
-
-    const yLo = Math.min(...allVals) - 0.3;
-    const yHi = Math.max(...allVals) + 0.3;
-    const xS  = i => ML + (i / Math.max(dates.length - 1, 1)) * PW;
-    const yS  = v => MT + PH - ((v - yLo) / (yHi - yLo)) * PH;
-
-    const polylines = series.map(s => ({
-      ...s,
-      points: dates.map((d, i) => {
-        const v = s.map[d];
-        return v != null ? `${xS(i).toFixed(1)},${yS(v).toFixed(1)}` : null;
-      }).filter(Boolean).join(' '),
-    }));
-
-    const xTicks = niceXTicks(dates, xS);
-
-    const yTicks = Array.from({ length: 5 }, (_, k) => {
-      const v = yLo + (k / 4) * (yHi - yLo);
-      return { y: yS(v), label: v.toFixed(1) };
-    });
-
-    const stats = series.map(s => {
-      const vals = dates.map(d => s.map[d]).filter(v => v != null);
-      return {
-        key: s.key,
-        min: vals.length ? Math.min(...vals).toFixed(2) : null,
-        max: vals.length ? Math.max(...vals).toFixed(2) : null,
-      };
-    });
-
-    return { dates, series, polylines, xTicks, yTicks, xS, yS, stats };
-  }, [aligned, allDates, effectiveWindow, visibleKeys]);
-
+  // Taux courants
   const rateByKey = useMemo(() => {
     const out = {};
     SERIES.forEach(s => { out[s.key] = bondYields?.find(b => b.name === NAME_BY_KEY[s.key])?.rate ?? null; });
@@ -233,11 +109,120 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
   const spreadUsDe = us10y != null && bund10y != null ? (us10y - bund10y).toFixed(2) : null;
   const spreadFrDe = oat10y != null && bund10y != null ? (oat10y - bund10y).toFixed(2) : null;
 
-  const hoverX    = hoverIdx != null && computed ? computed.xS(hoverIdx) : null;
-  const hoverDate = hoverIdx != null ? computed?.dates[hoverIdx] : null;
-  const hoverVals = hoverIdx != null && computed
-    ? computed.series.map(s => ({ label: s.label, color: s.color, value: s.map[computed.dates[hoverIdx]] }))
-    : null;
+  // ── Création du chart dès que les données sont prêtes ─────────────────────
+  useEffect(() => {
+    if (!aligned || !containerRef.current || chartRef.current) return;
+
+    const chart = createChart(containerRef.current, {
+      layout: {
+        background: { type: 'solid', color: theme.bg2 },
+        textColor: theme.chartText,
+      },
+      grid: {
+        vertLines: { color: theme.chartGrid },
+        horzLines: { color: theme.chartGrid },
+      },
+      width: containerRef.current.clientWidth,
+      height: 260,
+      timeScale: { borderColor: theme.chartGrid },
+      rightPriceScale: { borderColor: theme.chartGrid },
+    });
+    chartRef.current = chart;
+
+    // Créer toutes les séries
+    SERIES.forEach(s => {
+      const series = chart.addSeries(LineSeries, {
+        color: s.color,
+        lineWidth: s.dashed ? 1.5 : 2,
+        lineStyle: s.dashed ? 2 : 0,  // 2 = Dashed, 0 = Solid
+        visible: visibleKeys.has(s.key),
+        priceFormat: { type: 'custom', formatter: v => v.toFixed(2) + '%' },
+        crosshairMarkerRadius: 4,
+      });
+      seriesMapRef.current[s.key] = series;
+
+      // Données
+      const ser = aligned.series.find(as => as.key === s.key);
+      if (ser) {
+        const data = aligned.allDates
+          .map(d => ({ time: d, value: ser.map[d] ?? null }))
+          .filter(p => p.value != null);
+        series.setData(data);
+      }
+    });
+
+    // Crosshair → tooltip
+    chart.subscribeCrosshairMove(param => {
+      if (!param.time || !param.point) {
+        setHoverData(null);
+        return;
+      }
+      const vals = {};
+      SERIES.forEach(s => {
+        const sr = seriesMapRef.current[s.key];
+        if (sr) vals[s.key] = param.seriesData.get(sr)?.value ?? null;
+      });
+      setHoverData({ date: String(param.time), vals });
+    });
+
+    // Plage initiale
+    if (range === 'Max') {
+      chart.timeScale().fitContent();
+    } else {
+      const [startIdx] = idxForRange(aligned.allDates, range);
+      chart.timeScale().setVisibleRange({
+        from: aligned.allDates[startIdx],
+        to:   aligned.allDates[aligned.allDates.length - 1],
+      });
+    }
+
+    const ro = new ResizeObserver(() => {
+      if (containerRef.current && chartRef.current) {
+        chartRef.current.applyOptions({ width: containerRef.current.clientWidth });
+      }
+    });
+    ro.observe(containerRef.current);
+
+    return () => {
+      ro.disconnect();
+      chart.remove();
+      chartRef.current = null;
+      seriesMapRef.current = {};
+    };
+  }, [aligned]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Mise à jour du thème ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!chartRef.current) return;
+    chartRef.current.applyOptions({
+      layout: { background: { type: 'solid', color: theme.bg2 }, textColor: theme.chartText },
+      grid:   { vertLines: { color: theme.chartGrid }, horzLines: { color: theme.chartGrid } },
+      timeScale:       { borderColor: theme.chartGrid },
+      rightPriceScale: { borderColor: theme.chartGrid },
+    });
+  }, [theme]);
+
+  // ── Visibilité des séries ─────────────────────────────────────────────────
+  useEffect(() => {
+    SERIES.forEach(s => {
+      const sr = seriesMapRef.current[s.key];
+      if (sr) sr.applyOptions({ visible: visibleKeys.has(s.key) });
+    });
+  }, [visibleKeys]);
+
+  // ── Plage temporelle ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!chartRef.current || !aligned) return;
+    if (range === 'Max') {
+      chartRef.current.timeScale().fitContent();
+    } else {
+      const [startIdx] = idxForRange(aligned.allDates, range);
+      chartRef.current.timeScale().setVisibleRange({
+        from: aligned.allDates[startIdx],
+        to:   aligned.allDates[aligned.allDates.length - 1],
+      });
+    }
+  }, [range]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{
@@ -326,7 +311,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
           {SERIES.map(s => {
             const active = visibleKeys.has(s.key);
             const currentRate = rateByKey[s.key];
-            const stat = computed?.stats?.find(st => st.key === s.key);
+            const stat = visibleStats[s.key];
             return (
               <button
                 key={s.key}
@@ -349,7 +334,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
                 {currentRate != null && (
                   <span style={{ fontSize: '11px', color: active ? s.color : 'var(--text3)' }}>{currentRate.toFixed(2)}%</span>
                 )}
-                {stat?.min && active && (
+                {stat && active && (
                   <span style={{ color: 'var(--text3)', fontSize: '10px' }}>({stat.min}–{stat.max})</span>
                 )}
               </button>
@@ -357,8 +342,8 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
           })}
         </div>
         <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
-          {!isFullView && (
-            <button onClick={() => { setViewWindow(null); setRange('Max'); }} style={{
+          {range !== 'Max' && (
+            <button onClick={() => setRange('Max')} style={{
               background: '#ef535022', border: '1px solid #ef535044', borderRadius: '4px',
               padding: '2px 7px', fontSize: '10px', color: '#ef5350', cursor: 'pointer', marginRight: '4px',
             }}>↺ Reset</button>
@@ -382,74 +367,35 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
       {loading && <div style={{ color: 'var(--text3)', fontSize: '13px', padding: '30px 0', textAlign: 'center' }}>Chargement…</div>}
       {error   && <div style={{ color: '#ef5350', fontSize: '13px', padding: '12px 0' }}>Erreur : {error}</div>}
 
-      {!loading && !error && computed && (
+      {!loading && !error && aligned && (
         <div style={{ position: 'relative' }}>
-          <svg
-            ref={svgRef}
-            width="100%"
-            viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-            style={{ display: 'block', cursor: 'crosshair' }}
-            onMouseMove={e => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const svgX = ((e.clientX - rect.left) / rect.width) * SVG_W;
-              const rawI = ((svgX - ML) / PW) * (computed.dates.length - 1);
-              setHoverIdx(Math.max(0, Math.min(computed.dates.length - 1, Math.round(rawI))));
-            }}
-            onMouseLeave={() => setHoverIdx(null)}
-          >
-            {computed.yTicks.map(({ y, label }) => (
-              <g key={label}>
-                <line x1={ML} y1={y} x2={SVG_W - MR} y2={y} stroke="var(--border)" strokeDasharray="3,3" />
-                <text x={ML - 6} y={y + 4} textAnchor="end" fill="var(--text3)" fontSize="10">{label}%</text>
-              </g>
-            ))}
-            {computed.xTicks.map(({ x, label }) => (
-              <text key={label} x={x} y={SVG_H - 4} textAnchor="middle" fill="var(--text3)" fontSize="9">{label}</text>
-            ))}
+          <div ref={containerRef} style={{ height: '260px' }} />
 
-            {computed.series[0] && computed.series[1] && (() => {
-              const us   = computed.series[0];
-              const bund = computed.series[1];
-              const topPts = computed.dates.map((d, i) => {
-                const v = us.map[d]; return v != null ? `${computed.xS(i).toFixed(1)},${computed.yS(v).toFixed(1)}` : null;
-              }).filter(Boolean);
-              const botPts = [...computed.dates].reverse().map((d, ri) => {
-                const i = computed.dates.length - 1 - ri;
-                const v = bund.map[d]; return v != null ? `${computed.xS(i).toFixed(1)},${computed.yS(v).toFixed(1)}` : null;
-              }).filter(Boolean);
-              return <polygon points={[...topPts, ...botPts].join(' ')} fill="#2962FF0D" stroke="none" />;
-            })()}
-
-            {computed.polylines.map(s => (
-              <polyline key={s.key} points={s.points} fill="none"
-                stroke={s.color} strokeWidth="1.8" strokeLinejoin="round"
-                strokeDasharray={s.dashed ? '6,4' : undefined} />
-            ))}
-
-            {hoverX != null && (
-              <line x1={hoverX} y1={MT} x2={hoverX} y2={SVG_H - MB} stroke="var(--text3)" strokeWidth="1" strokeDasharray="3,2" />
-            )}
-          </svg>
-
-          {hoverVals && hoverDate && (
+          {/* Tooltip hover */}
+          {hoverData && (
             <div style={{
               position: 'absolute', top: '10px', right: '10px',
               backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
               borderRadius: '6px', padding: '8px 12px', fontSize: '11px',
-              pointerEvents: 'none',
+              pointerEvents: 'none', zIndex: 10,
             }}>
-              <div style={{ color: 'var(--text3)', marginBottom: '4px', fontWeight: '600' }}>{hoverDate}</div>
-              {hoverVals.map(v => v.value != null && (
-                <div key={v.label} style={{ color: v.color, fontVariantNumeric: 'tabular-nums' }}>
-                  {v.label} : <strong>{v.value.toFixed(2)}%</strong>
-                </div>
-              ))}
+              <div style={{ color: 'var(--text3)', marginBottom: '4px', fontWeight: '600' }}>{hoverData.date}</div>
+              {SERIES.filter(s => visibleKeys.has(s.key)).map(s => {
+                const v = hoverData.vals[s.key];
+                if (v == null) return null;
+                return (
+                  <div key={s.key} style={{ color: s.color, fontVariantNumeric: 'tabular-nums' }}>
+                    {s.label} : <strong>{v.toFixed(2)}%</strong>
+                  </div>
+                );
+              })}
               {(() => {
-                const usVal = hoverVals.find(v => v.label === 'US 10Y')?.value;
-                const deVal = hoverVals.find(v => v.label === 'Bund 10Y')?.value;
-                const frVal = hoverVals.find(v => v.label === 'OAT 10Y')?.value;
+                const usVal = hoverData.vals.us10y;
+                const deVal = hoverData.vals.bund10y;
+                const frVal = hoverData.vals.oat10y;
                 const sUsDe = usVal != null && deVal != null ? (usVal - deVal).toFixed(2) : null;
                 const sFrDe = frVal != null && deVal != null ? (frVal - deVal).toFixed(2) : null;
+                if (!sUsDe && !sFrDe) return null;
                 return (
                   <div style={{ borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
                     {sUsDe && <div style={{ color: '#2962FF', fontSize: '10px' }}>US–DE : +{sUsDe}%</div>}
