@@ -10,12 +10,13 @@ const NEUTRAL_METRICS = new Set([
 import MetricInfo from './fundamentals/MetricInfo';
 import MetricCard from './fundamentals/MetricCard';
 import FinancialStatement from './fundamentals/FinancialStatement';
+import ScoreDashboard from './fundamentals/ScoreDashboard';
 import { useFundamentals } from '../hooks/useFundamentals';
 import { useSectorAverages } from '../hooks/useSectorAverages';
 import { useSectorHistory } from '../hooks/useSectorHistory';
 
 // ── Composant principal ────────────────────────────────────────────────────
-function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
+function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = false }) {
   const allSymbols = [selectedSymbol, ...compareSymbols];
   const { dataMap, loading, errors } = useFundamentals(allSymbols);
   const isSoloMode = allSymbols.length === 1;
@@ -94,11 +95,41 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
       d.website     && { icon: '🔗', label: 'Site web',        value: d.website, isLink: true },
     ].filter(Boolean);
 
+    const scores = d.scores ?? null;
+
+    // Libellés pour le badge complexité dans l'en-tête
+    const complexityLabel = scores?.complexity >= 6.5 ? 'Avancé' : scores?.complexity >= 4.0 ? 'Modéré' : 'Simple';
+    const complexityColor = scores?.complexity >= 6.5 ? '#ef5350' : scores?.complexity >= 4.0 ? '#ff9800' : '#26a69a';
+    const verdictColor    = { 'Excellent': '#26a69a', 'Bon': '#26a69a', 'Correct': '#ff9800', 'Risqué': '#ef5350', 'À éviter': '#ef5350' }[scores?.verdict] ?? 'var(--text1)';
+
     return (
       <div>
         {/* ── EN-TÊTE : description + fiche d'identité ── */}
         <div style={{ marginBottom: '32px' }}>
-          <h2 style={{ color: 'var(--text1)', fontSize: '26px', marginBottom: '2px' }}>{d.name}</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '2px' }}>
+            <h2 style={{ color: 'var(--text1)', fontSize: '26px', margin: 0 }}>{d.name}</h2>
+            {/* Badge verdict */}
+            {scores && (
+              <span style={{
+                fontSize: '13px', fontWeight: 'bold', padding: '3px 10px',
+                borderRadius: '5px', backgroundColor: verdictColor + '22',
+                color: verdictColor, border: `1px solid ${verdictColor}55`,
+              }}>
+                {scores.verdict}
+              </span>
+            )}
+            {/* Badge complexité */}
+            {scores && (
+              <span style={{
+                fontSize: '11px', fontWeight: 'bold', padding: '3px 10px',
+                borderRadius: '5px', backgroundColor: complexityColor + '22',
+                color: complexityColor, border: `1px solid ${complexityColor}55`,
+                letterSpacing: '0.04em',
+              }}>
+                {complexityLabel}
+              </span>
+            )}
+          </div>
           <div style={{ color: '#2962FF', fontWeight: 'bold', marginBottom: '18px', fontSize: '13px' }}>
             {d.sector}{d.industry && d.industry !== d.sector ? ` — ${d.industry}` : ''}
           </div>
@@ -144,6 +175,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           </div>
         </div>
 
+        {/* ── SCORE DASHBOARD ── */}
+        <ScoreDashboard scores={scores} />
+
         <div style={{ display: 'grid', gridTemplateColumns: '3fr 3fr 4fr', gap: '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
           {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}
           {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health')}
@@ -153,10 +187,15 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
         </div>
 
-        <FinancialStatement title="7. Compte de Résultat — Historique"  stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data}   stmtAvgHistory={sectorHistory?.income_stmt_data}   companyName={d.name} />
-        <FinancialStatement title="8. Bilan Comptable — Historique"     stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} stmtAvgHistory={sectorHistory?.balance_sheet_data} companyName={d.name} />
-        <FinancialStatement title="9. Flux de Trésorerie — Historique"  stmtData={d.cashflow_data}      fmt={fmt} stmtAvg={sectorAvg?.cashflow_data}      stmtAvgHistory={sectorHistory?.cashflow_data}      companyName={d.name} />
-        {dd.annual?.items?.length > 0 && (() => {
+        {/* ── TABLEAUX FINANCIERS — masqués en mode débutant ── */}
+        {!isBeginnerMode && (
+          <>
+            <FinancialStatement title="7. Compte de Résultat — Historique"  stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data}   stmtAvgHistory={sectorHistory?.income_stmt_data}   companyName={d.name} />
+            <FinancialStatement title="8. Bilan Comptable — Historique"     stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} stmtAvgHistory={sectorHistory?.balance_sheet_data} companyName={d.name} />
+            <FinancialStatement title="9. Flux de Trésorerie — Historique"  stmtData={d.cashflow_data}      fmt={fmt} stmtAvg={sectorAvg?.cashflow_data}      stmtAvgHistory={sectorHistory?.cashflow_data}      companyName={d.name} />
+          </>
+        )}
+        {!isBeginnerMode && dd.annual?.items?.length > 0 && (() => {
           const scalarRows = [
             dd.dividend_yield      && { name: 'Rendement Div.',     vals: [dd.dividend_yield],      unit: '%' },
             dd.dividend_rate       && { name: 'Dividende/Action',   vals: [dd.dividend_rate],       unit: '$' },

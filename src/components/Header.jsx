@@ -130,7 +130,7 @@ function FilterDropdown({ label, items, filters, onChange, onSelectAll, onSelect
 }
 
 // ── Header principal ──────────────────────────────────────────────────────────
-function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode, setViewMode }) {
+function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode, setViewMode, isBeginnerMode, setIsBeginnerMode }) {
   const { isDark, toggleTheme } = useTheme();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -358,6 +358,26 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
           <button onClick={() => setViewMode('fundamentals')} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'fundamentals' ? '#2962FF' : 'transparent', color: 'var(--text1)', borderRadius: '0', cursor: 'pointer', transition: 'background-color 0.2s' }}>Analyse Fondamentale</button>
           <button onClick={() => setViewMode('macro')} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'macro' ? '#26a69a' : 'transparent', color: 'var(--text1)', borderRadius: '0 6px 6px 0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🌐 Indicateurs Macroéconomiques</button>
         </div>
+
+        {/* TOGGLE MODE DÉBUTANT — visible uniquement en vue Fondamentaux */}
+        {viewMode === 'fundamentals' && (
+          <button
+            onClick={() => setIsBeginnerMode(v => !v)}
+            title={isBeginnerMode ? 'Afficher les détails complets' : 'Activer le mode débutant'}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '7px 13px', borderRadius: '6px', cursor: 'pointer',
+              border: `1px solid ${isBeginnerMode ? '#26a69a' : 'var(--border)'}`,
+              backgroundColor: isBeginnerMode ? '#26a69a22' : 'var(--bg3)',
+              color: isBeginnerMode ? '#26a69a' : 'var(--text3)',
+              fontSize: '12px', fontWeight: 'bold', transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span style={{ fontSize: '14px' }}>🎓</span>
+            Mode Débutant
+          </button>
+        )}
 
         {/* TOGGLE DARK / LIGHT */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>

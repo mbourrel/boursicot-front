@@ -16,10 +16,11 @@ import { useAssets } from './hooks/useAssets';
 
 // ── Dashboard (contenu protégé) ──────────────────────────────────────────────
 function Dashboard() {
-  const [selectedSymbol, setSelectedSymbol] = useState('AI.PA');
-  const [compareSymbols, setCompareSymbols] = useState([]);
-  const [viewMode,       setViewMode]       = useState('chart');
-  const [chartMode,      setChartMode]      = useState('simple');
+  const [selectedSymbol,  setSelectedSymbol]  = useState('AI.PA');
+  const [compareSymbols,  setCompareSymbols]  = useState([]);
+  const [viewMode,        setViewMode]        = useState('chart');
+  const [chartMode,       setChartMode]       = useState('simple');
+  const [isBeginnerMode,  setIsBeginnerMode]  = useState(false);
 
   const { assets: fundamentalsData } = useAssets();
 
@@ -60,6 +61,8 @@ function Dashboard() {
           fundamentalsData={fundamentalsData}
           viewMode={viewMode}
           setViewMode={setViewMode}
+          isBeginnerMode={isBeginnerMode}
+          setIsBeginnerMode={setIsBeginnerMode}
         />
       </div>
 
@@ -105,7 +108,7 @@ function Dashboard() {
         </>
       ) : (
         <ErrorBoundary label="Fondamentaux">
-          <Fundamentals selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} />
+          <Fundamentals selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} isBeginnerMode={isBeginnerMode} />
         </ErrorBoundary>
       )}
       </div>
