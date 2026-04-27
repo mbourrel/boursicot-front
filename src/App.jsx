@@ -21,7 +21,7 @@ function Dashboard() {
   const [compareSymbols,  setCompareSymbols]  = useState([]);
   const [viewMode,        setViewMode]        = useState('chart');
   const [chartMode,       setChartMode]       = useState('simple');
-  const [isBeginnerMode,  setIsBeginnerMode]  = useState(false);
+  const [isBeginnerMode,  setIsBeginnerMode]  = useState(true);
 
   const { assets: fundamentalsData } = useAssets();
 

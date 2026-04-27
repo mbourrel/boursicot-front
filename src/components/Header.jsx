@@ -363,19 +363,19 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
         {viewMode === 'fundamentals' && (
           <button
             onClick={() => setIsBeginnerMode(v => !v)}
-            title={isBeginnerMode ? 'Afficher les détails complets' : 'Activer le mode débutant'}
+            title={isBeginnerMode ? 'Afficher les comptes historiques et données avancées' : 'Masquer les données avancées'}
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '7px 13px', borderRadius: '6px', cursor: 'pointer',
-              border: `1px solid ${isBeginnerMode ? '#26a69a' : 'var(--border)'}`,
-              backgroundColor: isBeginnerMode ? '#26a69a22' : 'var(--bg3)',
-              color: isBeginnerMode ? '#26a69a' : 'var(--text3)',
+              border: `1px solid ${!isBeginnerMode ? '#2962FF' : 'var(--border)'}`,
+              backgroundColor: !isBeginnerMode ? '#2962FF22' : 'var(--bg3)',
+              color: !isBeginnerMode ? '#2962FF' : 'var(--text3)',
               fontSize: '12px', fontWeight: 'bold', transition: 'all 0.2s',
               whiteSpace: 'nowrap',
             }}
           >
-            <span style={{ fontSize: '14px' }}>🎓</span>
-            Mode Débutant
+            <span style={{ fontSize: '14px' }}>📊</span>
+            Analyse Avancée
           </button>
         )}
 
