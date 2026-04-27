@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const path = (req.query.path || []).join('/');
   const search = req.url.includes('?') ? '?' + req.url.split('?').slice(1).join('?') : '';
   const targetUrl = `https://eu.i.posthog.com/${path}${search}`;
@@ -21,4 +21,4 @@ export default async function handler(req, res) {
 
   const data = await response.arrayBuffer();
   res.status(response.status).end(Buffer.from(data));
-}
+};
