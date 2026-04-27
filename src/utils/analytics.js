@@ -16,6 +16,8 @@ export function initAnalytics() {
   posthog.init(key, {
     api_host: '/ph',
     ui_host: host || 'https://eu.posthog.com',
+    defaults: '2026-01-30',
+    person_profiles: 'identified_only',
     persistence: 'memory',
     autocapture: false,
     capture_pageview: false,
