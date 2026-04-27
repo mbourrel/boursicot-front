@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { registerTokenGetter } from './api/config';
+import { identifyUser } from './utils/analytics';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -119,10 +120,15 @@ function Dashboard() {
 // ── Router racine ─────────────────────────────────────────────────────────────
 function App() {
   const { getToken, isLoaded } = useAuth();
+  const { user } = useUser();
 
   useEffect(() => {
     if (isLoaded) registerTokenGetter(getToken);
   }, [getToken, isLoaded]);
+
+  useEffect(() => {
+    if (user?.id) identifyUser(user.id);
+  }, [user?.id]);
 
   return (
     <Routes>

@@ -1,10 +1,12 @@
 import { SignIn } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
+import { captureEvent } from '../utils/analytics';
 
 export default function LoginPage() {
   const navigate = useNavigate();
 
   const continueAsGuest = () => {
+    captureEvent('guest_mode_clicked');
     sessionStorage.setItem('guestSession', Date.now().toString());
     navigate('/');
   };
