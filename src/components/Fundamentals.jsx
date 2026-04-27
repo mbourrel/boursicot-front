@@ -55,13 +55,13 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
     if (errors[selectedSymbol]) return <p style={{ color: '#ef5350' }}>Aucune donnée disponible pour {selectedSymbol}</p>;
     if (!primaryData)           return <p style={{ color: 'var(--text3)' }}>Aucune donnée disponible.</p>;
 
-    const renderCategory = (title, dataArray, catKey) => {
+    const renderCategory = (title, dataArray, catKey, sectionId) => {
       if (!dataArray || dataArray.length === 0) return null;
       // Exclure les métriques sans valeur pour éviter les colonnes vides
       const visible = dataArray.filter(m => m.val !== null && m.val !== undefined && m.val !== 0);
       if (visible.length === 0) return null;
       return (
-        <div>
+        <div id={sectionId}>
           <h3 style={h3Style}>{title}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${visible.length}, 1fr)`, gap: '8px' }}>
             {visible.map((metric, i) => {
@@ -191,12 +191,12 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
         })()}
 
         <div style={{ display: 'grid', gridTemplateColumns: '3fr 3fr 4fr', gap: '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
-          {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}
-          {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health')}
-          {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation')}
-          {renderCategory('4. Risque & Marché',                 d.risk_market,        'risk_market')}
-          {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash')}
-          {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth')}
+          {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis',    'section-market')}
+          {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health',   'section-health')}
+          {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation', 'section-valuation')}
+          {renderCategory('4. Risque & Marché',                 d.risk_market,        'risk_market',        'section-risk')}
+          {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash',       'section-balance')}
+          {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth',      'section-growth')}
         </div>
 
         {/* ── TABLEAUX FINANCIERS — masqués en mode débutant ── */}
