@@ -36,7 +36,7 @@ const PILLARS = [
   },
 ];
 
-export default function MethodologyModal({ onClose }) {
+export default function MethodologyModal({ onClose, sector }) {
   return createPortal(
     <div
       onClick={onClose}
@@ -94,13 +94,19 @@ export default function MethodologyModal({ onClose }) {
 
           {/* Verdict & Complexité */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-            <div style={{ padding: '12px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text3)', textTransform: 'uppercase', fontWeight: 'bold' }}>Le Verdict</span>
-              <p style={{ fontSize: '12px', color: 'var(--text2)', margin: '4px 0 0' }}>Conclusion globale basée sur la moyenne pondérée des 3 piliers.</p>
+            <div style={{ padding: '14px 16px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)', borderLeft: `4px solid ${COLOR_UP}` }}>
+              <span style={{ fontSize: '11px', color: COLOR_UP, textTransform: 'uppercase', fontWeight: 'bold' }}>Le Verdict : Une vue d'ensemble</span>
+              <p style={{ fontSize: '12px', color: 'var(--text2)', margin: '8px 0 0', lineHeight: '1.6' }}>
+                Ce n'est pas une recommandation d'achat, mais une note de synthèse pondérée. Elle agrège plus de{' '}
+                <strong style={{ color: 'var(--text1)' }}>60 métriques financières</strong> pour déterminer si l'entreprise est globalement performante par rapport à ses pairs
+                {sector ? <> du secteur <strong style={{ color: 'var(--text1)' }}>{sector}</strong></> : ' de son secteur'}.
+              </p>
             </div>
-            <div style={{ padding: '12px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text3)', textTransform: 'uppercase', fontWeight: 'bold' }}>La Complexité</span>
-              <p style={{ fontSize: '12px', color: 'var(--text2)', margin: '4px 0 0' }}>Dépend de la volatilité (Beta) et de la taille de l'entreprise (Market Cap).</p>
+            <div style={{ padding: '14px 16px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)', borderLeft: `4px solid ${COLOR_NEUTRAL}` }}>
+              <span style={{ fontSize: '11px', color: COLOR_NEUTRAL, textTransform: 'uppercase', fontWeight: 'bold' }}>La Complexité : Votre niveau de vigilance</span>
+              <p style={{ fontSize: '12px', color: 'var(--text2)', margin: '8px 0 0', lineHeight: '1.6' }}>
+                Ce badge n'évalue pas la qualité de l'entreprise, mais la <strong style={{ color: 'var(--text1)' }}>difficulté de son analyse</strong>. Une complexité "Avancée" signifie souvent que l'action est très volatile (Beta élevé) ou plus sensible aux mouvements de marché (petite capitalisation), nécessitant une surveillance plus étroite.
+              </p>
             </div>
           </div>
 

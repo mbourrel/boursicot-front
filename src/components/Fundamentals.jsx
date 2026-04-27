@@ -176,7 +176,19 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
         </div>
 
         {/* ── SCORE DASHBOARD ── */}
-        <ScoreDashboard scores={scores} sector={d.sector} companyCount={sectorAvg?.company_count ?? null} />
+        {(() => {
+          const beta      = d.risk_market?.find(m => m.name === 'Beta')?.val ?? null;
+          const marketCap = d.market_analysis?.find(m => m.name === 'Capitalisation')?.val ?? null;
+          return (
+            <ScoreDashboard
+              scores={scores}
+              sector={d.sector}
+              companyCount={sectorAvg?.company_count ?? null}
+              beta={beta}
+              marketCap={marketCap}
+            />
+          );
+        })()}
 
         <div style={{ display: 'grid', gridTemplateColumns: '3fr 3fr 4fr', gap: '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
           {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}

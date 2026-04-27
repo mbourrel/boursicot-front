@@ -6,8 +6,10 @@
  *
  * Props :
  *   scores       { health, valuation, growth, complexity, verdict }
- *   sector       string — nom du secteur (optionnel)
- *   companyCount number — nb d'entreprises dans le secteur (optionnel)
+ *   sector       string  — nom du secteur (optionnel)
+ *   companyCount number  — nb d'entreprises dans le secteur (optionnel)
+ *   beta         number  — beta de l'entreprise (optionnel)
+ *   marketCap    number  — capitalisation boursière en $ (optionnel)
  */
 import { useState } from 'react';
 import MethodologyModal from './MethodologyModal';
@@ -62,7 +64,7 @@ function CircularGauge({ score, label, size = 96 }) {
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
-export default function ScoreDashboard({ scores, sector, companyCount }) {
+export default function ScoreDashboard({ scores, sector, companyCount, beta, marketCap }) {
   const [showModal, setShowModal] = useState(false);
   const [btnHover,  setBtnHover]  = useState(false);
   if (!scores) return null;
@@ -75,6 +77,13 @@ export default function ScoreDashboard({ scores, sector, companyCount }) {
     'Correct':   COLOR_NEUTRAL,
     'Risqué':    COLOR_DOWN, 'À éviter': COLOR_DOWN,
   }[scores.verdict] ?? 'var(--text1)';
+
+  // Micro-explication dynamique de la complexité
+  const riskHint = (() => {
+    if (beta !== null && beta > 1.5)           return { icon: '⚡', text: 'Vigilance : Volatilité élevée',         color: COLOR_DOWN };
+    if (marketCap !== null && marketCap < 2e9) return { icon: '🔍', text: 'Vigilance : Petite capitalisation',     color: COLOR_NEUTRAL };
+    return                                            { icon: '✓',  text: 'Profil de risque standard',             color: COLOR_UP };
+  })();
 
   return (
     <div style={{
@@ -101,6 +110,7 @@ export default function ScoreDashboard({ scores, sector, companyCount }) {
         gap: '14px', padding: '0 28px',
         borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)',
       }}>
+
         {/* Verdict */}
         <div style={{ textAlign: 'center' }}>
           <div style={{
@@ -109,8 +119,11 @@ export default function ScoreDashboard({ scores, sector, companyCount }) {
           }}>
             Verdict
           </div>
-          <div style={{ fontSize: '26px', fontWeight: 'bold', color: verdictColor, lineHeight: 1 }}>
+          <div style={{ fontSize: '26px', fontWeight: 'bold', color: verdictColor, lineHeight: 1, marginBottom: '5px' }}>
             {scores.verdict}
+          </div>
+          <div style={{ fontSize: '10px', color: 'var(--text3)', opacity: 0.75, lineHeight: '1.4' }}>
+            Synthèse de 60+ indicateurs<br />(Santé, Valo, Croissance)
           </div>
         </div>
 
@@ -130,13 +143,21 @@ export default function ScoreDashboard({ scores, sector, companyCount }) {
           }}>
             {complexityLabel}
           </span>
+          {/* Micro-explication dynamique */}
+          <div style={{
+            marginTop: '6px', fontSize: '10px', color: riskHint.color,
+            opacity: 0.85, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+          }}>
+            <span>{riskHint.icon}</span>
+            <span>{riskHint.text}</span>
+          </div>
         </div>
 
         {/* Contexte secteur + company count */}
         {(sector || companyCount) && (
           <div style={{
             fontSize: '11px', color: 'var(--text3)', textAlign: 'center',
-            lineHeight: '1.5', opacity: 0.8, maxWidth: '200px',
+            lineHeight: '1.5', opacity: 0.8, maxWidth: '210px',
           }}>
             {companyCount !== null && companyCount < 3 && (
               <span title="Échantillon faible — score moins représentatif" style={{ marginRight: '4px' }}>⚠️</span>
@@ -188,7 +209,7 @@ export default function ScoreDashboard({ scores, sector, companyCount }) {
         </button>
       </div>
 
-      {showModal && <MethodologyModal onClose={() => setShowModal(false)} />}
+      {showModal && <MethodologyModal onClose={() => setShowModal(false)} sector={sector} />}
     </div>
   );
 }
