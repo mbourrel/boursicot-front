@@ -11,7 +11,7 @@ const PILLARS = [
     color: COLOR_UP,
     metrics: [
       { name: 'Marge Nette',           desc: "Indique la part de profit réel sur chaque euro vendu." },
-      { name: 'ROE',                   desc: 'Capacité de l\'entreprise à générer du profit avec l\'argent des actionnaires.' },
+      { name: 'ROE',                   desc: "Capacité de l'entreprise à générer du profit avec l'argent des actionnaires." },
       { name: 'Dette / Fonds Propres', desc: "Mesure si l'entreprise utilise trop d'emprunts par rapport à son propre capital." },
       { name: 'Ratio de Liquidité',    desc: 'Capacité à payer ses factures et dettes urgentes sans difficulté.' },
     ],
@@ -21,8 +21,8 @@ const PILLARS = [
     title: 'Valorisation',
     color: '#2962FF',
     metrics: [
-      { name: 'PER vs secteur', desc: 'Compare le prix de l\'action aux bénéfices. Un PER bas peut indiquer une action bon marché.' },
-      { name: 'Forward PE',     desc: 'Estimation du prix par rapport aux bénéfices attendus l\'année prochaine.' },
+      { name: 'PER vs secteur', desc: "Compare le prix de l'action aux bénéfices. Un PER bas peut indiquer une action bon marché." },
+      { name: 'Forward PE',     desc: "Estimation du prix par rapport aux bénéfices attendus l'année prochaine." },
     ],
   },
   {
@@ -30,8 +30,8 @@ const PILLARS = [
     title: 'Croissance',
     color: COLOR_NEUTRAL,
     metrics: [
-      { name: "Chiffre d'Affaires",    desc: "Évolution de l'activité commerciale sur les 5 dernières années." },
-      { name: 'Bénéfices (EPS)',       desc: 'Capacité de l\'entreprise à faire progresser ses profits réels.' },
+      { name: "Chiffre d'Affaires", desc: "Évolution de l'activité commerciale sur les 5 dernières années." },
+      { name: 'Bénéfices (EPS)',    desc: "Capacité de l'entreprise à faire progresser ses profits réels." },
     ],
   },
 ];
@@ -42,9 +42,9 @@ export default function MethodologyModal({ onClose }) {
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.75)',
+        background: 'rgba(0,0,0,0.82)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '16px', backdropFilter: 'blur(4px)'
+        padding: '16px', backdropFilter: 'blur(8px)',
       }}
     >
       <div
@@ -54,20 +54,17 @@ export default function MethodologyModal({ onClose }) {
           border: '1px solid var(--border)',
           borderRadius: '12px',
           width: '100%',
-          maxWidth: '650px',
+          maxWidth: '860px',
           maxHeight: '90vh',
           overflowY: 'auto',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
         }}
       >
         {/* ── En-tête ── */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '18px 20px',
-          borderBottom: '1px solid var(--border)',
-          position: 'sticky', top: 0,
-          background: 'var(--bg2)',
-          zIndex: 1,
+          padding: '18px 20px', borderBottom: '1px solid var(--border)',
+          position: 'sticky', top: 0, background: 'var(--bg2)', zIndex: 1,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '18px' }}>🔍</span>
@@ -97,40 +94,41 @@ export default function MethodologyModal({ onClose }) {
 
           {/* Verdict & Complexité */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-             <div style={{ padding: '12px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text3)', textTransform: 'uppercase', fontWeight: 'bold' }}>Le Verdict</span>
-                <p style={{ fontSize: '12px', color: 'var(--text2)', margin: '4px 0 0' }}>Conclusion globale basée sur la moyenne pondérée des 3 piliers.</p>
-             </div>
-             <div style={{ padding: '12px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text3)', textTransform: 'uppercase', fontWeight: 'bold' }}>La Complexité</span>
-                <p style={{ fontSize: '12px', color: 'var(--text2)', margin: '4px 0 0' }}>Dépend de la volatilité (Beta) et de la taille de l'entreprise (Market Cap).</p>
-             </div>
+            <div style={{ padding: '12px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text3)', textTransform: 'uppercase', fontWeight: 'bold' }}>Le Verdict</span>
+              <p style={{ fontSize: '12px', color: 'var(--text2)', margin: '4px 0 0' }}>Conclusion globale basée sur la moyenne pondérée des 3 piliers.</p>
+            </div>
+            <div style={{ padding: '12px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text3)', textTransform: 'uppercase', fontWeight: 'bold' }}>La Complexité</span>
+              <p style={{ fontSize: '12px', color: 'var(--text2)', margin: '4px 0 0' }}>Dépend de la volatilité (Beta) et de la taille de l'entreprise (Market Cap).</p>
+            </div>
           </div>
 
-          {/* Piliers */}
-          {PILLARS.map(pillar => (
-            <div key={pillar.title} style={{
-              marginBottom: '12px',
-              padding: '14px 16px',
-              backgroundColor: 'var(--bg3)',
-              border: '1px solid var(--border)',
-              borderRadius: '8px',
-              borderLeft: `4px solid ${pillar.color}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                <span style={{ fontSize: '16px' }}>{pillar.icon}</span>
-                <span style={{ color: pillar.color, fontWeight: 'bold', fontSize: '14px' }}>{pillar.title}</span>
+          {/* Piliers en grille 2 colonnes */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
+            {PILLARS.map(pillar => (
+              <div key={pillar.title} style={{
+                padding: '14px 16px',
+                backgroundColor: 'var(--bg3)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                borderLeft: `4px solid ${pillar.color}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '16px' }}>{pillar.icon}</span>
+                  <span style={{ color: pillar.color, fontWeight: 'bold', fontSize: '14px' }}>{pillar.title}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {pillar.metrics.map(m => (
+                    <div key={m.name} style={{ display: 'flex', gap: '12px', fontSize: '12px' }}>
+                      <span style={{ color: 'var(--text1)', fontWeight: '600', minWidth: '140px', flexShrink: 0 }}>{m.name}</span>
+                      <span style={{ color: 'var(--text3)', lineHeight: '1.4' }}>{m.desc}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {pillar.metrics.map(m => (
-                  <div key={m.name} style={{ display: 'flex', gap: '12px', fontSize: '12px' }}>
-                    <span style={{ color: 'var(--text1)', fontWeight: '600', minWidth: '140px', flexShrink: 0 }}>{m.name}</span>
-                    <span style={{ color: 'var(--text3)', lineHeight: '1.4' }}>{m.desc}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           {/* Avertissement Biais de Groupe */}
           <div style={{
@@ -138,7 +136,6 @@ export default function MethodologyModal({ onClose }) {
             backgroundColor: COLOR_NEUTRAL + '15',
             border: `1px solid ${COLOR_NEUTRAL}55`,
             borderRadius: '8px',
-            marginTop: '20px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <span style={{ fontSize: '14px' }}>⚠️</span>
