@@ -88,13 +88,13 @@ function Dashboard() {
         <>
           <div style={{ display: 'flex', gap: '0', marginBottom: '12px' }}>
             <button
-              onClick={() => setChartMode('simple')}
+              onClick={() => { captureEvent('chart_mode_changed', { mode: 'simple' }); setChartMode('simple'); }}
               style={{ ...toggleBtnStyle(chartMode === 'simple'), borderRadius: '6px 0 0 6px' }}
             >
               Simple
             </button>
             <button
-              onClick={() => setChartMode('trading')}
+              onClick={() => { captureEvent('chart_mode_changed', { mode: 'trading' }); setChartMode('trading'); }}
               style={{ ...toggleBtnStyle(chartMode === 'trading'), borderRadius: '0 6px 6px 0', borderLeft: 'none' }}
             >
               Trading

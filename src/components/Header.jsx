@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { UserButton } from '@clerk/clerk-react';
+import { captureEvent } from '../utils/analytics';
 
 // ── Bouton toggle dark/light ──────────────────────────────────────────────────
 function ThemeToggle({ isDark, onToggle }) {
@@ -239,6 +240,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   });
 
   const handleSelect = (ticker) => {
+    captureEvent('symbol_selected', { ticker });
     setSelectedSymbol(ticker);
     setIsOpen(false);
   };
@@ -354,15 +356,15 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
 
         {/* BOUTONS DE NAVIGATION */}
         <div style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px' }}>
-          <button onClick={() => setViewMode('chart')} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'chart' ? '#2962FF' : 'transparent', color: 'var(--text1)', borderRadius: '6px 0 0 6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Cours de bourse</button>
-          <button onClick={() => setViewMode('fundamentals')} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'fundamentals' ? '#2962FF' : 'transparent', color: 'var(--text1)', borderRadius: '0', cursor: 'pointer', transition: 'background-color 0.2s' }}>Analyse Fondamentale</button>
-          <button onClick={() => setViewMode('macro')} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'macro' ? '#26a69a' : 'transparent', color: 'var(--text1)', borderRadius: '0 6px 6px 0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🌐 Indicateurs Macroéconomiques</button>
+          <button onClick={() => { captureEvent('view_changed', { view: 'chart' }); setViewMode('chart'); }} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'chart' ? '#2962FF' : 'transparent', color: 'var(--text1)', borderRadius: '6px 0 0 6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Cours de bourse</button>
+          <button onClick={() => { captureEvent('view_changed', { view: 'fundamentals' }); setViewMode('fundamentals'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'fundamentals' ? '#2962FF' : 'transparent', color: 'var(--text1)', borderRadius: '0', cursor: 'pointer', transition: 'background-color 0.2s' }}>Analyse Fondamentale</button>
+          <button onClick={() => { captureEvent('view_changed', { view: 'macro' }); setViewMode('macro'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'macro' ? '#26a69a' : 'transparent', color: 'var(--text1)', borderRadius: '0 6px 6px 0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🌐 Indicateurs Macroéconomiques</button>
         </div>
 
         {/* TOGGLE MODE DÉBUTANT — visible uniquement en vue Fondamentaux */}
         {viewMode === 'fundamentals' && (
           <button
-            onClick={() => setIsBeginnerMode(v => !v)}
+            onClick={() => { captureEvent('advanced_mode_toggled', { enabled: isBeginnerMode }); setIsBeginnerMode(v => !v); }}
             title={isBeginnerMode ? 'Afficher les comptes historiques et données avancées' : 'Masquer les données avancées'}
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
@@ -384,7 +386,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
           <span style={{ fontSize: '11px', color: 'var(--text3)', letterSpacing: '0.04em', userSelect: 'none' }}>
             DARK
           </span>
-          <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+          <ThemeToggle isDark={isDark} onToggle={() => { captureEvent('theme_toggled', { theme: isDark ? 'light' : 'dark' }); toggleTheme(); }} />
         </div>
 
         {/* BOUTON UTILISATEUR CLERK (profil + déconnexion) */}

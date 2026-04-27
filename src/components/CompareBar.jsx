@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { captureEvent } from '../utils/analytics';
 
 export const ASSET_COLORS = ['#2962FF', '#26a69a', '#e91e63', '#ff9800', '#9c27b0'];
 
@@ -23,6 +24,7 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
 
   const handleAdd = (ticker) => {
     if (!compareSymbols.includes(ticker) && ticker !== primarySymbol && compareSymbols.length < 4) {
+      captureEvent('compare_add', { ticker, count: compareSymbols.length + 1 });
       setCompareSymbols(prev => [...prev, ticker]);
     }
     setIsOpen(false);
@@ -30,6 +32,7 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
   };
 
   const handleRemove = (ticker) => {
+    captureEvent('compare_remove', { ticker });
     setCompareSymbols(prev => prev.filter(s => s !== ticker));
   };
 
