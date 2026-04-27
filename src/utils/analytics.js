@@ -11,14 +11,13 @@ export function initAnalytics() {
   if (!key || initialized) return;
 
   posthog.init(key, {
-    api_host: host || 'https://eu.i.posthog.com',
+    api_host: '/ingest',
+    ui_host: host || 'https://eu.posthog.com',
     persistence: 'memory',
     autocapture: false,
     capture_pageview: false,
     loaded: (ph) => {
       console.log('[Analytics] PostHog loaded, distinct_id:', ph.get_distinct_id());
-      console.log('[Analytics] PostHog config — api_host:', ph.config.api_host, '| token:', ph.config.token);
-      ph.debug();
     },
   });
 
