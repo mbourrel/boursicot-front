@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { registerTokenGetter } from './api/config';
-import { identifyUser } from './utils/analytics';
+import { identifyUser, captureEvent } from './utils/analytics';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -128,7 +128,10 @@ function App() {
   }, [getToken, isLoaded]);
 
   useEffect(() => {
-    if (user?.id) identifyUser(user.id);
+    if (!user?.id) return;
+    identifyUser(user.id);
+    const accountAgeMs = Date.now() - new Date(user.createdAt).getTime();
+    if (accountAgeMs < 5 * 60 * 1000) captureEvent('signup_completed');
   }, [user?.id]);
 
   return (
