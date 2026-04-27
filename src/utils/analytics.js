@@ -11,7 +11,7 @@ export function initAnalytics() {
   if (!key || initialized) return;
 
   posthog.init(key, {
-    api_host: '/api/ingest',
+    api_host: '/ph',
     ui_host: host || 'https://eu.posthog.com',
     persistence: 'memory',
     autocapture: false,
