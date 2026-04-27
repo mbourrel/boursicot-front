@@ -132,11 +132,19 @@ export default function ScoreDashboard({ scores, sector, companyCount }) {
           </span>
         </div>
 
-        {/* Contexte secteur */}
-        {sector && (
-          <div style={{ fontSize: '11px', color: 'var(--text3)', textAlign: 'center', lineHeight: '1.4' }}>
-            Basé sur le secteur <span style={{ color: 'var(--text2)', fontWeight: '600' }}>{sector}</span>
-            {companyCount ? ` (${companyCount} entreprises)` : ''}
+        {/* Contexte secteur + company count */}
+        {(sector || companyCount) && (
+          <div style={{
+            fontSize: '11px', color: 'var(--text3)', textAlign: 'center',
+            lineHeight: '1.5', opacity: 0.8, maxWidth: '200px',
+          }}>
+            {companyCount !== null && companyCount < 3 && (
+              <span title="Échantillon faible — score moins représentatif" style={{ marginRight: '4px' }}>⚠️</span>
+            )}
+            {companyCount !== null
+              ? <>Comparaison basée sur <strong style={{ color: 'var(--text2)' }}>{companyCount} entreprises</strong> du secteur {sector}</>
+              : <>Secteur : <strong style={{ color: 'var(--text2)' }}>{sector}</strong></>
+            }
           </div>
         )}
       </div>

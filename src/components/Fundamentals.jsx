@@ -176,7 +176,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
         </div>
 
         {/* ── SCORE DASHBOARD ── */}
-        <ScoreDashboard scores={scores} sector={d.sector} />
+        <ScoreDashboard scores={scores} sector={d.sector} companyCount={sectorAvg?.company_count ?? null} />
 
         <div style={{ display: 'grid', gridTemplateColumns: '3fr 3fr 4fr', gap: '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
           {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis')}
