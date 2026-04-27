@@ -274,6 +274,71 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
 
   const colWidth = `${Math.floor(80 / allSymbols.length)}%`;
 
+  // ── Radar Chart SVG (pur, sans librairie) ────────────────────────────────
+  const RadarChart = () => {
+    const size       = 220;
+    const cx         = size / 2;
+    const cy         = size / 2;
+    const maxRadius  = 76;
+    const labelGap   = 18;
+    const axes       = ['health', 'valuation', 'growth'];
+    const axisLabels = ['Santé', 'Valorisation', 'Croissance'];
+    // 3 axes à 120° d'intervalle, départ à 12h (-90°)
+    const angles = axes.map((_, i) => ((i * 120 - 90) * Math.PI) / 180);
+    const pt = (angle, value) => ({
+      x: cx + ((value / 10) * maxRadius) * Math.cos(angle),
+      y: cy + ((value / 10) * maxRadius) * Math.sin(angle),
+    });
+    const anchors = ['middle', 'start', 'end'];
+
+    return (
+      <svg width={size} height={size} style={{ display: 'block' }}>
+        {/* Grilles */}
+        {[0.25, 0.5, 0.75, 1].map(level => (
+          <polygon key={level}
+            points={angles.map(a => `${cx + level * maxRadius * Math.cos(a)},${cy + level * maxRadius * Math.sin(a)}`).join(' ')}
+            fill="none" stroke="var(--border)" strokeWidth="1"
+          />
+        ))}
+        {/* Axes */}
+        {angles.map((a, i) => (
+          <line key={i} x1={cx} y1={cy}
+            x2={cx + maxRadius * Math.cos(a)} y2={cy + maxRadius * Math.sin(a)}
+            stroke="var(--border)" strokeWidth="1"
+          />
+        ))}
+        {/* Libellés des axes */}
+        {angles.map((a, i) => {
+          const r = maxRadius + labelGap;
+          return (
+            <text key={i}
+              x={cx + r * Math.cos(a)} y={cy + r * Math.sin(a)}
+              textAnchor={anchors[i]} dominantBaseline="middle"
+              fill="var(--text3)" fontSize="9" fontFamily="sans-serif"
+            >
+              {axisLabels[i]}
+            </text>
+          );
+        })}
+        {/* Polygones par entreprise */}
+        {allSymbols.map((sym, si) => {
+          const s = dataMap[sym]?.scores;
+          if (!s) return null;
+          const vals   = [s.health, s.valuation, s.growth];
+          const points = angles.map((a, i) => pt(a, vals[i]));
+          const pStr   = points.map(p => `${p.x},${p.y}`).join(' ');
+          const clr    = ASSET_COLORS[si];
+          return (
+            <g key={sym}>
+              <polygon points={pStr} fill={clr + '28'} stroke={clr} strokeWidth="1.5" strokeLinejoin="round" />
+              {points.map((p, pi) => <circle key={pi} cx={p.x} cy={p.y} r="3" fill={clr} />)}
+            </g>
+          );
+        })}
+      </svg>
+    );
+  };
+
   const MetricNameCell = ({ name }) => (
     <td style={{ ...tdStyle, color: 'var(--text3)' }}>
       <span style={{ display: 'inline-flex', alignItems: 'center' }}>
@@ -309,6 +374,8 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
     );
   };
 
+  const scoreColor = s => s >= 7 ? '#26a69a' : s >= 4 ? '#ff9800' : '#ef5350';
+
   return (
     <div>
       {/* En-têtes actifs */}
@@ -333,6 +400,85 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
             </div>
           );
         })}
+      </div>
+
+      {/* ── Synthèse des Scores Boursicot ── */}
+      <div style={{ marginBottom: '32px' }}>
+        <h3 style={{ ...h3Style, borderBottom: '2px solid var(--border)', paddingBottom: '10px', marginBottom: '16px' }}>
+          Synthèse des Scores Boursicot
+        </h3>
+        <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          {/* Cartes de scores par actif */}
+          <div style={{ flex: 1, display: 'flex', gap: '10px', flexWrap: 'wrap', minWidth: 0 }}>
+            {allSymbols.map((sym, i) => {
+              const d = dataMap[sym];
+              const s = d?.scores;
+              const color = ASSET_COLORS[i];
+              return (
+                <div key={sym} style={{
+                  flex: 1, minWidth: '130px',
+                  backgroundColor: 'var(--bg3)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '10px',
+                  borderTop: `3px solid ${color}`,
+                  padding: '14px 14px',
+                }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color, marginBottom: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {d?.name || sym}
+                  </div>
+                  {s ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                      {[
+                        { label: 'Santé',        value: s.health },
+                        { label: 'Valorisation', value: s.valuation },
+                        { label: 'Croissance',   value: s.growth },
+                      ].map(({ label, value }) => {
+                        const c = scoreColor(value);
+                        return (
+                          <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--text3)' }}>{label}</span>
+                            <span style={{
+                              fontSize: '12px', fontWeight: 'bold',
+                              padding: '2px 8px', borderRadius: '4px',
+                              backgroundColor: c + '22',
+                              color: c,
+                              border: `1px solid ${c}55`,
+                              minWidth: '38px', textAlign: 'center',
+                            }}>
+                              {value.toFixed(1)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ color: 'var(--text3)', fontSize: '11px' }}>Scores indisponibles</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Radar Chart */}
+          <div style={{
+            backgroundColor: 'var(--bg3)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '14px',
+            flexShrink: 0,
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+          }}>
+            <RadarChart />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', justifyContent: 'center' }}>
+              {allSymbols.map((sym, i) => (
+                <div key={sym} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: 'var(--text3)' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: ASSET_COLORS[i], flexShrink: 0 }} />
+                  {dataMap[sym]?.name || sym}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Catégories simples */}

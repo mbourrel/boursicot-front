@@ -5,6 +5,8 @@
  * Props :
  *   scores  { health, valuation, growth, complexity, verdict }
  */
+import { useState } from 'react';
+import MethodologyModal from './MethodologyModal';
 
 // ── Couleurs du projet ────────────────────────────────────────────────────────
 const COLOR_UP      = '#26a69a';  // Hausse / bon
@@ -84,6 +86,7 @@ function CircularGauge({ score, label, size = 100 }) {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 export default function ScoreDashboard({ scores }) {
+  const [showModal, setShowModal] = useState(false);
   if (!scores) return null;
 
   // Badge complexité
@@ -157,7 +160,7 @@ export default function ScoreDashboard({ scores }) {
         </div>
       </div>
 
-      {/* ── Légende mini ── */}
+      {/* ── Légende mini + bouton méthodologie ── */}
       <div style={{
         marginLeft: 'auto', display: 'flex', flexDirection: 'column', gap: '6px',
         fontSize: '11px', color: 'var(--text3)',
@@ -174,7 +177,21 @@ export default function ScoreDashboard({ scores }) {
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: COLOR_DOWN,    flexShrink: 0 }} />
           &lt; 4 — Défavorable
         </div>
+        <button
+          onClick={() => setShowModal(true)}
+          style={{
+            marginTop: '6px',
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--text3)', fontSize: '11px',
+            display: 'flex', alignItems: 'center', gap: '4px',
+            padding: 0, textDecoration: 'underline', textUnderlineOffset: '2px',
+          }}
+        >
+          ℹ️ Comprendre la méthodologie
+        </button>
       </div>
+
+      {showModal && <MethodologyModal onClose={() => setShowModal(false)} />}
     </div>
   );
 }
