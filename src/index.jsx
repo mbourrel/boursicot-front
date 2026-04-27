@@ -2,15 +2,15 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { ThemeProvider } from './context/ThemeContext';
+import { ClerkProvider } from '@clerk/clerk-react';
+import { BrowserRouter } from 'react-router-dom';
+import reportWebVitals from './reportWebVitals';
 import { initAnalytics } from './utils/analytics';
 
 // Initialisation analytics avant le premier render — exécuté une seule fois.
 // Sans VITE_POSTHOG_KEY dans .env.local, cette fonction est silencieuse.
 initAnalytics();
-import { ThemeProvider } from './context/ThemeContext';
-import { ClerkProvider } from '@clerk/clerk-react';
-import { BrowserRouter } from 'react-router-dom';
-import reportWebVitals from './reportWebVitals';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 

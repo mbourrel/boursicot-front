@@ -14,6 +14,7 @@ import Fundamentals from './components/Fundamentals';
 import MacroEnvironment from './components/MacroEnvironment';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAssets } from './hooks/useAssets';
+import ConsentBanner from './components/ConsentBanner';
 
 // ── Dashboard (contenu protégé) ──────────────────────────────────────────────
 function Dashboard() {
@@ -131,11 +132,14 @@ function App() {
   }, [user?.id]);
 
   return (
-    <Routes>
-      <Route path="/login/*"    element={<LoginPage />} />
-      <Route path="/register/*" element={<RegisterPage />} />
-      <Route path="/*"          element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    </Routes>
+    <>
+      <ConsentBanner />
+      <Routes>
+        <Route path="/login/*"    element={<LoginPage />} />
+        <Route path="/register/*" element={<RegisterPage />} />
+        <Route path="/*"          element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      </Routes>
+    </>
   );
 }
 
