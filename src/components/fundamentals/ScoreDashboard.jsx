@@ -11,7 +11,9 @@
  *   marketCap    number  — capitalisation en $ (optionnel)
  */
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import MethodologyModal from './MethodologyModal';
+import { PILLARS } from '../../constants/pillars';
 
 const COLOR_UP      = '#26a69a';
 const COLOR_DOWN    = '#ef5350';
@@ -27,7 +29,7 @@ function scoreColor(s) {
 const WEIGHTS = { health: 0.25, valuation: 0.20, growth: 0.20, efficiency: 0.15, dividend: 0.10, momentum: 0.10 };
 
 // ── Jauge circulaire SVG ──────────────────────────────────────────────────────
-function CircularGauge({ score, label, icon, size = 72, strokeWidth = 7, onClick, sectionId }) {
+function CircularGauge({ score, label, icon, size = 72, strokeWidth = 7, onPillarClick }) {
   const [hovered, setHovered] = useState(false);
   const radius      = (size - strokeWidth * 2) / 2;
   const cx          = size / 2;
@@ -36,25 +38,18 @@ function CircularGauge({ score, label, icon, size = 72, strokeWidth = 7, onClick
   const progress    = (score / 10) * circumference;
   const color       = scoreColor(score);
 
-  const handleClick = () => {
-    if (sectionId) {
-      const el = document.getElementById(sectionId);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   return (
     <div
-      onClick={handleClick}
+      onClick={onPillarClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
-        cursor: sectionId ? 'pointer' : 'default',
-        opacity: hovered && sectionId ? 0.8 : 1,
+        cursor: onPillarClick ? 'pointer' : 'default',
+        opacity: hovered && onPillarClick ? 0.8 : 1,
         transition: 'opacity 0.15s',
       }}
-      title={sectionId ? `Voir la section ${label}` : undefined}
+      title={onPillarClick ? `Détails : ${label}` : undefined}
     >
       <svg width={size} height={size}>
         <circle cx={cx} cy={cy} r={radius} fill="none" stroke="var(--border)" strokeWidth={strokeWidth} />
@@ -120,11 +115,91 @@ function MasterGauge({ score, size = 120, strokeWidth = 11 }) {
   );
 }
 
+// ── Modale détail d'une jauge ─────────────────────────────────────────────────
+function GaugePillarModal({ pillar, score, onClose }) {
+  const color = scoreColor(score);
+  const verdictLabel = score >= 7 ? 'Favorable' : score >= 4 ? 'Neutre' : 'Défavorable';
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(0,0,0,0.82)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px', backdropFilter: 'blur(8px)',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'var(--bg2)',
+          border: '1px solid var(--border)',
+          borderLeft: `5px solid ${pillar.color}`,
+          borderRadius: '12px',
+          width: '100%',
+          maxWidth: '500px',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
+          overflow: 'hidden',
+        }}
+      >
+        {/* En-tête */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '18px 22px', borderBottom: '1px solid var(--border)',
+          background: pillar.color + '12',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '26px' }}>{pillar.icon}</span>
+            <div>
+              <div style={{ color: pillar.color, fontWeight: 'bold', fontSize: '18px', lineHeight: 1.2 }}>{pillar.title}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '3px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Indicateur de score</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '32px', fontWeight: '900', color, lineHeight: 1 }}>{score.toFixed(1)}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text3)' }}>/10 — <span style={{ color }}>{verdictLabel}</span></div>
+            </div>
+            <button
+              onClick={onClose}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: '24px', padding: '0 4px', lineHeight: 1 }}
+            >✕</button>
+          </div>
+        </div>
+
+        {/* Métriques */}
+        <div style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text3)', marginBottom: '2px' }}>
+            Indicateurs pris en compte
+          </div>
+          {pillar.metrics.map(m => (
+            <div key={m.name} style={{
+              padding: '12px 14px',
+              background: 'var(--bg3)',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+            }}>
+              <div style={{ color: 'var(--text1)', fontWeight: '600', fontSize: '13px', marginBottom: '5px' }}>{m.name}</div>
+              <div style={{ color: 'var(--text3)', fontSize: '12px', lineHeight: '1.6' }}>{m.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // ── Composant principal ───────────────────────────────────────────────────────
 export default function ScoreDashboard({ scores, sector, companyCount, beta, marketCap }) {
-  const [showModal, setShowModal] = useState(false);
-  const [btnHover,  setBtnHover]  = useState(false);
+  const [showModal,    setShowModal]    = useState(false);
+  const [activePillar, setActivePillar] = useState(null);
+  const [btnHover,     setBtnHover]     = useState(false);
   if (!scores) return null;
+
+  const pillarByKey = Object.fromEntries(PILLARS.map(p => [p.key, p]));
+  const openPillar  = (key, score) => setActivePillar({ pillar: pillarByKey[key], score });
 
   // Note Globale : utilise global_score du backend si disponible, sinon calcul frontend
   const globalScore = scores.global_score != null
@@ -175,10 +250,10 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
 
       {/* ── Col 1 : Piliers Financiers (gauche) — pyramide ── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingRight: '20px', alignItems: 'center' }}>
-        <CircularGauge score={s.health} label="Santé" icon="❤️" size={110} sectionId="section-health" />
+        <CircularGauge score={s.health} label="Santé" icon="❤️" size={110} onPillarClick={() => openPillar('health', s.health)} />
         <div style={{ display: 'flex', gap: '36px' }}>
-          <CircularGauge score={s.valuation} label="Valorisation" icon="📊" size={110} sectionId="section-valuation" />
-          <CircularGauge score={s.growth}    label="Croissance"   icon="📈" size={110} sectionId="section-growth"    />
+          <CircularGauge score={s.valuation} label="Valorisation" icon="📊" size={110} onPillarClick={() => openPillar('valuation', s.valuation)} />
+          <CircularGauge score={s.growth}    label="Croissance"   icon="📈" size={110} onPillarClick={() => openPillar('growth',    s.growth)}    />
         </div>
       </div>
 
@@ -244,10 +319,10 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
 
       {/* ── Col 3 : Piliers Stratégiques (droite) — pyramide ── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingLeft: '20px', paddingRight: '20px', alignItems: 'center' }}>
-        <CircularGauge score={s.dividend} label="Dividende" icon="💰" size={110} sectionId={null} />
+        <CircularGauge score={s.dividend} label="Dividende" icon="💰" size={110} onPillarClick={() => openPillar('dividend', s.dividend)} />
         <div style={{ display: 'flex', gap: '36px' }}>
-          <CircularGauge score={s.momentum}   label="Momentum"   icon="⚡"  size={110} sectionId="section-risk"   />
-          <CircularGauge score={s.efficiency} label="Efficacité" icon="⚙️" size={110} sectionId="section-health" />
+          <CircularGauge score={s.momentum}   label="Momentum"   icon="⚡"  size={110} onPillarClick={() => openPillar('momentum',   s.momentum)}   />
+          <CircularGauge score={s.efficiency} label="Efficacité" icon="⚙️" size={110} onPillarClick={() => openPillar('efficiency', s.efficiency)} />
         </div>
       </div>
 
@@ -289,11 +364,12 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
           }}
         >
           <span style={{ fontSize: '16px' }}>📖</span>
-          Méthodologie
+          Définition des indicateurs
         </button>
       </div>
 
-      {showModal && <MethodologyModal onClose={() => setShowModal(false)} sector={sector} />}
+      {showModal    && <MethodologyModal onClose={() => setShowModal(false)} sector={sector} />}
+      {activePillar && <GaugePillarModal pillar={activePillar.pillar} score={activePillar.score} onClose={() => setActivePillar(null)} />}
     </div>
   );
 }
