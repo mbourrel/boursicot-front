@@ -419,7 +419,24 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
               {d ? (
                 <>
                   <div style={{ color: 'var(--text3)', fontSize: '11px' }}>{sym}</div>
-                  <div style={{ color, fontSize: '11px', marginTop: '2px' }}>{d.sector}</div>
+                  {/* Prix + variation journalière */}
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', margin: '5px 0 3px' }}>
+                    <span style={{ color: 'var(--text1)', fontWeight: 'bold', fontSize: '13px' }}>
+                      {d.close_price != null
+                        ? `${d.close_price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${d.currency || '$'}`
+                        : '-- ' + (d.currency || '$')
+                      }
+                    </span>
+                    {d.daily_change_pct != null && (
+                      <span style={{
+                        fontSize: '11px', fontWeight: '600',
+                        color: d.daily_change_pct >= 0 ? '#26a69a' : '#ef5350',
+                      }}>
+                        {d.daily_change_pct >= 0 ? '+' : ''}{d.daily_change_pct.toFixed(2)} %
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ color, fontSize: '11px' }}>{d.sector}</div>
                 </>
               ) : (
                 <div style={{ color: '#ef5350', fontSize: '12px' }}>Données indisponibles</div>
