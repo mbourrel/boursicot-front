@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ASSET_COLORS } from './CompareBar';
 
 const LOWER_IS_BETTER = new Set([
@@ -11,6 +12,7 @@ import MetricInfo from './fundamentals/MetricInfo';
 import MetricCard from './fundamentals/MetricCard';
 import FinancialStatement from './fundamentals/FinancialStatement';
 import ScoreDashboard from './fundamentals/ScoreDashboard';
+import MethodologyModal from './fundamentals/MethodologyModal';
 import { useFundamentals } from '../hooks/useFundamentals';
 import { useSectorAverages } from '../hooks/useSectorAverages';
 import { useSectorHistory } from '../hooks/useSectorHistory';
@@ -19,6 +21,7 @@ import { useSectorHistory } from '../hooks/useSectorHistory';
 function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = false, setIsBeginnerMode }) {
   const allSymbols = [selectedSymbol, ...compareSymbols];
   const { dataMap, loading, errors } = useFundamentals(allSymbols);
+  const [showMethodology, setShowMethodology] = useState(false);
   const isSoloMode = allSymbols.length === 1;
   const primarySector = isSoloMode ? dataMap[selectedSymbol]?.sector : null;
   const sectorAvg     = useSectorAverages(primarySector);
@@ -403,7 +406,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
   return (
     <div>
       {/* En-têtes actifs */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
         {allSymbols.map((sym, i) => {
           const d = dataMap[sym];
           const color = ASSET_COLORS[i];
@@ -424,7 +427,28 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
             </div>
           );
         })}
+
+        {/* Bouton Définition des indicateurs */}
+        <button
+          onClick={() => setShowMethodology(true)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '7px',
+            padding: '8px 14px', borderRadius: '8px', cursor: 'pointer',
+            border: '1px solid var(--border)',
+            backgroundColor: 'var(--bg3)',
+            color: 'var(--text3)',
+            fontSize: '12px', fontWeight: '500',
+            transition: 'all 0.2s', whiteSpace: 'nowrap', flexShrink: 0,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--text1)'; e.currentTarget.style.color = 'var(--text1)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text3)'; }}
+        >
+          <span style={{ fontSize: '14px' }}>📖</span>
+          Définition des indicateurs
+        </button>
       </div>
+
+      {showMethodology && <MethodologyModal onClose={() => setShowMethodology(false)} />}
 
       {/* ── Synthèse des Scores Boursicot ── */}
       <div style={{ marginBottom: '32px' }}>
