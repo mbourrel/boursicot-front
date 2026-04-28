@@ -56,13 +56,13 @@ function MetricInfo({ name }) {
             <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '11px', marginBottom: '8px' }}>{name}</div>
             {typeof text === 'object' && text.what ? (
               <>
-                <div style={{ marginBottom: '7px' }}>
+                <div style={{ marginBottom: '8px' }}>
                   <span style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>C'est quoi ?</span>
-                  <div style={{ color: 'var(--text2)', marginTop: '3px' }}>{text.what}</div>
+                  <div style={{ color: 'var(--text2)', marginTop: '4px' }}>{text.what}</div>
                 </div>
-                <div>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '8px' }}>
                   <span style={{ color: '#26a69a', fontWeight: 'bold', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pourquoi c'est important ?</span>
-                  <div style={{ color: '#b0b8c4', marginTop: '3px' }}>{text.why}</div>
+                  <div style={{ color: '#b0b8c4', marginTop: '4px' }}>{text.why}</div>
                 </div>
               </>
             ) : (

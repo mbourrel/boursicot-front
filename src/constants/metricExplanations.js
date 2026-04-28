@@ -5,36 +5,36 @@
 const EXPLANATIONS = {
   // ── Analyse de marché ────────────────────────────────────────────────────
   'Capitalisation': {
-    what: "Valeur totale de l'entreprise en bourse : cours × nombre d'actions en circulation.",
-    why:  "Indique la taille de la société. < 2 Md$ = small cap (plus risqué, plus de potentiel), > 10 Md$ = large cap (plus stable, moins de surprises).",
+    what: "La valeur totale de l'entreprise sur le marché (Nombre d'actions × Prix de l'action).",
+    why:  "Elle permet de classer l'entreprise : les 'Large Caps' sont souvent plus stables, tandis que les 'Small Caps' offrent plus de potentiel de croissance mais avec plus de risques.",
   },
   'PER': {
-    what: "Rapport entre le prix de l'action et le bénéfice net par action. Indique combien vous payez pour €1 de profit.",
-    why:  "Un PER élevé (> 25) signifie que le marché anticipe une forte croissance future. Un PER bas (< 12) peut signaler une action décotée ou un secteur cyclique. À toujours comparer à la **moyenne du secteur**.",
+    what: "Le rapport entre le prix de l'action et le bénéfice net par action.",
+    why:  "Il indique si une action est 'chère' ou 'bon marché'. Un PER de 20 signifie que vous payez 20 € pour chaque 1 € de profit annuel.",
   },
   'Rendement Div': {
-    what: "Pourcentage du prix de l'action reversé chaque année aux actionnaires en cash.",
-    why:  "C'est votre 'loyer' d'investisseur. Un rendement régulier et stable est souvent le signe d'une entreprise mature. Attention : un rendement très élevé (> 8 %) peut signaler une entreprise en difficulté.",
+    what: "Le pourcentage du prix de l'action reversé chaque année aux actionnaires.",
+    why:  "C'est votre 'loyer' d'investisseur. Un rendement élevé peut être attractif, mais attention — s'il est trop élevé, cela peut signaler un dividende non soutenable.",
   },
 
   // ── Santé financière ─────────────────────────────────────────────────────
   'Marge Nette': {
-    what: "Pourcentage du chiffre d'affaires qui se transforme en bénéfice net après avoir payé toutes les charges.",
-    why:  "C'est le juge de paix de l'efficacité. Une entreprise à 15 % de marge nette est souvent plus solide face aux crises qu'une entreprise à 2 %, qui n'a aucun coussin de sécurité.",
+    what: "Le pourcentage de profit qu'il reste à l'entreprise sur chaque euro de vente après avoir payé TOUTES ses dépenses.",
+    why:  "C'est l'indicateur d'efficacité ultime. Une marge élevée signifie que l'entreprise a un fort pouvoir de fixation des prix ou une excellente gestion des coûts.",
   },
   'ROE': {
-    what: "Bénéfice net divisé par les capitaux propres. Mesure combien l'entreprise gagne pour chaque euro appartenant aux actionnaires.",
-    why:  "Un ROE > 15 % est généralement bon. Warren Buffett cible des ROE > 20 % sur la durée. Un ROE faible indique que le management crée peu de valeur avec votre argent.",
+    what: "Mesure la rentabilité de l'argent investi par les actionnaires.",
+    why:  "Il montre à quel point le management est efficace pour générer des profits avec votre capital. Un ROE constant au-dessus de 15 % est souvent signe de qualité.",
   },
   'Dette/Fonds Propres': {
-    what: "Compare ce que l'entreprise doit aux banques par rapport à ce qu'elle possède en propre.",
-    why:  "Trop de dettes augmentent le risque de faillite, surtout quand les taux montent. Une entreprise peu endettée est plus libre de ses décisions et traverse mieux les crises.",
+    what: "Le ratio entre les dettes de l'entreprise et ses fonds propres (son capital réel).",
+    why:  "Une entreprise trop endettée est vulnérable. Idéalement, on cherche des entreprises qui ne dépendent pas trop des banques pour fonctionner.",
   },
 
   // ── Valorisation avancée ─────────────────────────────────────────────────
   'Forward PE': {
-    what: "PER calculé sur les bénéfices attendus par les analystes pour l'exercice à venir.",
-    why:  "Plus pertinent que le PER historique car orienté vers l'avenir. S'il est bien inférieur au PER actuel, le marché anticipe une forte hausse des profits.",
+    what: "Le PER calculé sur les bénéfices futurs estimés (année prochaine).",
+    why:  "La bourse anticipe l'avenir. Si le Forward PE est plus bas que le PER actuel, le marché prévoit que les bénéfices vont augmenter.",
   },
   'Price to Book': {
     what: "Cours de l'action divisé par la valeur comptable par action (actifs nets).",
@@ -45,8 +45,8 @@ const EXPLANATIONS = {
     why:  "Permet de comparer des entreprises indépendamment de leur dette et de leur fiscalité. Un ratio de 8-12x est souvent raisonnable ; au-delà, l'action est chère.",
   },
   'PEG Ratio': {
-    what: "PER divisé par le taux de croissance des bénéfices. Ajuste la valorisation à la dynamique de croissance.",
-    why:  "Un PEG < 1 suggère que la croissance n'est pas encore reflétée dans le cours — une idée popularisée par Peter Lynch pour dénicher des 'growth at reasonable price'.",
+    what: "Le PER divisé par le taux de croissance des bénéfices.",
+    why:  "Un PER de 30 peut sembler cher, mais si la croissance est de 30 %, le PEG est de 1. Un PEG proche de 1 indique souvent un prix juste par rapport à la croissance.",
   },
 
   // ── Compte de résultat & croissance ─────────────────────────────────────
@@ -73,8 +73,8 @@ const EXPLANATIONS = {
     why:  "Un coussin de sécurité essentiel pour traverser les crises, payer les salaires ou saisir des opportunités d'acquisition sans s'endetter.",
   },
   'Free Cash Flow': {
-    what: "Cash généré par l'activité moins les investissements nécessaires au maintien de l'outil de production (CapEx).",
-    why:  "C'est l'argent 'libre' et réel. C'est lui qui finance les dividendes, les rachats d'actions et la croissance future. Plus difficile à manipuler que le bénéfice net.",
+    what: "L'argent réel qu'il reste dans les caisses après avoir payé l'exploitation et les investissements (usines, machines, etc.).",
+    why:  "Contrairement au bénéfice comptable, le FCF ne ment pas. C'est cet argent qui sert à payer les dividendes, racheter des actions ou rembourser la dette.",
   },
   'Ratio Liquidité': {
     what: "Actifs à court terme divisés par les dettes à court terme. Mesure la capacité à payer ses factures immédiates.",
@@ -83,8 +83,8 @@ const EXPLANATIONS = {
 
   // ── Risque & marché ──────────────────────────────────────────────────────
   'Beta': {
-    what: "Mesure la sensibilité de l'action aux mouvements du marché global.",
-    why:  "Beta = 1 : suit le marché. > 1 : amplifie les hausses ET les baisses (plus risqué, plus de potentiel). < 1 : amortit les chocs (actions défensives comme les utilities).",
+    what: "Mesure la nervosité d'une action par rapport à l'ensemble du marché.",
+    why:  "Un Beta de 1.5 signifie que si le marché monte de 10 %, l'action tend à monter de 15 %… mais aussi à baisser plus vite si le marché chute.",
   },
   'Plus Haut 52w': {
     what: "Plus haut cours atteint sur les 52 dernières semaines.",
