@@ -163,7 +163,7 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'auto 1fr auto auto',
+      gridTemplateColumns: '1fr minmax(auto, 210px) 1fr auto',
       alignItems: 'center',
       gap: '0',
       padding: '20px 24px',
@@ -174,16 +174,16 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
     }}>
 
       {/* ── Col 1 : Piliers Financiers (gauche) ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingRight: '28px' }}>
-        <CircularGauge score={s.health}    label="Santé"        icon="❤️" size={72} sectionId="section-health"    />
-        <CircularGauge score={s.valuation} label="Valorisation" icon="📊" size={72} sectionId="section-valuation" />
-        <CircularGauge score={s.growth}    label="Croissance"   icon="📈" size={72} sectionId="section-growth"    />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingRight: '28px', alignItems: 'center' }}>
+        <CircularGauge score={s.health}    label="Santé"        icon="❤️" size={86} sectionId="section-health"    />
+        <CircularGauge score={s.valuation} label="Valorisation" icon="📊" size={86} sectionId="section-valuation" />
+        <CircularGauge score={s.growth}    label="Croissance"   icon="📈" size={86} sectionId="section-growth"    />
       </div>
 
       {/* ── Col 2 : Master Gauge + Verdict + Complexité + Contexte (centre) ── */}
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        gap: '12px', padding: '0 32px',
+        gap: '10px', padding: '0 20px',
         borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)',
       }}>
         {/* Label Note Globale */}
@@ -195,7 +195,7 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
         </div>
 
         {/* Master Gauge */}
-        <MasterGauge score={globalScore} />
+        <MasterGauge score={globalScore} size={104} strokeWidth={10} />
 
         {/* Verdict */}
         <div style={{ textAlign: 'center' }}>
@@ -241,10 +241,10 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
       </div>
 
       {/* ── Col 3 : Piliers Stratégiques (droite) ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingLeft: '28px', paddingRight: '28px' }}>
-        <CircularGauge score={s.dividend}   label="Dividende"  icon="💰" size={72} sectionId={null} />
-        <CircularGauge score={s.momentum}   label="Momentum"   icon="⚡" size={72} sectionId="section-risk" />
-        <CircularGauge score={s.efficiency} label="Efficacité" icon="⚙️" size={72} sectionId="section-health" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingLeft: '28px', paddingRight: '28px', alignItems: 'center' }}>
+        <CircularGauge score={s.dividend}   label="Dividende"  icon="💰" size={86} sectionId={null} />
+        <CircularGauge score={s.momentum}   label="Momentum"   icon="⚡" size={86} sectionId="section-risk" />
+        <CircularGauge score={s.efficiency} label="Efficacité" icon="⚙️" size={86} sectionId="section-health" />
       </div>
 
       {/* ── Col 4 : Légende + bouton Méthodologie ── */}
