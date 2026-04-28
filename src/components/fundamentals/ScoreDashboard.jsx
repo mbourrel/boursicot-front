@@ -174,11 +174,11 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
     }}>
 
       {/* ── Col 1 : Piliers Financiers (gauche) — pyramide ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', paddingRight: '24px', alignItems: 'center' }}>
-        <CircularGauge score={s.health} label="Santé" icon="❤️" size={96} sectionId="section-health" />
-        <div style={{ display: 'flex', gap: '18px' }}>
-          <CircularGauge score={s.valuation} label="Valorisation" icon="📊" size={96} sectionId="section-valuation" />
-          <CircularGauge score={s.growth}    label="Croissance"   icon="📈" size={96} sectionId="section-growth"    />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingRight: '20px', alignItems: 'center' }}>
+        <CircularGauge score={s.health} label="Santé" icon="❤️" size={110} sectionId="section-health" />
+        <div style={{ display: 'flex', gap: '36px' }}>
+          <CircularGauge score={s.valuation} label="Valorisation" icon="📊" size={110} sectionId="section-valuation" />
+          <CircularGauge score={s.growth}    label="Croissance"   icon="📈" size={110} sectionId="section-growth"    />
         </div>
       </div>
 
@@ -243,33 +243,33 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
       </div>
 
       {/* ── Col 3 : Piliers Stratégiques (droite) — pyramide ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', paddingLeft: '24px', paddingRight: '24px', alignItems: 'center' }}>
-        <CircularGauge score={s.dividend} label="Dividende" icon="💰" size={96} sectionId={null} />
-        <div style={{ display: 'flex', gap: '18px' }}>
-          <CircularGauge score={s.momentum}   label="Momentum"   icon="⚡"  size={96} sectionId="section-risk"   />
-          <CircularGauge score={s.efficiency} label="Efficacité" icon="⚙️" size={96} sectionId="section-health" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingLeft: '20px', paddingRight: '20px', alignItems: 'center' }}>
+        <CircularGauge score={s.dividend} label="Dividende" icon="💰" size={110} sectionId={null} />
+        <div style={{ display: 'flex', gap: '36px' }}>
+          <CircularGauge score={s.momentum}   label="Momentum"   icon="⚡"  size={110} sectionId="section-risk"   />
+          <CircularGauge score={s.efficiency} label="Efficacité" icon="⚙️" size={110} sectionId="section-health" />
         </div>
       </div>
 
       {/* ── Col 4 : Légende + bouton Méthodologie ── */}
       <div style={{
-        display: 'flex', flexDirection: 'column', gap: '10px',
-        fontSize: '13px', color: 'var(--text3)',
-        borderLeft: '1px solid var(--border)', paddingLeft: '28px', minWidth: '140px',
+        display: 'flex', flexDirection: 'column', gap: '14px',
+        fontSize: '15px', color: 'var(--text3)',
+        borderLeft: '1px solid var(--border)', paddingLeft: '32px', minWidth: '170px',
       }}>
-        <div style={{ fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '2px', color: 'var(--text3)' }}>
+        <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '2px', color: 'var(--text3)' }}>
           Légende
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ width: '11px', height: '11px', borderRadius: '50%', backgroundColor: COLOR_UP,      flexShrink: 0 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: COLOR_UP,      flexShrink: 0 }} />
           ≥ 7 — Favorable
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ width: '11px', height: '11px', borderRadius: '50%', backgroundColor: COLOR_NEUTRAL, flexShrink: 0 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: COLOR_NEUTRAL, flexShrink: 0 }} />
           4-7 — Neutre
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ width: '11px', height: '11px', borderRadius: '50%', backgroundColor: COLOR_DOWN,    flexShrink: 0 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: COLOR_DOWN,    flexShrink: 0 }} />
           &lt; 4 — Défavorable
         </div>
 
@@ -278,17 +278,17 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
           onMouseEnter={() => setBtnHover(true)}
           onMouseLeave={() => setBtnHover(false)}
           style={{
-            marginTop: '14px',
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
+            marginTop: '16px',
+            display: 'flex', alignItems: 'center', gap: '9px',
+            padding: '10px 18px', borderRadius: '20px', cursor: 'pointer',
             border: `1px solid ${btnHover ? 'var(--text1)' : 'var(--border)'}`,
             backgroundColor: 'transparent',
             color: btnHover ? 'var(--text1)' : 'var(--text3)',
-            fontSize: '13px', fontWeight: '500',
+            fontSize: '14px', fontWeight: '500',
             transition: 'all 0.2s', whiteSpace: 'nowrap',
           }}
         >
-          <span style={{ fontSize: '15px' }}>📖</span>
+          <span style={{ fontSize: '16px' }}>📖</span>
           Méthodologie
         </button>
       </div>
