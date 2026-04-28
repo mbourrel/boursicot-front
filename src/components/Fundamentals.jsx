@@ -16,7 +16,7 @@ import { useSectorAverages } from '../hooks/useSectorAverages';
 import { useSectorHistory } from '../hooks/useSectorHistory';
 
 // ── Composant principal ────────────────────────────────────────────────────
-function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = false }) {
+function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = false, setIsBeginnerMode }) {
   const allSymbols = [selectedSymbol, ...compareSymbols];
   const { dataMap, loading, errors } = useFundamentals(allSymbols);
   const isSoloMode = allSymbols.length === 1;
@@ -186,6 +186,11 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
               companyCount={sectorAvg?.company_count ?? null}
               beta={beta}
               marketCap={marketCap}
+              isBeginnerMode={isBeginnerMode}
+              onShowAdvanced={setIsBeginnerMode ? () => {
+                setIsBeginnerMode(false);
+                setTimeout(() => document.getElementById('section-market')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+              } : undefined}
             />
           );
         })()}

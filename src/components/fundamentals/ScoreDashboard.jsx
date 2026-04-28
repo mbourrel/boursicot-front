@@ -192,7 +192,7 @@ function GaugePillarModal({ pillar, score, onClose }) {
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
-export default function ScoreDashboard({ scores, sector, companyCount, beta, marketCap }) {
+export default function ScoreDashboard({ scores, sector, companyCount, beta, marketCap, isBeginnerMode, onShowAdvanced }) {
   const [showModal,    setShowModal]    = useState(false);
   const [activePillar, setActivePillar] = useState(null);
   const [btnHover,     setBtnHover]     = useState(false);
@@ -302,6 +302,37 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
             <span>{riskHint.text}</span>
           </div>
         </div>
+
+        {/* Bouton Voir métriques détaillées */}
+        {onShowAdvanced && isBeginnerMode && (
+          <button
+            onClick={onShowAdvanced}
+            style={{
+              marginTop: '4px',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
+              border: '1px solid var(--border)',
+              backgroundColor: 'transparent',
+              color: 'var(--text2)',
+              fontSize: '12px', fontWeight: '500',
+              transition: 'all 0.2s', whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = '#2962FF';
+              e.currentTarget.style.color = '#2962FF';
+              e.currentTarget.style.backgroundColor = '#2962FF11';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = 'var(--border)';
+              e.currentTarget.style.color = 'var(--text2)';
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            <span style={{ fontSize: '13px' }}>📊</span>
+            Voir les métriques détaillées
+            <span style={{ fontSize: '10px', opacity: 0.6 }}>↓</span>
+          </button>
+        )}
 
         {/* Contexte secteur */}
         {(sector || companyCount) && (

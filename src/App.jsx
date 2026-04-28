@@ -110,7 +110,7 @@ function Dashboard() {
         </>
       ) : (
         <ErrorBoundary label="Fondamentaux">
-          <Fundamentals selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} isBeginnerMode={isBeginnerMode} />
+          <Fundamentals selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} isBeginnerMode={isBeginnerMode} setIsBeginnerMode={setIsBeginnerMode} />
         </ErrorBoundary>
       )}
       </div>
