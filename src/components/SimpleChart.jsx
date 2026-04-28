@@ -54,13 +54,6 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
     chart.timeScale().setVisibleRange({ from: fromStr, to: last.time });
   };
 
-  const normalize = (data) => {
-    if (!data || data.length === 0) return [];
-    const base = data[0].value;
-    if (!base) return data;
-    return data.map(d => ({ ...d, value: ((d.value - base) / base) * 100 }));
-  };
-
   // Garde le ref à jour pour éviter les closures périmées dans les callbacks
   useEffect(() => { candleIntervalRef.current = candleInterval; }, [candleInterval]);
 
@@ -152,10 +145,8 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             allSymbols.forEach((sym) => {
               const d = allDataRef.current[sym];
               if (!d || d.length === 0) return;
-              // Mode normalisé : % depuis le premier point (tous comparables)
-              // Mode individuel : cours réels (chacun sur sa propre échelle)
-              const displayData = (isComparing && !individualScales) ? normalize(d) : d;
-              seriesMap[sym].setData(displayData.map(p => ({ time: p.time, value: p.value })));
+              // Toujours afficher les prix réels (jamais de normalisation en %)
+              seriesMap[sym].setData(d.map(p => ({ time: p.time, value: p.value })));
             });
 
             if (!isComparing) {
@@ -329,9 +320,9 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             <button
               style={btnStyle(!individualScales, '#758696')}
               onClick={() => setIndividualScales(v => !v)}
-              title={individualScales ? 'Passer en vue normalisée (% depuis une base commune)' : 'Revenir aux cours réels sur des échelles indépendantes'}
+              title={individualScales ? 'Afficher tous les actifs sur la même échelle de prix' : 'Revenir aux échelles indépendantes par actif'}
             >
-              {individualScales ? 'Normaliser (%)' : 'Cours réels'}
+              {individualScales ? 'Échelle commune' : 'Échelles tronquées'}
             </button>
           )}
         </div>
@@ -352,11 +343,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
                 <span style={{ color: ASSET_COLORS[i] }}>● </span>
                 <span style={{ color: 'var(--text3)' }}>{getName(sym)} </span>
                 <span style={{ color: 'var(--text1)' }}>
-                  {/* En mode normalisé : afficher le % ; en mode individuel : le prix réel */}
-                  {isComparing && !individualScales
-                    ? `${hoverData[sym] >= 0 ? '+' : ''}${hoverData[sym].toFixed(2)}%`
-                    : formatPrice(hoverData[sym])
-                  }
+                  {formatPrice(hoverData[sym])}
                 </span>
               </span>
             ))}
