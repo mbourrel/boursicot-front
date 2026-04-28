@@ -322,7 +322,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
               onClick={() => setIndividualScales(v => !v)}
               title={individualScales ? 'Afficher tous les actifs sur la même échelle de prix' : 'Revenir aux échelles indépendantes par actif'}
             >
-              {individualScales ? 'Échelle commune' : 'Échelles tronquées'}
+              {individualScales ? 'Cours réels' : 'Échelle normalisée'}
             </button>
           )}
         </div>
