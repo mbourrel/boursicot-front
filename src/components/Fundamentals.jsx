@@ -291,22 +291,29 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
 
   const colWidth = `${Math.floor(80 / allSymbols.length)}%`;
 
-  // ── Radar Chart SVG (pur, sans librairie) ────────────────────────────────
+  // ── Radar Chart SVG 6 axes (pur, sans librairie) ─────────────────────────
   const RadarChart = () => {
-    const size       = 220;
-    const cx         = size / 2;
-    const cy         = size / 2;
-    const maxRadius  = 76;
-    const labelGap   = 18;
-    const axes       = ['health', 'valuation', 'growth'];
-    const axisLabels = ['Santé', 'Valorisation', 'Croissance'];
-    // 3 axes à 120° d'intervalle, départ à 12h (-90°)
-    const angles = axes.map((_, i) => ((i * 120 - 90) * Math.PI) / 180);
+    const size      = 280;
+    const cx        = size / 2;
+    const cy        = size / 2;
+    const maxRadius = 88;
+    const labelGap  = 20;
+    const axes      = ['health', 'valuation', 'growth', 'efficiency', 'dividend', 'momentum'];
+    const axisLabels= ['Santé', 'Valorisation', 'Croissance', 'Efficacité', 'Dividende', 'Momentum'];
+    // 6 axes à 60° d'intervalle, départ à 12h (-90°)
+    const angles = axes.map((_, i) => ((i * 60 - 90) * Math.PI) / 180);
     const pt = (angle, value) => ({
       x: cx + ((value / 10) * maxRadius) * Math.cos(angle),
       y: cy + ((value / 10) * maxRadius) * Math.sin(angle),
     });
-    const anchors = ['middle', 'start', 'end'];
+    // anchor déduit de la position angulaire
+    const anchor = (a) => {
+      const deg = (a * 180 / Math.PI + 360) % 360;
+      if (deg < 30 || deg > 330) return 'middle';
+      if (deg < 150) return 'start';
+      if (deg < 210) return 'middle';
+      return 'end';
+    };
 
     return (
       <svg width={size} height={size} style={{ display: 'block' }}>
@@ -324,13 +331,13 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
             stroke="var(--border)" strokeWidth="1"
           />
         ))}
-        {/* Libellés des axes */}
+        {/* Libellés */}
         {angles.map((a, i) => {
           const r = maxRadius + labelGap;
           return (
             <text key={i}
               x={cx + r * Math.cos(a)} y={cy + r * Math.sin(a)}
-              textAnchor={anchors[i]} dominantBaseline="middle"
+              textAnchor={anchor(a)} dominantBaseline="middle"
               fill="var(--text3)" fontSize="9" fontFamily="sans-serif"
             >
               {axisLabels[i]}
@@ -341,7 +348,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
         {allSymbols.map((sym, si) => {
           const s = dataMap[sym]?.scores;
           if (!s) return null;
-          const vals   = [s.health, s.valuation, s.growth];
+          const vals   = [s.health, s.valuation, s.growth, s.efficiency ?? 5, s.dividend ?? 5, s.momentum ?? 5];
           const points = angles.map((a, i) => pt(a, vals[i]));
           const pStr   = points.map(p => `${p.x},${p.y}`).join(' ');
           const clr    = ASSET_COLORS[si];
@@ -431,43 +438,78 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
               const d = dataMap[sym];
               const s = d?.scores;
               const color = ASSET_COLORS[i];
+              const globalScore = s?.global_score ?? null;
+              const verdictColor = { 'Excellent': '#26a69a', 'Bon': '#26a69a', 'Correct': '#ff9800', 'Risqué': '#ef5350', 'À éviter': '#ef5350' }[s?.verdict] ?? 'var(--text3)';
+              const METRICS = [
+                { label: 'Santé',        icon: '❤️',  key: 'health' },
+                { label: 'Valorisation', icon: '📊',  key: 'valuation' },
+                { label: 'Croissance',   icon: '📈',  key: 'growth' },
+                { label: 'Dividende',    icon: '💰',  key: 'dividend' },
+                { label: 'Momentum',     icon: '⚡',  key: 'momentum' },
+                { label: 'Efficacité',   icon: '⚙️', key: 'efficiency' },
+              ];
               return (
                 <div key={sym} style={{
-                  flex: 1, minWidth: '130px',
+                  flex: 1, minWidth: '160px',
                   backgroundColor: 'var(--bg3)',
                   border: '1px solid var(--border)',
                   borderRadius: '10px',
                   borderTop: `3px solid ${color}`,
-                  padding: '14px 14px',
+                  padding: '14px',
                 }}>
-                  <div style={{ fontSize: '12px', fontWeight: 'bold', color, marginBottom: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {/* En-tête carte */}
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color, marginBottom: '10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {d?.name || sym}
                   </div>
+
                   {s ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-                      {[
-                        { label: 'Santé',        value: s.health },
-                        { label: 'Valorisation', value: s.valuation },
-                        { label: 'Croissance',   value: s.growth },
-                      ].map(({ label, value }) => {
-                        const c = scoreColor(value);
-                        return (
-                          <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
-                            <span style={{ fontSize: '11px', color: 'var(--text3)' }}>{label}</span>
+                    <>
+                      {/* Note globale + verdict */}
+                      {globalScore != null && (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '8px 10px', marginBottom: '10px',
+                          background: scoreColor(globalScore) + '18',
+                          border: `1px solid ${scoreColor(globalScore)}44`,
+                          borderRadius: '7px',
+                        }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text3)', fontWeight: 'bold' }}>Note Globale</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {s.verdict && (
+                              <span style={{ fontSize: '10px', fontWeight: 'bold', color: verdictColor }}>{s.verdict}</span>
+                            )}
                             <span style={{
-                              fontSize: '12px', fontWeight: 'bold',
-                              padding: '2px 8px', borderRadius: '4px',
-                              backgroundColor: c + '22',
-                              color: c,
-                              border: `1px solid ${c}55`,
-                              minWidth: '38px', textAlign: 'center',
+                              fontSize: '14px', fontWeight: '900',
+                              color: scoreColor(globalScore),
                             }}>
-                              {value.toFixed(1)}
+                              {globalScore.toFixed(1)}
                             </span>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                      )}
+
+                      {/* 6 métriques */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {METRICS.map(({ label, icon, key }) => {
+                          const value = s[key] ?? 5;
+                          const c = scoreColor(value);
+                          const barW = `${(value / 10) * 100}%`;
+                          return (
+                            <div key={key}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
+                                <span style={{ fontSize: '11px', color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                  <span style={{ fontSize: '12px' }}>{icon}</span>{label}
+                                </span>
+                                <span style={{ fontSize: '12px', fontWeight: 'bold', color: c }}>{value.toFixed(1)}</span>
+                              </div>
+                              <div style={{ height: '3px', background: 'var(--border)', borderRadius: '2px', overflow: 'hidden' }}>
+                                <div style={{ width: barW, height: '100%', background: c, borderRadius: '2px' }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
                   ) : (
                     <div style={{ color: 'var(--text3)', fontSize: '11px' }}>Scores indisponibles</div>
                   )}
