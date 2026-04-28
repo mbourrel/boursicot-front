@@ -115,6 +115,124 @@ function MasterGauge({ score, size = 120, strokeWidth = 11 }) {
   );
 }
 
+// ── Modale Note Globale ───────────────────────────────────────────────────────
+function GlobalScoreModal({ scores, globalScore, verdictColor, onClose }) {
+  const color = scoreColor(globalScore);
+
+  const PILLAR_WEIGHTS = [
+    { key: 'health',     label: 'Santé Financière', icon: '❤️',  weight: 0.25 },
+    { key: 'valuation',  label: 'Valorisation',      icon: '📊',  weight: 0.20 },
+    { key: 'growth',     label: 'Croissance',         icon: '📈',  weight: 0.20 },
+    { key: 'efficiency', label: 'Efficacité',         icon: '⚙️', weight: 0.15 },
+    { key: 'dividend',   label: 'Dividende',          icon: '💰',  weight: 0.10 },
+    { key: 'momentum',   label: 'Momentum',           icon: '⚡',  weight: 0.10 },
+  ];
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(0,0,0,0.82)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px', backdropFilter: 'blur(8px)',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'var(--bg2)',
+          border: '1px solid var(--border)',
+          borderLeft: `5px solid ${color}`,
+          borderRadius: '12px',
+          width: '100%',
+          maxWidth: '520px',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
+          overflow: 'hidden',
+        }}
+      >
+        {/* En-tête */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '18px 22px', borderBottom: '1px solid var(--border)',
+          background: color + '12',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '26px' }}>🏆</span>
+            <div>
+              <div style={{ color: color, fontWeight: 'bold', fontSize: '18px', lineHeight: 1.2 }}>Note Globale</div>
+              <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '3px' }}>Synthèse pondérée de 60+ indicateurs</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '32px', fontWeight: '900', color, lineHeight: 1 }}>{globalScore.toFixed(1)}</div>
+              <div style={{ fontSize: '13px', fontWeight: 'bold', color: verdictColor }}>{scores.verdict}</div>
+            </div>
+            <button
+              onClick={onClose}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: '24px', padding: '0 4px', lineHeight: 1 }}
+            >✕</button>
+          </div>
+        </div>
+
+        {/* Corps */}
+        <div style={{ padding: '22px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text3)', marginBottom: '14px' }}>
+            Décomposition par pilier
+          </div>
+
+          {/* Tableau de pondération */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+            {PILLAR_WEIGHTS.map(({ key, label, icon, weight }) => {
+              const score  = scores[key] ?? 5;
+              const contrib = score * weight;
+              const c      = scoreColor(score);
+              const barW   = `${(score / 10) * 100}%`;
+              return (
+                <div key={key} style={{
+                  display: 'grid', gridTemplateColumns: '26px 1fr 48px 52px 52px',
+                  alignItems: 'center', gap: '10px',
+                  padding: '10px 12px',
+                  background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '8px',
+                }}>
+                  <span style={{ fontSize: '16px', textAlign: 'center' }}>{icon}</span>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text1)', marginBottom: '4px' }}>{label}</div>
+                    <div style={{ height: '4px', background: 'var(--border)', borderRadius: '2px', overflow: 'hidden' }}>
+                      <div style={{ width: barW, height: '100%', background: c, borderRadius: '2px', transition: 'width 0.4s ease' }} />
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text3)' }}>
+                    {(weight * 100).toFixed(0)}%
+                  </div>
+                  <div style={{ textAlign: 'center', fontSize: '13px', fontWeight: 'bold', color: c }}>
+                    {score.toFixed(1)}
+                  </div>
+                  <div style={{ textAlign: 'right', fontSize: '12px', color: 'var(--text3)' }}>
+                    +{contrib.toFixed(2)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Total */}
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '10px 14px',
+            background: color + '18', border: `1px solid ${color}44`, borderRadius: '8px',
+          }}>
+            <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text2)' }}>Note Globale (Σ pondéré)</span>
+            <span style={{ fontSize: '22px', fontWeight: '900', color }}>{globalScore.toFixed(1)} / 10</span>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // ── Modale détail d'une jauge ─────────────────────────────────────────────────
 function GaugePillarModal({ pillar, score, onClose }) {
   const color = scoreColor(score);
@@ -193,9 +311,10 @@ function GaugePillarModal({ pillar, score, onClose }) {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 export default function ScoreDashboard({ scores, sector, companyCount, beta, marketCap, isBeginnerMode, onShowAdvanced }) {
-  const [showModal,    setShowModal]    = useState(false);
-  const [activePillar, setActivePillar] = useState(null);
-  const [btnHover,     setBtnHover]     = useState(false);
+  const [showModal,      setShowModal]      = useState(false);
+  const [activePillar,   setActivePillar]   = useState(null);
+  const [showGlobalModal, setShowGlobalModal] = useState(false);
+  const [btnHover,       setBtnHover]       = useState(false);
   if (!scores) return null;
 
   const pillarByKey = Object.fromEntries(PILLARS.map(p => [p.key, p]));
@@ -263,24 +382,34 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
         gap: '10px', padding: '0 20px',
         borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)',
       }}>
-        {/* Label Note Globale */}
-        <div style={{
-          fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.1em',
-          color: 'var(--text3)', textTransform: 'uppercase',
-        }}>
-          Note Globale
-        </div>
-
-        {/* Master Gauge */}
-        <MasterGauge score={globalScore} size={104} strokeWidth={10} />
-
-        {/* Verdict */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '22px', fontWeight: 'bold', color: verdictColor, lineHeight: 1, marginBottom: '3px' }}>
-            {scores.verdict}
+        {/* Zone cliquable : Label + Gauge + Verdict */}
+        <div
+          onClick={() => setShowGlobalModal(true)}
+          title="Voir le détail de la Note Globale"
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+            cursor: 'pointer', borderRadius: '10px', padding: '8px 12px',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--border)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        >
+          <div style={{
+            fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.1em',
+            color: 'var(--text3)', textTransform: 'uppercase',
+          }}>
+            Note Globale
           </div>
-          <div style={{ fontSize: '10px', color: 'var(--text3)', opacity: 0.75, lineHeight: '1.4' }}>
-            Synthèse de 60+ indicateurs<br />(Santé, Valo, Croissance…)
+
+          <MasterGauge score={globalScore} size={104} strokeWidth={10} />
+
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '22px', fontWeight: 'bold', color: verdictColor, lineHeight: 1, marginBottom: '3px' }}>
+              {scores.verdict}
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--text3)', opacity: 0.75, lineHeight: '1.4' }}>
+              Synthèse de 60+ indicateurs<br />(Santé, Valo, Croissance…)
+            </div>
           </div>
         </div>
 
@@ -399,8 +528,9 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
         </button>
       </div>
 
-      {showModal    && <MethodologyModal onClose={() => setShowModal(false)} sector={sector} />}
-      {activePillar && <GaugePillarModal pillar={activePillar.pillar} score={activePillar.score} onClose={() => setActivePillar(null)} />}
+      {showModal       && <MethodologyModal onClose={() => setShowModal(false)} sector={sector} />}
+      {activePillar    && <GaugePillarModal pillar={activePillar.pillar} score={activePillar.score} onClose={() => setActivePillar(null)} />}
+      {showGlobalModal && <GlobalScoreModal scores={s} globalScore={globalScore} verdictColor={verdictColor} onClose={() => setShowGlobalModal(false)} />}
     </div>
   );
 }
