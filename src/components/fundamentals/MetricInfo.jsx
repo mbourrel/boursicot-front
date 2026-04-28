@@ -47,14 +47,27 @@ function MetricInfo({ name }) {
           <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => setPos(null)} />
           <div style={{
             position: 'fixed', top: pos.top, left: pos.left,
-            transform: pos.transform ?? 'none', zIndex: 999, width: '260px',
+            transform: pos.transform ?? 'none', zIndex: 999, width: '280px',
             backgroundColor: 'var(--bg2)', border: '1px solid #2962FF44',
             borderRadius: '8px', padding: '10px 12px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
-            fontSize: '11px', color: '#b0b8c4', lineHeight: '1.65',
+            fontSize: '11px', lineHeight: '1.65',
           }}>
-            <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '11px', marginBottom: '5px' }}>{name}</div>
-            {text}
+            <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '11px', marginBottom: '8px' }}>{name}</div>
+            {typeof text === 'object' && text.what ? (
+              <>
+                <div style={{ marginBottom: '7px' }}>
+                  <span style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>C'est quoi ?</span>
+                  <div style={{ color: 'var(--text2)', marginTop: '3px' }}>{text.what}</div>
+                </div>
+                <div>
+                  <span style={{ color: '#26a69a', fontWeight: 'bold', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pourquoi c'est important ?</span>
+                  <div style={{ color: '#b0b8c4', marginTop: '3px' }}>{text.why}</div>
+                </div>
+              </>
+            ) : (
+              <div style={{ color: '#b0b8c4' }}>{text}</div>
+            )}
           </div>
         </>,
         document.body
