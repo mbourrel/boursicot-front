@@ -20,8 +20,8 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   const [candleInterval, setCandleInterval] = useState('1D');
   const [assetStats, setAssetStats] = useState({});
   const [hoverData, setHoverData] = useState(null);
-  // false = normalisé base 100 (défaut), true = cours réels chacun sur sa propre échelle
-  const [individualScales, setIndividualScales] = useState(false);
+  // true = cours réels chacun sur sa propre échelle (défaut), false = normalisé base 100 (%)
+  const [individualScales, setIndividualScales] = useState(true);
   const [showMa10,  setShowMa10]  = useState(true);
   const [showMa100, setShowMa100] = useState(true);
   const [showMa200, setShowMa200] = useState(true);
@@ -327,11 +327,11 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
           {/* Bouton visible uniquement en mode comparaison */}
           {isComparing && (
             <button
-              style={btnStyle(individualScales, '#758696')}
+              style={btnStyle(!individualScales, '#758696')}
               onClick={() => setIndividualScales(v => !v)}
-              title={individualScales ? 'Revenir à la vue normalisée (% base commune)' : 'Afficher les cours réels sur des échelles indépendantes'}
+              title={individualScales ? 'Passer en vue normalisée (% depuis une base commune)' : 'Revenir aux cours réels sur des échelles indépendantes'}
             >
-              {individualScales ? 'Vue normalisée' : 'Mutualiser les échelles'}
+              {individualScales ? 'Normaliser (%)' : 'Cours réels'}
             </button>
           )}
         </div>
