@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { ASSET_COLORS } from './CompareBar';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatFinancialValue } from '../utils/formatFinancialValue';
 
 const LOWER_IS_BETTER = new Set([
   'PER', 'Forward PE', 'Price to Book', 'EV / EBITDA', 'PEG Ratio',
@@ -26,9 +28,12 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
   const primarySector = isSoloMode ? dataMap[selectedSymbol]?.sector : null;
   const sectorAvg     = useSectorAverages(primarySector);
   const sectorHistory = useSectorHistory(primarySector);
+  const { targetCurrency, rates } = useCurrency();
 
-  // ── Formateur de valeurs ───────────────────────────────────────────────────
-  const fmt = (val, unit) => {
+  // ── Formateur de base (sans conversion devise) ─────────────────────────────
+  // Utilisé pour les moyennes sectorielles (devise mixte non convertible).
+  // En mode solo, fmt est redéfini plus bas avec la devise du ticker courant.
+  let fmt = (val, unit) => {
     if (val === null || val === undefined) return <span style={{ color: 'var(--text3)' }}>—</span>;
     if (val === 0) return <span style={{ color: 'var(--text3)' }}>—</span>;
     if (unit === '%') return `${val.toFixed(2)}%`;
@@ -41,6 +46,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
     return `${sign}${abs.toFixed(2)} $`;
   };
 
+  // fmtRaw : toujours sans conversion (moyennes sectorielles)
   const fmtRaw = (val, unit) => {
     const r = fmt(val, unit);
     return typeof r === 'string' ? r : '—';
@@ -77,6 +83,17 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
     };
 
     const d = primaryData;
+
+    // ── Formateur currency-aware pour le ticker courant ──────────────────────
+    // Remplace le fmt de base : convertit les valeurs monétaires selon targetCurrency.
+    // fmtRaw reste non-converti pour les moyennes sectorielles (devise mixte).
+    const sourceCurrency = d.currency || 'USD';
+    fmt = (val, unit) => {
+      if (val === null || val === undefined || val === 0)
+        return <span style={{ color: 'var(--text3)' }}>—</span>;
+      const str = formatFinancialValue(val, unit, sourceCurrency, targetCurrency, rates);
+      return str === '—' ? <span style={{ color: 'var(--text3)' }}>—</span> : str;
+    };
 
     const dd = d.dividends_data || {};
     const divSectorAvg = sectorAvg?.dividends_data || {};
@@ -605,9 +622,12 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
                   if (val === bestVal)  color = '#26a69a';
                   else if (val === worstVal) color = '#ef5350';
                 }
+                const symCurrency = dataMap[sym]?.currency || 'USD';
                 return (
                   <td key={sym} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', fontSize: '13px', color }}>
-                    {fmt(val, unit)}
+                    {val !== null && val !== 0
+                      ? formatFinancialValue(val, unit, symCurrency, targetCurrency, rates)
+                      : <span style={{ color: 'var(--text3)' }}>—</span>}
                   </td>
                 );
               })}
@@ -646,9 +666,12 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
                 if (m && m.val !== null && m.prev !== null && m.prev !== 0) {
                   yoy = ((m.val - m.prev) / Math.abs(m.prev)) * 100;
                 }
+                const symCurrency = dataMap[sym]?.currency || 'USD';
                 return (
                   <td key={sym} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', fontSize: '13px', color: valueColor }}>
-                    {fmt(val, '$')}
+                    {val !== null && val !== 0
+                      ? formatFinancialValue(val, '$', symCurrency, targetCurrency, rates)
+                      : <span style={{ color: 'var(--text3)' }}>—</span>}
                     {yoy !== null && (
                       <span style={{ display: 'block', fontSize: '10px', fontWeight: 'normal', color: yoy >= 0 ? '#26a69a' : '#ef5350' }}>
                         {yoy >= 0 ? '▲' : '▼'} {Math.abs(yoy).toFixed(1)}% vs N-1

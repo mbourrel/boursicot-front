@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { ThemeProvider } from './context/ThemeContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 import { ClerkProvider } from '@clerk/clerk-react';
 import { BrowserRouter } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';
@@ -20,7 +21,9 @@ root.render(
     <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/login">
       <BrowserRouter>
         <ThemeProvider>
-          <App />
+          <CurrencyProvider>
+            <App />
+          </CurrencyProvider>
         </ThemeProvider>
       </BrowserRouter>
     </ClerkProvider>

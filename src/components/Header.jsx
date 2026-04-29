@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { UserButton } from '@clerk/clerk-react';
 import { captureEvent } from '../utils/analytics';
 
@@ -133,6 +134,7 @@ function FilterDropdown({ label, items, filters, onChange, onSelectAll, onSelect
 // ── Header principal ──────────────────────────────────────────────────────────
 function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode, setViewMode, isBeginnerMode, setIsBeginnerMode }) {
   const { isDark, toggleTheme } = useTheme();
+  const { targetCurrency, setTargetCurrency, updatedAt } = useCurrency();
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -379,6 +381,35 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
             <span style={{ fontSize: '14px' }}>📊</span>
             Analyse Avancée
           </button>
+        )}
+
+        {/* TOGGLE DEVISE — visible uniquement en vue Fondamentaux */}
+        {viewMode === 'fundamentals' && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+            <div style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+              {['LOCAL', 'EUR', 'USD'].map((cur, i) => (
+                <button
+                  key={cur}
+                  onClick={() => { captureEvent('currency_changed', { currency: cur }); setTargetCurrency(cur); }}
+                  style={{
+                    padding: '6px 10px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold',
+                    borderRadius: i === 0 ? '5px 0 0 5px' : i === 2 ? '0 5px 5px 0' : '0',
+                    borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
+                    backgroundColor: targetCurrency === cur ? '#2962FF' : 'transparent',
+                    color: targetCurrency === cur ? 'white' : 'var(--text3)',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {cur === 'LOCAL' ? '🏳 Local' : cur === 'EUR' ? '€ EUR' : '$ USD'}
+                </button>
+              ))}
+            </div>
+            {updatedAt && targetCurrency !== 'LOCAL' && (
+              <span style={{ fontSize: '9px', color: 'var(--text3)' }}>
+                Taux du {new Date(updatedAt).toLocaleDateString('fr-FR')}
+              </span>
+            )}
+          </div>
         )}
 
         {/* TOGGLE DARK / LIGHT */}
