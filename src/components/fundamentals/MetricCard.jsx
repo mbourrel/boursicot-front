@@ -32,7 +32,7 @@ function MetricCard({ metric, fmt, fmtRaw }) {
   return (
     <div style={cardStyle}>
       <span style={{ color: 'var(--text3)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
-        {metric.name}
+        {metric.displayName ?? metric.name}
         <MetricInfo name={metric.name} />
       </span>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '6px' }}>

@@ -136,7 +136,14 @@ function FilterDropdown({ label, items, filters, onChange, onSelectAll, onSelect
 function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode, setViewMode }) {
   const { isDark, toggleTheme } = useTheme();
   const { targetCurrency, setTargetCurrency, updatedAt } = useCurrency();
-  const { profile, setProfile } = useProfile();
+  const { profile, setProfile, showCoachMark, setShowCoachMark } = useProfile();
+
+  // Auto-dismiss du Coach Mark après 5 s
+  useEffect(() => {
+    if (!showCoachMark) return;
+    const t = setTimeout(() => setShowCoachMark(false), 5000);
+    return () => clearTimeout(t);
+  }, [showCoachMark, setShowCoachMark]);
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -396,31 +403,59 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
           </div>
         )}
 
-        {/* TOGGLE PROFIL Explorateur / Stratège */}
-        <div
-          title={profile === 'explorateur' ? 'Passer en mode Stratège — vue complète' : 'Passer en mode Explorateur — vue simplifiée'}
-          style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', border: '1px solid var(--border)', overflow: 'hidden' }}
-        >
-          {[
-            { value: 'explorateur', icon: '🧭', label: 'Explorateur' },
-            { value: 'stratege',    icon: '📈', label: 'Stratège' },
-          ].map(({ value, icon, label }, i) => (
-            <button
-              key={value}
-              onClick={() => { captureEvent('profile_changed', { profile: value }); setProfile(value); }}
+        {/* TOGGLE PROFIL Explorateur / Stratège + Coach Mark */}
+        <div style={{ position: 'relative' }}>
+          <div
+            title={profile === 'explorateur' ? 'Passer en mode Stratège — vue complète' : 'Passer en mode Explorateur — vue simplifiée'}
+            style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', border: '1px solid var(--border)', overflow: 'hidden' }}
+          >
+            {[
+              { value: 'explorateur', icon: '🧭', label: 'Explorateur' },
+              { value: 'stratege',    icon: '📈', label: 'Stratège' },
+            ].map(({ value, icon, label }, i) => (
+              <button
+                key={value}
+                onClick={() => { captureEvent('profile_changed', { profile: value }); setProfile(value); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '5px',
+                  padding: '6px 11px', border: 'none', cursor: 'pointer',
+                  borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
+                  backgroundColor: profile === value ? '#2962FF' : 'transparent',
+                  color: profile === value ? 'white' : 'var(--text3)',
+                  fontSize: '11px', fontWeight: 'bold', transition: 'all 0.15s',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span>{icon}</span>{label}
+              </button>
+            ))}
+          </div>
+
+          {/* Coach Mark — apparaît après un changement de profil, se ferme en 5 s */}
+          {showCoachMark && (
+            <div
+              onClick={() => setShowCoachMark(false)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '5px',
-                padding: '6px 11px', border: 'none', cursor: 'pointer',
-                borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
-                backgroundColor: profile === value ? '#2962FF' : 'transparent',
-                color: profile === value ? 'white' : 'var(--text3)',
-                fontSize: '11px', fontWeight: 'bold', transition: 'all 0.15s',
-                whiteSpace: 'nowrap',
+                position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                backgroundColor: '#2962FF', color: 'white',
+                borderRadius: '8px', padding: '10px 14px',
+                fontSize: '12px', whiteSpace: 'nowrap',
+                boxShadow: '0 4px 16px rgba(41,98,255,0.45)',
+                cursor: 'pointer', zIndex: 200,
+                opacity: 1, transition: 'opacity 0.3s',
               }}
             >
-              <span>{icon}</span>{label}
-            </button>
-          ))}
+              {/* Triangle pointant vers le toggle */}
+              <div style={{
+                position: 'absolute', top: '-6px', right: '20px',
+                width: 0, height: 0,
+                borderLeft: '6px solid transparent',
+                borderRight: '6px solid transparent',
+                borderBottom: '6px solid #2962FF',
+              }} />
+              ✓ Mode {profile === 'explorateur' ? 'Explorateur' : 'Stratège'} activé — cliquez ici pour changer
+            </div>
+          )}
         </div>
 
         {/* TOGGLE DARK / LIGHT */}

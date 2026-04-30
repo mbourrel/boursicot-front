@@ -12,6 +12,7 @@ import TradingChart from './components/TradingChart';
 import SimpleChart from './components/SimpleChart';
 import Fundamentals from './components/Fundamentals';
 import MacroEnvironment from './components/MacroEnvironment';
+import WelcomeModal from './components/WelcomeModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAssets } from './hooks/useAssets';
 import ConsentBanner from './components/ConsentBanner';
@@ -35,6 +36,9 @@ function Dashboard() {
 
   return (
     <div style={{ backgroundColor: 'var(--bg0)', minHeight: '100vh', color: 'var(--text1)', fontFamily: 'sans-serif' }}>
+
+      {/* Onboarding — affiché en overlay si aucun profil n'est encore choisi */}
+      {profile === null && <WelcomeModal />}
 
       {/* ── ZONE STICKY : bannière + header ── */}
       <div style={{

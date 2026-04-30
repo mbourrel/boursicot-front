@@ -22,10 +22,12 @@ import { useSectorAverages } from '../hooks/useSectorAverages';
 import { useSectorHistory } from '../hooks/useSectorHistory';
 
 // Métriques clés affichées en mode Explorateur (solo uniquement)
+// 'label' = libellé grand public affiché à la place du nom technique
+// cat '_dividends' = cas spécial : valeur scalaire dans d.dividends_data
 const METRIQUES_REINES = [
   { cat: 'market_analysis',  name: 'PER',                label: 'Valorisation' },
   { cat: 'financial_health', name: 'Marge Nette',        label: 'Rentabilité' },
-  { cat: 'financial_health', name: 'ROE',                label: 'Efficacité' },
+  { cat: '_dividends',       name: 'Rendement Div.',     label: 'Dividende' },
   { cat: 'financial_health', name: 'Dette/Fonds Propres',label: 'Endettement' },
   { cat: 'income_growth',    name: 'Croissance CA',      label: 'Croissance' },
 ];
@@ -182,11 +184,20 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
               Indicateurs clés
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: `repeat(${METRIQUES_REINES.length}, 1fr)`, gap: '10px' }}>
-              {METRIQUES_REINES.map(({ cat, name }) => {
-                const metric = d[cat]?.find(m => m.name === name);
+              {METRIQUES_REINES.map(({ cat, name, label }) => {
+                let metric;
+                let avg;
+                if (cat === '_dividends') {
+                  // Cas spécial : dividend_yield est un scalaire dans dividends_data
+                  const val = d.dividends_data?.dividend_yield ?? null;
+                  metric = val != null ? { name, val, unit: '%' } : null;
+                  avg = sectorAvg?.dividends_data?.dividend_yield ?? undefined;
+                } else {
+                  metric = d[cat]?.find(m => m.name === name);
+                  avg = sectorAvg?.[cat]?.[name] ?? undefined;
+                }
                 if (!metric || metric.val === null || metric.val === undefined) return null;
-                const avg = sectorAvg?.[cat]?.[name] ?? undefined;
-                return <MetricCard key={name} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
+                return <MetricCard key={name} metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} />;
               })}
             </div>
           </div>
