@@ -423,6 +423,11 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
         {/* BOUTON UTILISATEUR CLERK (profil + déconnexion) */}
         <UserButton />
       </div>
+
+      {/* DISCLAIMER MIF2 */}
+      <div style={{ fontSize: '10px', color: 'var(--text3)', textAlign: 'center', paddingTop: '5px', opacity: 0.65, letterSpacing: '0.02em' }}>
+        Informations à titre indicatif uniquement — ne constituent pas un conseil en investissement. Tout investissement comporte un risque de perte en capital.
+      </div>
     </div>
   );
 }

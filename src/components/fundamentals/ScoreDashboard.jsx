@@ -332,9 +332,9 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
   const complexityLabel = scores.complexity >= 6.5 ? 'Avancé' : scores.complexity >= 4.0 ? 'Modéré' : 'Simple';
   const complexityColor = scores.complexity >= 6.5 ? COLOR_DOWN : scores.complexity >= 4.0 ? COLOR_NEUTRAL : COLOR_UP;
   const verdictColor    = {
-    'Excellent': COLOR_UP, 'Bon': COLOR_UP,
-    'Correct': COLOR_NEUTRAL,
-    'Risqué': COLOR_DOWN, 'À éviter': COLOR_DOWN,
+    'Profil Fort': COLOR_UP, 'Profil Solide': COLOR_UP,
+    'Profil Neutre': COLOR_NEUTRAL,
+    'Profil Prudent': COLOR_DOWN, 'Profil Fragile': COLOR_DOWN,
   }[scores.verdict] ?? 'var(--text1)';
 
   // Micro-explication complexité

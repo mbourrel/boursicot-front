@@ -28,7 +28,8 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
   const isSoloMode = allSymbols.length === 1;
   const primarySector = isSoloMode ? dataMap[selectedSymbol]?.sector : null;
   const sectorAvg     = useSectorAverages(primarySector);
-  const sectorHistory = useSectorHistory(primarySector);
+  // useSectorHistory est coûteux (appel API supplémentaire) — réservé au mode avancé
+  const sectorHistory = useSectorHistory(isBeginnerMode ? null : primarySector);
   const { targetCurrency, rates } = useCurrency();
 
   // ── Formateur de base (sans conversion devise) ─────────────────────────────
@@ -121,7 +122,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
     // Libellés pour le badge complexité dans l'en-tête
     const complexityLabel = scores?.complexity >= 6.5 ? 'Avancé' : scores?.complexity >= 4.0 ? 'Modéré' : 'Simple';
     const complexityColor = scores?.complexity >= 6.5 ? '#ef5350' : scores?.complexity >= 4.0 ? '#ff9800' : '#26a69a';
-    const verdictColor    = { 'Excellent': '#26a69a', 'Bon': '#26a69a', 'Correct': '#ff9800', 'Risqué': '#ef5350', 'À éviter': '#ef5350' }[scores?.verdict] ?? 'var(--text1)';
+    const verdictColor    = { 'Profil Fort': '#26a69a', 'Profil Solide': '#26a69a', 'Profil Neutre': '#ff9800', 'Profil Prudent': '#ef5350', 'Profil Fragile': '#ef5350' }[scores?.verdict] ?? 'var(--text1)';
 
     return (
       <div>
@@ -499,7 +500,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
               const s = d?.scores;
               const color = ASSET_COLORS[i];
               const globalScore = s?.global_score ?? null;
-              const verdictColor = { 'Excellent': '#26a69a', 'Bon': '#26a69a', 'Correct': '#ff9800', 'Risqué': '#ef5350', 'À éviter': '#ef5350' }[s?.verdict] ?? 'var(--text3)';
+              const verdictColor = { 'Profil Fort': '#26a69a', 'Profil Solide': '#26a69a', 'Profil Neutre': '#ff9800', 'Profil Prudent': '#ef5350', 'Profil Fragile': '#ef5350' }[s?.verdict] ?? 'var(--text3)';
               const METRICS = [
                 { label: 'Santé',        icon: '❤️',  key: 'health' },
                 { label: 'Valorisation', icon: '📊',  key: 'valuation' },
