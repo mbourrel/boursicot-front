@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { fetchPrices } from '../api/prices';
 import ChartControls from './chart/ChartControls';
 import DrawingToolbar from './chart/DrawingToolbar';
+import SourceTag from '../components/SourceTag';
 
 const CHART_HEIGHT = 550;
 
@@ -479,6 +480,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
           </g>
         </svg>
       </div>
+      <SourceTag label="Yahoo Finance" />
     </div>
   );
 }

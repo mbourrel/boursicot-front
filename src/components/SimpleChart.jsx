@@ -3,6 +3,7 @@ import { createChart, AreaSeries, LineSeries } from 'lightweight-charts';
 import { ASSET_COLORS } from './CompareBar';
 import { useTheme } from '../context/ThemeContext';
 import { API_URL, authFetch } from '../api/config';
+import SourceTag from './SourceTag';
 
 function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   const { theme, isDark } = useTheme();
@@ -350,6 +351,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
           </div>
         )}
         <div ref={chartContainerRef} style={{ width: '100%', height: '500px' }} />
+        <SourceTag label="Yahoo Finance" />
       </div>
     </div>
   );
