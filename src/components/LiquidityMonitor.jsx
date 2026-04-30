@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createChart, LineSeries } from 'lightweight-charts';
 import { useTheme } from '../context/ThemeContext';
+import SourceTag from './SourceTag';
 
 function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error }) {
   const [showInfo,  setShowInfo]  = useState(false);
@@ -179,6 +180,7 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
         ref={containerRef}
         style={{ height: loading || error ? '0px' : '280px', overflow: 'hidden' }}
       />
+      {!loading && !error && <SourceTag label="FRED · M2SL / Yahoo Finance · BTC-USD" />}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { createChart, BaselineSeries } from 'lightweight-charts';
 import { useTheme } from '../context/ThemeContext';
+import SourceTag from './SourceTag';
 
 const RANGES = ['3M', '6M', '1Y', '2Y', '5Y', '10Y', 'Max'];
 
@@ -337,6 +338,7 @@ export default function YieldCurveChart({ yieldCurve, bondYields, loading, error
           <CurveSnapshot bondYields={bondYields} />
         </div>
       )}
+      {!loading && !error && <SourceTag label="FRED · rendements obligataires" />}
     </div>
   );
 }

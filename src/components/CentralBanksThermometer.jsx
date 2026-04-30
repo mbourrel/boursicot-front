@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import SourceTag from './SourceTag';
 
 const MAX_RATE = 8;
 
@@ -175,6 +176,7 @@ export default function CentralBanksThermometer({ centralBanks, loading, error }
           {[0, 2, 4, 6, 8].map(v => <span key={v}>{v}%</span>)}
         </div>
       )}
+      {!loading && !error && <SourceTag label="FRED · taux directeurs" />}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { createChart, LineSeries } from 'lightweight-charts';
 import { useTheme } from '../context/ThemeContext';
+import SourceTag from './SourceTag';
 
 const SERIES = [
   { key: 'us2y',    label: 'US 2Y',    color: '#e91e63', flag: 'us' },
@@ -407,6 +408,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
           )}
         </div>
       )}
+      {!loading && !error && <SourceTag label="FRED · spreads souverains" />}
     </div>
   );
 }

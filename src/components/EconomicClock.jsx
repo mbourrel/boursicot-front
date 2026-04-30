@@ -60,6 +60,8 @@ const PHASE_EXPLANATIONS = {
   },
 };
 
+import SourceTag from './SourceTag';
+
 function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflation_trend, loading, error, history, historyLoading }) {
   const [showInfo, setShowInfo] = useState(false);
 
@@ -356,6 +358,7 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
           }
         </div>
       </div>
+      <SourceTag label="FRED · INDPRO / CPIAUCSL" />
     </div>
   );
 }

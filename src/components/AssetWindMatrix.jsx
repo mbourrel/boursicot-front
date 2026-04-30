@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SourceTag from './SourceTag';
 
 // ── Matrice statique phase → actifs ───────────────────────────────────────
 const PHASE_MATRIX = {
@@ -184,6 +185,7 @@ function AssetWindMatrix({ phase, loading }) {
           </div>
         </>
       )}
+      {!loading && <SourceTag label="Boursicot · modèle de cycle" />}
     </div>
   );
 }

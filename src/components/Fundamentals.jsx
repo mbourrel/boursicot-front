@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ASSET_COLORS } from './CompareBar';
 import { useCurrency } from '../context/CurrencyContext';
 import { formatFinancialValue } from '../utils/formatFinancialValue';
+import SourceTag from './SourceTag';
 
 const LOWER_IS_BETTER = new Set([
   'PER', 'Forward PE', 'Price to Book', 'EV / EBITDA', 'PEG Ratio',
@@ -261,6 +262,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
             />
           );
         })()}
+        <SourceTag label="Yahoo Finance · FMP (prix live)" />
       </div>
     );
   }
@@ -684,6 +686,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
           );
         });
       })}
+      <SourceTag label="Yahoo Finance · FMP (prix live)" />
     </div>
   );
 }
