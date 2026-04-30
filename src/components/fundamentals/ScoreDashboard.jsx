@@ -531,6 +531,16 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
       {showModal       && <MethodologyModal onClose={() => setShowModal(false)} sector={sector} />}
       {activePillar    && <GaugePillarModal pillar={activePillar.pillar} score={activePillar.score} onClose={() => setActivePillar(null)} />}
       {showGlobalModal && <GlobalScoreModal scores={s} globalScore={globalScore} verdictColor={verdictColor} onClose={() => setShowGlobalModal(false)} />}
+
+      {/* DISCLAIMER MIF2 — pleine largeur sous la grille de scores */}
+      <div style={{
+        gridColumn: '1 / -1',
+        textAlign: 'center', fontSize: '9px', color: 'var(--text3)', opacity: 0.55,
+        letterSpacing: '0.02em', paddingTop: '10px', borderTop: '1px solid var(--border)',
+        marginTop: '4px',
+      }}>
+        Scores indicatifs uniquement — ne constituent pas un conseil en investissement.
+      </div>
     </div>
   );
 }

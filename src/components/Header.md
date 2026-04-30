@@ -42,3 +42,4 @@ Bouton toggle SVG animé dark/light, positionné à droite.
 - Les filtres pays et secteur sont initialisés à `null` et remplis de façon asynchrone après le premier chargement de `fundamentalsData` : ne pas présupposer qu'ils sont prêts à t=0.
 - La dérivation du pays depuis le ticker est une heuristique (suffixe) — ne reflète pas nécessairement le pays du siège.
 - Le `dropdownRef` de la barre de recherche et les `typeFilterRef/countryFilterRef/sectorFilterRef` sont des refs séparées pour éviter les conflits de fermeture.
+- **Disclaimer MIF2 (2026-04-30)** : une ligne en 10px est affichée sous la barre principale ("Informations à titre indicatif uniquement — ne constituent pas un conseil en investissement. Tout investissement comporte un risque de perte en capital."). Visible sur toutes les vues, pas seulement Fundamentals.
