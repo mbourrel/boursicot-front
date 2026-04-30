@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import { ThemeProvider } from './context/ThemeContext';
 import { CurrencyProvider } from './context/CurrencyContext';
+import { ProfileProvider } from './context/ProfileContext';
 import { ClerkProvider } from '@clerk/clerk-react';
 import { BrowserRouter } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';
@@ -22,7 +23,9 @@ root.render(
       <BrowserRouter>
         <ThemeProvider>
           <CurrencyProvider>
-            <App />
+            <ProfileProvider>
+              <App />
+            </ProfileProvider>
           </CurrencyProvider>
         </ThemeProvider>
       </BrowserRouter>

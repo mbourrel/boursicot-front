@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useProfile } from '../context/ProfileContext';
 import { UserButton } from '@clerk/clerk-react';
 import { captureEvent } from '../utils/analytics';
 
@@ -132,9 +133,10 @@ function FilterDropdown({ label, items, filters, onChange, onSelectAll, onSelect
 }
 
 // ── Header principal ──────────────────────────────────────────────────────────
-function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode, setViewMode, isBeginnerMode, setIsBeginnerMode }) {
+function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode, setViewMode }) {
   const { isDark, toggleTheme } = useTheme();
   const { targetCurrency, setTargetCurrency, updatedAt } = useCurrency();
+  const { profile, setProfile } = useProfile();
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -363,25 +365,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
           <button onClick={() => { captureEvent('view_changed', { view: 'macro' }); setViewMode('macro'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'macro' ? '#26a69a' : 'transparent', color: 'var(--text1)', borderRadius: '0 6px 6px 0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🌐 Indicateurs Macroéconomiques</button>
         </div>
 
-        {/* TOGGLE MODE DÉBUTANT — visible uniquement en vue Fondamentaux */}
-        {viewMode === 'fundamentals' && (
-          <button
-            onClick={() => { captureEvent('advanced_mode_toggled', { enabled: isBeginnerMode }); setIsBeginnerMode(v => !v); }}
-            title={isBeginnerMode ? 'Afficher les comptes historiques et données avancées' : 'Masquer les données avancées'}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '7px 13px', borderRadius: '6px', cursor: 'pointer',
-              border: `1px solid ${!isBeginnerMode ? '#2962FF' : 'var(--border)'}`,
-              backgroundColor: !isBeginnerMode ? '#2962FF22' : 'var(--bg3)',
-              color: !isBeginnerMode ? '#2962FF' : 'var(--text3)',
-              fontSize: '12px', fontWeight: 'bold', transition: 'all 0.2s',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <span style={{ fontSize: '14px' }}>📊</span>
-            Analyse Avancée
-          </button>
-        )}
+        {/* TOGGLE DEVISE — visible uniquement en vue Fondamentaux */}
 
         {/* TOGGLE DEVISE — visible uniquement en vue Fondamentaux */}
         {viewMode === 'fundamentals' && (
@@ -411,6 +395,33 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
             )}
           </div>
         )}
+
+        {/* TOGGLE PROFIL Explorateur / Stratège */}
+        <div
+          title={profile === 'explorateur' ? 'Passer en mode Stratège — vue complète' : 'Passer en mode Explorateur — vue simplifiée'}
+          style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', border: '1px solid var(--border)', overflow: 'hidden' }}
+        >
+          {[
+            { value: 'explorateur', icon: '🧭', label: 'Explorateur' },
+            { value: 'stratege',    icon: '📈', label: 'Stratège' },
+          ].map(({ value, icon, label }, i) => (
+            <button
+              key={value}
+              onClick={() => { captureEvent('profile_changed', { profile: value }); setProfile(value); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '5px',
+                padding: '6px 11px', border: 'none', cursor: 'pointer',
+                borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
+                backgroundColor: profile === value ? '#2962FF' : 'transparent',
+                color: profile === value ? 'white' : 'var(--text3)',
+                fontSize: '11px', fontWeight: 'bold', transition: 'all 0.15s',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span>{icon}</span>{label}
+            </button>
+          ))}
+        </div>
 
         {/* TOGGLE DARK / LIGHT */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>

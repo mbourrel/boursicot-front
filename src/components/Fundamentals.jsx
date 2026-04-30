@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ASSET_COLORS } from './CompareBar';
 import { useCurrency } from '../context/CurrencyContext';
+import { useProfile } from '../context/ProfileContext';
 import { formatFinancialValue } from '../utils/formatFinancialValue';
 import SourceTag from './SourceTag';
 
@@ -20,16 +21,28 @@ import { useFundamentals } from '../hooks/useFundamentals';
 import { useSectorAverages } from '../hooks/useSectorAverages';
 import { useSectorHistory } from '../hooks/useSectorHistory';
 
+// Métriques clés affichées en mode Explorateur (solo uniquement)
+const METRIQUES_REINES = [
+  { cat: 'market_analysis',  name: 'PER',                label: 'Valorisation' },
+  { cat: 'financial_health', name: 'Marge Nette',        label: 'Rentabilité' },
+  { cat: 'financial_health', name: 'ROE',                label: 'Efficacité' },
+  { cat: 'financial_health', name: 'Dette/Fonds Propres',label: 'Endettement' },
+  { cat: 'income_growth',    name: 'Croissance CA',      label: 'Croissance' },
+];
+
 // ── Composant principal ────────────────────────────────────────────────────
-function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = false, setIsBeginnerMode }) {
+function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
+  const { profile, setProfile } = useProfile();
+  const isExplorateur = profile === 'explorateur';
+
   const allSymbols = [selectedSymbol, ...compareSymbols];
   const { dataMap, loading, errors } = useFundamentals(allSymbols);
   const [showMethodology, setShowMethodology] = useState(false);
   const isSoloMode = allSymbols.length === 1;
   const primarySector = isSoloMode ? dataMap[selectedSymbol]?.sector : null;
   const sectorAvg     = useSectorAverages(primarySector);
-  // useSectorHistory est coûteux (appel API supplémentaire) — réservé au mode avancé
-  const sectorHistory = useSectorHistory(isBeginnerMode ? null : primarySector);
+  // useSectorHistory est coûteux — réservé au profil Stratège
+  const sectorHistory = useSectorHistory(isExplorateur ? null : primarySector);
   const { targetCurrency, rates } = useCurrency();
 
   // ── Formateur de base (sans conversion devise) ─────────────────────────────
@@ -124,6 +137,95 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
     const complexityColor = scores?.complexity >= 6.5 ? '#ef5350' : scores?.complexity >= 4.0 ? '#ff9800' : '#26a69a';
     const verdictColor    = { 'Profil Fort': '#26a69a', 'Profil Solide': '#26a69a', 'Profil Neutre': '#ff9800', 'Profil Prudent': '#ef5350', 'Profil Fragile': '#ef5350' }[scores?.verdict] ?? 'var(--text1)';
 
+    // ── VUE EXPLORATEUR SOLO ────────────────────────────────────────────────
+    if (isExplorateur) {
+      return (
+        <div>
+          {/* En-tête simplifié */}
+          <div style={{ marginBottom: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '4px' }}>
+              <h2 style={{ color: 'var(--text1)', fontSize: '26px', margin: 0 }}>{d.name}</h2>
+              {scores && (
+                <span style={{
+                  fontSize: '13px', fontWeight: 'bold', padding: '3px 10px',
+                  borderRadius: '5px', backgroundColor: verdictColor + '22',
+                  color: verdictColor, border: `1px solid ${verdictColor}55`,
+                }}>{scores.verdict}</span>
+              )}
+            </div>
+            <div style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '13px', marginBottom: '10px' }}>
+              {d.sector}{d.industry && d.industry !== d.sector ? ` — ${d.industry}` : ''}
+            </div>
+            <p style={{ color: 'var(--text3)', lineHeight: '1.7', fontSize: '13px', margin: 0, maxWidth: '720px' }}>{d.description}</p>
+          </div>
+
+          {/* ScoreDashboard complet */}
+          {(() => {
+            const beta      = d.risk_market?.find(m => m.name === 'Beta')?.val ?? null;
+            const marketCap = d.market_analysis?.find(m => m.name === 'Capitalisation')?.val ?? null;
+            return (
+              <ScoreDashboard
+                scores={scores}
+                sector={d.sector}
+                companyCount={sectorAvg?.company_count ?? null}
+                beta={beta}
+                marketCap={marketCap}
+                isBeginnerMode={true}
+                onShowAdvanced={() => setProfile('stratege')}
+              />
+            );
+          })()}
+
+          {/* Métriques Reines */}
+          <div style={{ marginBottom: '16px' }}>
+            <h3 style={{ color: 'var(--text3)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
+              Indicateurs clés
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${METRIQUES_REINES.length}, 1fr)`, gap: '10px' }}>
+              {METRIQUES_REINES.map(({ cat, name }) => {
+                const metric = d[cat]?.find(m => m.name === name);
+                if (!metric || metric.val === null || metric.val === undefined) return null;
+                const avg = sectorAvg?.[cat]?.[name] ?? undefined;
+                return <MetricCard key={name} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
+              })}
+            </div>
+          </div>
+
+          {/* CTA vers Stratège */}
+          <div style={{
+            marginTop: '28px', padding: '16px 20px', borderRadius: '10px',
+            backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+          }}>
+            <div>
+              <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '14px', marginBottom: '3px' }}>
+                Aller plus loin ?
+              </div>
+              <div style={{ color: 'var(--text3)', fontSize: '12px' }}>
+                Le mode Stratège affiche les tableaux financiers historiques, le radar de comparaison et toutes les métriques avancées.
+              </div>
+            </div>
+            <button
+              onClick={() => setProfile('stratege')}
+              style={{
+                padding: '9px 18px', borderRadius: '6px', cursor: 'pointer',
+                border: '1px solid #2962FF', backgroundColor: '#2962FF',
+                color: 'white', fontSize: '13px', fontWeight: 'bold',
+                whiteSpace: 'nowrap', transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              📈 Passer en mode Stratège
+            </button>
+          </div>
+
+          <SourceTag label="Yahoo Finance · FMP (prix live)" />
+        </div>
+      );
+    }
+
+    // ── VUE STRATÈGE SOLO (inchangée) ───────────────────────────────────────
     return (
       <div>
         {/* ── EN-TÊTE : description + fiche d'identité ── */}
@@ -208,11 +310,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
               companyCount={sectorAvg?.company_count ?? null}
               beta={beta}
               marketCap={marketCap}
-              isBeginnerMode={isBeginnerMode}
-              onShowAdvanced={setIsBeginnerMode ? () => {
-                setIsBeginnerMode(false);
-                setTimeout(() => document.getElementById('section-market')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-              } : undefined}
+              isBeginnerMode={false}
             />
           );
         })()}
@@ -226,15 +324,13 @@ function Fundamentals({ selectedSymbol, compareSymbols = [], isBeginnerMode = fa
           {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth',      'section-growth')}
         </div>
 
-        {/* ── TABLEAUX FINANCIERS — masqués en mode débutant ── */}
-        {!isBeginnerMode && (
-          <>
-            <FinancialStatement title="7. Compte de Résultat — Historique"  stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data}   stmtAvgHistory={sectorHistory?.income_stmt_data}   companyName={d.name} />
-            <FinancialStatement title="8. Bilan Comptable — Historique"     stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} stmtAvgHistory={sectorHistory?.balance_sheet_data} companyName={d.name} />
-            <FinancialStatement title="9. Flux de Trésorerie — Historique"  stmtData={d.cashflow_data}      fmt={fmt} stmtAvg={sectorAvg?.cashflow_data}      stmtAvgHistory={sectorHistory?.cashflow_data}      companyName={d.name} />
-          </>
-        )}
-        {!isBeginnerMode && dd.annual?.items?.length > 0 && (() => {
+        {/* ── TABLEAUX FINANCIERS — mode Stratège uniquement ── */}
+        <>
+          <FinancialStatement title="7. Compte de Résultat — Historique"  stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data}   stmtAvgHistory={sectorHistory?.income_stmt_data}   companyName={d.name} />
+          <FinancialStatement title="8. Bilan Comptable — Historique"     stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} stmtAvgHistory={sectorHistory?.balance_sheet_data} companyName={d.name} />
+          <FinancialStatement title="9. Flux de Trésorerie — Historique"  stmtData={d.cashflow_data}      fmt={fmt} stmtAvg={sectorAvg?.cashflow_data}      stmtAvgHistory={sectorHistory?.cashflow_data}      companyName={d.name} />
+        </>
+        {dd.annual?.items?.length > 0 && (() => {
           const scalarRows = [
             dd.dividend_yield      && { name: 'Rendement Div.',     vals: [dd.dividend_yield],      unit: '%' },
             dd.dividend_rate       && { name: 'Dividende/Action',   vals: [dd.dividend_rate],       unit: '$' },
