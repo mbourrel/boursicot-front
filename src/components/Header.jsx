@@ -385,6 +385,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
             {[
               { mode: 'chart',        label: '📈' },
               { mode: 'fundamentals', label: '📊' },
+              { mode: 'screener',     label: '🔍' },
               { mode: 'macro',        label: '🌐' },
             ].map(({ mode, label }) => (
               <button
@@ -392,7 +393,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
                 onClick={() => { captureEvent('view_changed', { view: mode }); setViewMode(mode); }}
                 style={{
                   padding: '8px 11px', border: 'none', cursor: 'pointer', fontSize: '16px',
-                  backgroundColor: viewMode === mode ? '#2962FF' : 'transparent',
+                  backgroundColor: viewMode === mode ? (mode === 'screener' ? '#7c3aed' : mode === 'macro' ? '#26a69a' : '#2962FF') : 'transparent',
                   color: viewMode === mode ? 'white' : 'var(--text3)',
                   borderRadius: '6px', transition: 'background-color 0.2s',
                 }}
@@ -552,7 +553,8 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
         <div style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px' }}>
           <button onClick={() => { captureEvent('view_changed', { view: 'chart' }); setViewMode('chart'); }} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'chart' ? '#2962FF' : 'transparent', color: 'var(--text1)', borderRadius: '6px 0 0 6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Cours de bourse</button>
           <button onClick={() => { captureEvent('view_changed', { view: 'fundamentals' }); setViewMode('fundamentals'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'fundamentals' ? '#2962FF' : 'transparent', color: 'var(--text1)', borderRadius: '0', cursor: 'pointer', transition: 'background-color 0.2s' }}>Analyse Fondamentale</button>
-          <button onClick={() => { captureEvent('view_changed', { view: 'macro' }); setViewMode('macro'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'macro' ? '#26a69a' : 'transparent', color: 'var(--text1)', borderRadius: '0 6px 6px 0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🌐 Indicateurs Macroéconomiques</button>
+          <button onClick={() => { captureEvent('view_changed', { view: 'screener' }); setViewMode('screener'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'screener' ? '#7c3aed' : 'transparent', color: 'var(--text1)', borderRadius: '0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🔍 Screener</button>
+          <button onClick={() => { captureEvent('view_changed', { view: 'macro' }); setViewMode('macro'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'macro' ? '#26a69a' : 'transparent', color: 'var(--text1)', borderRadius: '0 6px 6px 0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🌐 Macro</button>
         </div>
 
           <Controls />

@@ -13,6 +13,7 @@ import TradingChart from './components/TradingChart';
 import SimpleChart from './components/SimpleChart';
 import Fundamentals from './components/Fundamentals';
 import MacroEnvironment from './components/MacroEnvironment';
+import Screener from './components/Screener';
 import WelcomeModal from './components/WelcomeModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useAssets } from './hooks/useAssets';
@@ -70,7 +71,7 @@ function Dashboard() {
       {/* ── CONTENU SCROLLABLE ── */}
       <div style={{ padding: isMobile ? '12px' : '20px' }}>
 
-        {viewMode !== 'macro' && (
+        {viewMode !== 'macro' && viewMode !== 'screener' && (
           <CompareBar
             primarySymbol={selectedSymbol}
             compareSymbols={compareSymbols}
@@ -79,7 +80,16 @@ function Dashboard() {
           />
         )}
 
-        {viewMode === 'macro' ? (
+        {viewMode === 'screener' ? (
+          <ErrorBoundary label="Screener">
+            <Screener
+              onSelectTicker={(ticker) => {
+                handleSelectSymbol(ticker);
+                setViewMode('fundamentals');
+              }}
+            />
+          </ErrorBoundary>
+        ) : viewMode === 'macro' ? (
           <ErrorBoundary label="Macro">
             <MacroEnvironment />
           </ErrorBoundary>
