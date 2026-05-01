@@ -12,6 +12,12 @@ export function PWAProvider({ children }) {
       setIsInstalled(true);
     }
 
+    // Récupérer l'événement capturé tôt dans index.html (avant montage React)
+    if (window.__pwaInstallPrompt) {
+      setInstallPrompt(window.__pwaInstallPrompt);
+      window.__pwaInstallPrompt = null;
+    }
+
     const handler = (e) => {
       e.preventDefault();
       setInstallPrompt(e);

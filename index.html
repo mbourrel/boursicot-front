@@ -29,7 +29,15 @@
     <!-- Manifest -->
     <link rel="manifest" href="/manifest.json" />
 
-    <title>Boursicot</title>
+    <title>Boursicot Pro</title>
+    <!-- Capture beforeinstallprompt avant le montage React pour ne jamais manquer l'événement -->
+    <script>
+      window.__pwaInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__pwaInstallPrompt = e;
+      });
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
