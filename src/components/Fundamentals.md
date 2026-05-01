@@ -4,26 +4,30 @@
 Affiche l'analyse fondamentale d'un ou plusieurs actifs : en mode solo, une fiche complète avec scores, métriques par catégorie et tableaux financiers historiques ; en mode comparaison, des tableaux côte-à-côte avec radar chart SVG.
 
 ## Dépendances
-- **Internes** : `./CompareBar` (ASSET_COLORS), `../context/CurrencyContext` (useCurrency), `../utils/formatFinancialValue`, `./SourceTag`, `./fundamentals/MetricInfo`, `./fundamentals/MetricCard`, `./fundamentals/FinancialStatement`, `./fundamentals/ScoreDashboard`, `./fundamentals/MethodologyModal`, `../hooks/useFundamentals`, `../hooks/useSectorAverages`, `../hooks/useSectorHistory`
+- **Internes** : `./CompareBar` (ASSET_COLORS), `../context/CurrencyContext` (useCurrency), `../utils/formatFinancialValue`, `./SourceTag`, `./fundamentals/MetricInfo`, `./fundamentals/MetricCard`, `./fundamentals/FinancialStatement`, `./fundamentals/ScoreDashboard`, `./fundamentals/MethodologyModal`, `../hooks/useFundamentals`, `../hooks/useSectorAverages`, `../hooks/useSectorHistory`, `../hooks/useBreakpoint`, `./SwipeableContainer`
 - **Externes** : `react` (useState)
 
 ## Fonctionnement
 
 ### Mode Solo (`isSolo === true`)
 - Charge les données via `useFundamentals([selectedSymbol])`.
-- Charge les moyennes sectorielles (`useSectorAverages`) et l'historique sectoriel (`useSectorHistory`) pour la comparaison avec la moyenne du secteur.
-- Affiche : en-tête (nom, badge verdict, badge complexité, description, fiche d'identité), puis `ScoreDashboard`, puis 6 catégories de métriques en grille via `renderCategory` → `MetricCard`.
-- En mode avancé (`!isBeginnerMode`) : 3 tableaux `FinancialStatement` (compte de résultat, bilan, flux) + tableau dividendes si disponible.
-- `fmt` est redéfini dynamiquement selon la devise source du ticker et la devise cible choisie dans `CurrencyContext`.
+- Charge les moyennes sectorielles (`useSectorAverages`) et l'historique sectoriel (`useSectorHistory`).
+- Affiche : en-tête (nom, badge verdict, badge complexité, description avec truncature mobile "Voir plus/Voir moins", fiche d'identité), puis `ScoreDashboard`, puis métriques par catégorie.
+- **Mobile** : description tronquée à 3 lignes (`-webkit-line-clamp: 3`) avec toggle. Grille identité → colonne. Métriques en carousel scroll-snap (cartes 44% + spacer `calc(56% - 10px)`). Catégories en colonne unique.
+- **Desktop** : grille 3 colonnes, layout habituel.
+- Mode avancé (`profil === 'stratege'`) : 3 `FinancialStatement` (compte de résultat, bilan, flux) + dividendes si disponibles.
 
 ### Mode Comparaison (`isSolo === false`)
 - Charge les données de tous les symboles en parallèle.
-- Affiche des en-têtes colorés par actif, une synthèse des scores Boursicot avec barres de progression, et un radar chart SVG 6 axes (Santé, Valorisation, Croissance, Efficacité, Dividende, Momentum) dessiné à la main sans librairie.
-- Tableaux de comparaison : métriques simples par catégorie (coloration vert/rouge meilleur/pire), puis états financiers (N-1 YoY en sous-ligne).
-- Bouton "Définition des indicateurs" ouvre `MethodologyModal`.
+- Affiche scores avec barres de progression et radar chart SVG 6 axes.
+- Tableaux via `CompareTable` (composant module-level) : métriques avec coloration meilleur/pire, états financiers avec sous-ligne YoY.
+- **Mobile** : scores au-dessus du radar, radar pleine largeur, `CompareTable` avec colonne gauche sticky + scroll horizontal isolé.
+
+### `CompareTable`
+Composant React au niveau module (non inline) pour pouvoir utiliser `useState` (état `scrolled` pour l'ombre sur la colonne sticky). Reçoit `allSymbols`, `dataMap`, `colWidth`, `isMobile` en props. La première colonne est `position: sticky; left: 0` avec ombre conditionnelle au scroll.
 
 ### Constantes
-- `LOWER_IS_BETTER` : métriques où une valeur basse est un signal positif (PER, EV/EBITDA…).
+- `LOWER_IS_BETTER` : métriques où une valeur basse est positive (PER, EV/EBITDA…).
 - `NEUTRAL_METRICS` : métriques sans signal directionnel (Bêta, Capitalisation…).
 
 ## Utilisé par
@@ -34,11 +38,11 @@ Affiche l'analyse fondamentale d'un ou plusieurs actifs : en mode solo, une fich
 |---|---|---|
 | `selectedSymbol` | string | Ticker principal |
 | `compareSymbols` | string[] | Tickers en comparaison (défaut `[]`) |
-| `isBeginnerMode` | boolean | Masque les tableaux avancés si `true` |
-| `setIsBeginnerMode` | function | Passé à `ScoreDashboard` pour le bouton CTA |
 
 ## Points d'attention
-- `fmt` est une fonction locale réassignée dans le corps du composant selon la devise — ne pas la capturer dans une closure avant la réassignation.
-- `fmtRaw` reste toujours non converti (moyennes sectorielles en devise mixte).
-- Le radar chart est un SVG pur calculé à partir de `dataMap[sym]?.scores` — les scores manquants retournent `null` et la série n'est pas rendue.
-- Les tableaux financiers sont conditionnels à `!isBeginnerMode` ET à la présence de données.
+- `fmt` est réassigné dans le corps du composant selon la devise — ne pas capturer avant réassignation.
+- `fmtRaw` reste sans conversion (moyennes sectorielles en devise mixte).
+- Le radar chart est un SVG pur sans librairie — scores manquants → série non rendue.
+- `CompareTable` doit rester au niveau module (pas inline) pour pouvoir avoir ses propres hooks.
+- `overscrollBehaviorX: 'contain'` sur les wrappers de tableaux pour isoler le scroll horizontal.
+- Spacer carousel = `calc(56% - 10px)` : formule mathématique fixe indépendante du nombre de cartes (100% − card 44% − gap 10px).

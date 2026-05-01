@@ -1,70 +1,74 @@
-# Getting Started with Create React App
+# Boursicot Pro
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Application web d'analyse boursière fondamentale et graphique — SPA React déployée sur Vercel, backend FastAPI sur Render.
 
-## Available Scripts
+## Stack technique
 
-In the project directory, you can run:
+| Couche | Techno |
+|---|---|
+| Frontend | React 19, Vite 8, React Router 7 |
+| Auth | Clerk |
+| Charts | lightweight-charts 5 |
+| Analytics | PostHog (cookieless RGPD) |
+| PWA | vite-plugin-pwa 1.2 (Workbox) |
+| Déploiement | Vercel (frontend), Render (backend) |
 
-### `npm start`
+## Lancer en local
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```bash
+npm install
+npm run dev        # http://localhost:3000
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Créer un `.env.local` avec :
+```
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+VITE_API_URL=http://127.0.0.1:8000
+VITE_POSTHOG_KEY=phc_...   # optionnel — silencieux si absent
+```
 
-### `npm test`
+## Build & preview
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm run build      # compile + vérifie les artifacts PWA
+npm run preview    # sert le dist sur http://localhost:4173
+```
 
-### `npm run build`
+Le script `scripts/verify-pwa.js` s'exécute automatiquement après le build et échoue explicitement si `sw.js`, `workbox-*.js` ou `manifest.webmanifest` sont manquants.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## PWA
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+L'app est installable sur Android (Chrome) et iOS (Safari → Partager → Sur l'écran d'accueil).
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- Nom : **Boursicot Pro**
+- Icônes : 11 tailles dans `public/icons/` dont une variante maskable Android
+- Service worker : Workbox `generateSW`
+  - API `/api/*` → NetworkFirst (5 min cache, 5 s timeout réseau)
+  - Icônes → CacheFirst (1 an)
+  - JS/CSS → StaleWhileRevalidate (7 jours)
+- Install prompt : capturé dans `index.html` avant montage React, exposé via `PWAContext`, bouton dans le menu burger mobile
 
-### `npm run eject`
+## Structure des sources
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```
+src/
+  api/            Appels HTTP vers le backend FastAPI
+  components/     Composants UI (Header, Fundamentals, charts macro…)
+    fundamentals/ Sous-composants de l'analyse fondamentale
+  context/        Providers React (Theme, Currency, Profile, PWA)
+  hooks/          Hooks de chargement de données
+  pages/          LoginPage, RegisterPage
+  utils/          analytics, formatFinancialValue
+  constants/      pillars, metricExplanations
+scripts/
+  verify-pwa.js   Vérification post-build des artifacts PWA
+public/
+  icons/          Icônes PWA (72px → 512px + maskable)
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Dépendance connue
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+`vite-plugin-pwa@1.2.0` ne déclare pas encore le support de vite 8 dans ses peer deps.
+Contournement : `.npmrc` avec `legacy-peer-deps=true`.
+À retirer dès qu'une version du plugin déclare officiellement `vite@^8`.
+Voir `.npmrc` pour le contexte et `scripts/verify-pwa.js` pour la détection de régression.

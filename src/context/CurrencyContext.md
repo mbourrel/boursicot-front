@@ -8,16 +8,16 @@ Contexte React gérant la devise d'affichage des données financières (`LOCAL`,
 - **Externes** : `react` (createContext, useContext, useState)
 
 ## Fonctionnement
-- `CurrencyProvider` : wraps les enfants et expose via le contexte :
-  - `targetCurrency` : devise cible sélectionnée par l'utilisateur (défaut `'LOCAL'`).
+- `CurrencyProvider` : expose via le contexte :
+  - `targetCurrency` : devise cible (défaut `'LOCAL'`).
   - `setTargetCurrency` : setter.
-  - `rates` : objet `{ EURUSD, GBPUSD, ... }` chargé via `useExchangeRates`.
+  - `rates` : objet `{ EURUSD, GBPUSD, … }` chargé via `useExchangeRates`.
   - `updatedAt` : timestamp ISO de la dernière mise à jour des taux.
-- `useCurrency()` : hook de consommation du contexte avec guard (erreur si utilisé hors `CurrencyProvider`).
+- `useCurrency()` : hook de consommation avec guard (erreur si utilisé hors `CurrencyProvider`).
 
 ## Utilisé par
-- `index.jsx` (provider wrappant l'app)
-- `Header.jsx` (toggle de devise + date des taux)
+- `index.jsx` (provider)
+- `Header.jsx` (toggle devise + date des taux)
 - `Fundamentals.jsx` (formatage des valeurs monétaires)
 
 ## Props / API
@@ -31,10 +31,9 @@ Contexte React gérant la devise d'affichage des données financières (`LOCAL`,
 |---|---|---|
 | `targetCurrency` | `'LOCAL'\|'EUR'\|'USD'` | Devise cible actuelle |
 | `setTargetCurrency` | function | Change la devise |
-| `rates` | object\|null | Taux de change `{ EURUSD, GBPUSD, ... }` |
+| `rates` | object\|null | Taux de change `{ EURUSD, GBPUSD, … }` |
 | `updatedAt` | string\|null | Date ISO de mise à jour des taux |
 
 ## Points d'attention
-- En mode `LOCAL`, aucune conversion n'est effectuée — `formatFinancialValue` affiche la devise source du ticker.
-- `rates` peut être `null` si l'API échoue : `formatFinancialValue` retombe sur la devise locale sans erreur.
-- Le contexte ne gère pas l'erreur de chargement des taux — l'échec est silencieux (warn en console).
+- En mode `LOCAL`, aucune conversion — `formatFinancialValue` affiche la devise source du ticker.
+- `rates` peut être `null` si l'API échoue : `formatFinancialValue` tombe silencieusement sur la devise locale.

@@ -1,10 +1,10 @@
 # Header.jsx
 
 ## Rôle
-Barre de navigation principale : recherche d'actif avec filtres multicritères (type, pays, secteur), navigation entre les vues, et contrôles de préférences (devise, thème dark/light, mode débutant/avancé).
+Barre de navigation principale : logo + titre, recherche d'actif avec filtres multicritères (type, pays, secteur), navigation entre les vues, contrôles de préférences (devise, profil, thème), et bouton d'installation PWA sur mobile.
 
 ## Dépendances
-- **Internes** : `../context/ThemeContext` (useTheme), `../context/CurrencyContext` (useCurrency), `../utils/analytics` (captureEvent)
+- **Internes** : `../context/ThemeContext` (useTheme), `../context/CurrencyContext` (useCurrency), `../context/ProfileContext` (useProfile), `../context/PWAContext` (usePWA), `../hooks/useBreakpoint`, `../utils/analytics` (captureEvent)
 - **Externes** : `react` (useState, useRef, useEffect, useMemo), `@clerk/clerk-react` (UserButton)
 
 ## Fonctionnement
@@ -13,16 +13,27 @@ Barre de navigation principale : recherche d'actif avec filtres multicritères (
 Composant interne générique : bouton déclencheur + liste de cases à cocher avec boutons "Tous"/"Aucun". Fermeture automatique au clic en dehors via `mousedown` sur `document`.
 
 ### `ThemeToggle`
-Bouton toggle SVG animé dark/light, positionné à droite.
+Toggle animé dark/light (pill CSS, pas SVG).
+
+### `Controls`
+Composant interne réutilisé dans le header desktop ET le panneau burger mobile. Contient : toggle devise, toggle profil Explorateur/Stratège, toggle dark/light, `UserButton` Clerk.
 
 ### `Header` (composant principal)
-- **Filtres** : trois `FilterDropdown` (TYPE, PAYS, SECTEUR). Les listes de pays et de secteurs sont dérivées de `fundamentalsData` via `useMemo`. Les pays sont déduits du suffixe du ticker (`.PA` → France, `.AS` → Pays-Bas, sans suffixe → États-Unis).
-- **Synchronisation** : quand `selectedSymbol` change, le champ texte se met à jour avec le nom + ticker de l'actif sélectionné.
-- **Barre de recherche** : filtre `filteredData` en temps réel selon le texte saisi et les filtres actifs. Dropdown fermé au clic en dehors.
-- **Navigation** : trois boutons (Cours de bourse / Analyse Fondamentale / Macro), envoient un événement `view_changed` à PostHog.
-- **Mode débutant** : bouton "Analyse Avancée" visible uniquement en vue `fundamentals`.
-- **Sélecteur de devise** : `LOCAL` / `EUR` / `USD`, visible uniquement en vue `fundamentals`, avec date du taux affiché en dessous si applicable.
-- **Profil** : `UserButton` Clerk en dernier.
+
+**Desktop** : tous les contrôles et la barre de recherche affichés inline.
+
+**Mobile** :
+- Logo + titre à gauche.
+- Barre de recherche pleine largeur + bouton burger ☰ à droite.
+- Boutons de navigation vue (📈/📊/🌐) compacts à gauche de la barre de recherche.
+- Panneau burger (overlay fixed slide-down) : `Controls` + bouton d'installation PWA.
+- Coach mark : toast bas d'écran affiché 5 s après changement de profil.
+
+### Bouton d'installation PWA
+Visible dans le panneau burger uniquement si `installPrompt && !isInstalled` (event `beforeinstallprompt` capturé via `PWAContext`). Appelle `triggerInstall()` puis ferme le menu.
+
+### Filtres
+Trois `FilterDropdown` (TYPE, PAYS, SECTEUR). Pays et secteurs dérivés de `fundamentalsData` via `useMemo`. Les pays sont inférés du suffixe ticker (`.PA` → France, `.AS` → Pays-Bas, sans suffixe → États-Unis, `^`/`-USD`/`=F` → International).
 
 ## Utilisé par
 `App.jsx` (Dashboard)
@@ -35,11 +46,9 @@ Bouton toggle SVG animé dark/light, positionné à droite.
 | `fundamentalsData` | array | Liste des actifs `{ ticker, name, sector }` |
 | `viewMode` | string | `'chart'` \| `'fundamentals'` \| `'macro'` |
 | `setViewMode` | function | Bascule de vue |
-| `isBeginnerMode` | boolean | Mode débutant actif |
-| `setIsBeginnerMode` | function | Toggle mode débutant |
 
 ## Points d'attention
-- Les filtres pays et secteur sont initialisés à `null` et remplis de façon asynchrone après le premier chargement de `fundamentalsData` : ne pas présupposer qu'ils sont prêts à t=0.
-- La dérivation du pays depuis le ticker est une heuristique (suffixe) — ne reflète pas nécessairement le pays du siège.
-- Le `dropdownRef` de la barre de recherche et les `typeFilterRef/countryFilterRef/sectorFilterRef` sont des refs séparées pour éviter les conflits de fermeture.
-- **Disclaimer MIF2 (2026-04-30)** : une ligne en 10px est affichée sous la barre principale ("Informations à titre indicatif uniquement — ne constituent pas un conseil en investissement. Tout investissement comporte un risque de perte en capital."). Visible sur toutes les vues, pas seulement Fundamentals.
+- Les filtres pays et secteur sont initialisés à `null` et remplis après le premier chargement de `fundamentalsData`.
+- La dérivation du pays est une heuristique sur le suffixe du ticker.
+- Disclaimer MIF2 affiché en bas sur toute la largeur, toutes vues confondues.
+- Le logo est affiché comme icône arrondie (carré 34–42 px, `borderRadius: 10px`, `object-fit: cover`) à côté du titre "Boursicot Pro".

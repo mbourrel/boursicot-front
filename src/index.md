@@ -1,29 +1,29 @@
 # index.jsx
 
 ## Rôle
-Point d'entrée React de l'application : monte le composant `App` dans le DOM et initialise les providers globaux et les outils transversaux.
+Point d'entrée React : monte `App` dans le DOM et initialise tous les providers globaux et outils transversaux.
 
 ## Dépendances
-- **Internes** : `./App`, `./context/ThemeContext` (ThemeProvider), `./context/CurrencyContext` (CurrencyProvider), `./utils/analytics` (initAnalytics), `./reportWebVitals`
+- **Internes** : `./App`, `./context/ThemeContext` (ThemeProvider), `./context/CurrencyContext` (CurrencyProvider), `./context/ProfileContext` (ProfileProvider), `./context/PWAContext` (PWAProvider), `./utils/analytics` (initAnalytics), `./reportWebVitals`
 - **Externes** : `react`, `react-dom/client`, `@clerk/clerk-react` (ClerkProvider), `react-router-dom` (BrowserRouter), `./index.css`
 
 ## Fonctionnement
-1. Appelle `initAnalytics()` en dehors du rendu — une seule fois au démarrage — pour configurer PostHog sans bloquer le rendu.
+1. Appelle `initAnalytics()` avant le premier render — une seule fois, sans bloquer le rendu.
 2. Monte l'arbre de providers dans cet ordre strict :
-   - `ClerkProvider` (auth, token) — clé lue depuis `VITE_CLERK_PUBLISHABLE_KEY`
-   - `BrowserRouter` (routing)
+   - `ClerkProvider` (auth + token Clerk) — clé `VITE_CLERK_PUBLISHABLE_KEY`
+   - `BrowserRouter` (routing React Router)
    - `ThemeProvider` (dark/light + variables CSS)
-   - `CurrencyProvider` (devise locale/EUR/USD + taux de change)
-   - `App` (logique applicative)
-3. Lance `reportWebVitals()` pour mesurer les performances Core Web Vitals.
+   - `CurrencyProvider` (devise LOCAL/EUR/USD + taux de change)
+   - `ProfileProvider` (profil Explorateur/Stratège + coach mark)
+   - `PWAProvider` (capture du `beforeinstallprompt` + état d'installation)
+   - `App`
+3. Lance `reportWebVitals()` (Core Web Vitals).
 
 ## Utilisé par
-Fichier racine, importé par Vite comme entry point (`index.html` → `index.jsx`).
-
-## Props / API
-Aucune export. Fichier d'initialisation pur.
+Entry point Vite — référencé dans `index.html` via `<script type="module" src="/src/index.jsx">`.
 
 ## Points d'attention
-- L'ordre des providers est important : Clerk doit envelopper tout le reste pour que `useAuth` soit disponible dans `App`.
-- `initAnalytics()` est silencieux si `VITE_POSTHOG_KEY` est absent (dev sans `.env.local`).
-- `afterSignOutUrl="/login"` garantit la redirection correcte après déconnexion Clerk.
+- L'ordre des providers est important : `ClerkProvider` doit envelopper tout le reste pour que `useAuth` soit disponible partout.
+- `initAnalytics()` est silencieux si `VITE_POSTHOG_KEY` est absent.
+- `afterSignOutUrl="/login"` redirige correctement après déconnexion Clerk.
+- `PWAProvider` capture `beforeinstallprompt` via `PWAContext` — mais l'événement est aussi capturé très tôt dans `index.html` (script inline) pour éviter un timing miss avant le montage React.
