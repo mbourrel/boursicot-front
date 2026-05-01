@@ -114,10 +114,10 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             {visible.map((metric, i) => {
               const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
               return metricsCarousel
-                ? <div key={i} style={{ flex: '0 0 44%', scrollSnapAlign: 'start', minWidth: 0 }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} /></div>
+                ? <div key={i} style={{ flex: '0 0 44%', flexShrink: 0, scrollSnapAlign: 'start' }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} /></div>
                 : <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
             })}
-            {metricsCarousel && <div aria-hidden="true" style={{ flex: '0 0 16px', flexShrink: 0 }} />}
+            {metricsCarousel && <div aria-hidden="true" style={{ flex: '0 0 calc(56% - 10px)', flexShrink: 0 }} />}
           </div>
         </div>
       );
@@ -148,10 +148,10 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           {allMetrics.map(({ metric, catKey }, i) => {
             const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
             return isMobile
-              ? <div key={`${catKey}-${i}`} style={{ flex: '0 0 44%', scrollSnapAlign: 'start', minWidth: 0 }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large /></div>
+              ? <div key={`${catKey}-${i}`} style={{ flex: '0 0 44%', flexShrink: 0, scrollSnapAlign: 'start' }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large /></div>
               : <MetricCard key={`${catKey}-${i}`} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large />;
           })}
-          {isMobile && <div aria-hidden="true" style={{ flex: '0 0 16px', flexShrink: 0 }} />}
+          {isMobile && <div aria-hidden="true" style={{ flex: '0 0 calc(56% - 10px)', flexShrink: 0 }} />}
         </div>
       );
     };
@@ -305,10 +305,10 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                 }
                 if (!metric || metric.val === null || metric.val === undefined) return null;
                 return isMobile
-                  ? <div key={name} style={{ flex: '0 0 44%', scrollSnapAlign: 'start', minWidth: 0 }}><MetricCard metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} /></div>
+                  ? <div key={name} style={{ flex: '0 0 44%', flexShrink: 0, scrollSnapAlign: 'start' }}><MetricCard metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} /></div>
                   : <MetricCard key={name} metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} />;
               })}
-              {isMobile && <div aria-hidden="true" style={{ flex: '0 0 16px', flexShrink: 0 }} />}
+              {isMobile && <div aria-hidden="true" style={{ flex: '0 0 calc(56% - 10px)', flexShrink: 0 }} />}
             </div>
           </div>
 
