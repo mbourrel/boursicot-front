@@ -359,7 +359,11 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
 
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isMobile ? '10px' : '20px', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-      <h1 style={{ margin: 0, color: 'var(--text1)', fontSize: isMobile ? '18px' : undefined }}>Boursicot Pro 📈</h1>
+      <img
+        src="/logo.png"
+        alt="Boursicot"
+        style={{ height: isMobile ? '36px' : '44px', width: 'auto', objectFit: 'contain' }}
+      />
 
       {/* ── MOBILE : barre de recherche + burger ── */}
       {isMobile ? (
