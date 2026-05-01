@@ -113,19 +113,26 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
     // Pour les non-stocks : grille plate full-width fusionnant toutes les métriques
     const renderFlatMetrics = (categories) => {
-      const allCards = [];
+      const allMetrics = [];
       for (const { dataArray, catKey } of categories) {
         if (!dataArray) continue;
         const visible = dataArray.filter(m => m.val !== null && m.val !== undefined && m.val !== 0);
-        for (let i = 0; i < visible.length; i++) {
-          const avg = sectorAvg?.[catKey]?.[visible[i].name] ?? undefined;
-          allCards.push(<MetricCard key={`${catKey}-${i}`} metric={{ ...visible[i], avg }} fmt={fmt} fmtRaw={fmtRaw} />);
+        for (const m of visible) {
+          allMetrics.push({ metric: m, catKey });
         }
       }
-      if (allCards.length === 0) return null;
+      if (allMetrics.length === 0) return null;
       return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', marginBottom: '32px' }}>
-          {allCards}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${allMetrics.length}, 1fr)`,
+          gap: '10px',
+          marginBottom: '32px',
+        }}>
+          {allMetrics.map(({ metric, catKey }, i) => {
+            const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
+            return <MetricCard key={`${catKey}-${i}`} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large />;
+          })}
         </div>
       );
     };

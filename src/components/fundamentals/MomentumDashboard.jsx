@@ -9,7 +9,8 @@
  *   perf1y   number | null  — Performance 1 an en %
  *   assetType string        — 'index' | 'crypto' | 'commodity'
  */
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 const COLOR_UP      = '#26a69a';
 const COLOR_DOWN    = '#ef5350';
@@ -134,12 +135,33 @@ export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetTyp
   };
 
   function TipButton({ id }) {
-    const open = expandedTip === id;
-    const tip  = TIPS[id];
+    const open   = expandedTip === id;
+    const tip    = TIPS[id];
+    const btnRef = useRef(null);
+    const [pos, setPos] = useState(null);
+
+    const handleClick = (e) => {
+      e.stopPropagation();
+      if (open) { setExpandedTip(null); setPos(null); return; }
+      const rect        = btnRef.current.getBoundingClientRect();
+      const tipWidth    = 280;
+      const spaceRight  = window.innerWidth - rect.right;
+      const spaceLeft   = rect.left;
+      const left = spaceRight >= tipWidth + 12
+        ? rect.right + 8
+        : spaceLeft >= tipWidth + 12
+          ? rect.left - tipWidth - 8
+          : Math.max(8, rect.right + 8);
+      const top = rect.top - 4;
+      setPos({ left, top });
+      setExpandedTip(id);
+    };
+
     return (
-      <span style={{ position: 'relative', display: 'inline-flex', verticalAlign: 'middle', marginLeft: '5px' }}>
+      <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: '5px' }}>
         <button
-          onClick={() => setExpandedTip(open ? null : id)}
+          ref={btnRef}
+          onClick={handleClick}
           style={{
             background: open ? '#2962FF22' : 'transparent',
             border: `1px solid ${open ? '#2962FF88' : 'var(--border)'}`,
@@ -151,17 +173,21 @@ export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetTyp
             transition: 'all 0.15s',
           }}
         >i</button>
-        {open && (
-          <div style={{
-            position: 'absolute', top: '-5px', left: '20px', zIndex: 100,
-            width: '260px', backgroundColor: 'var(--bg2)',
-            border: '1px solid #2962FF44', borderRadius: '8px',
-            padding: '10px 12px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-            fontSize: '11px', lineHeight: '1.65',
-          }}>
-            <div style={{ color: 'var(--text2)', fontWeight: 'bold', marginBottom: '6px' }}>{tip.title}</div>
-            <div style={{ color: '#b0b8c4' }}>{tip.text}</div>
-          </div>
+        {open && pos && createPortal(
+          <>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => { setExpandedTip(null); setPos(null); }} />
+            <div style={{
+              position: 'fixed', top: pos.top, left: pos.left, zIndex: 999,
+              width: '280px', backgroundColor: 'var(--bg2)',
+              border: '1px solid #2962FF44', borderRadius: '8px',
+              padding: '10px 12px', boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              fontSize: '11px', lineHeight: '1.65',
+            }}>
+              <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '11px', marginBottom: '8px' }}>{tip.title}</div>
+              <div style={{ color: '#b0b8c4' }}>{tip.text}</div>
+            </div>
+          </>,
+          document.body
         )}
       </span>
     );
