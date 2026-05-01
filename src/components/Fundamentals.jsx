@@ -43,6 +43,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
   const allSymbols = [selectedSymbol, ...compareSymbols];
   const { dataMap, loading, errors } = useFundamentals(allSymbols);
   const [showMethodology, setShowMethodology] = useState(false);
+  const [isDescExpanded, setIsDescExpanded]   = useState(false);
   const isSoloMode = allSymbols.length === 1;
   const primarySector = isSoloMode ? dataMap[selectedSymbol]?.sector : null;
   const sectorAvg     = useSectorAverages(primarySector);
@@ -212,7 +213,27 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             <div style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '13px', marginBottom: '10px' }}>
               {d.sector}{d.industry && d.industry !== d.sector ? ` — ${d.industry}` : ''}
             </div>
-            <p style={{ color: 'var(--text3)', lineHeight: '1.7', fontSize: '13px', margin: 0, maxWidth: '720px' }}>{d.description}</p>
+            <div>
+              <p style={{
+                color: 'var(--text3)', lineHeight: '1.7', fontSize: '13px', margin: 0, maxWidth: '720px',
+                ...(!isDescExpanded && isMobile && {
+                  display: '-webkit-box', WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                }),
+              }}>{d.description}</p>
+              {isMobile && d.description && d.description.length > 180 && (
+                <button
+                  onClick={() => setIsDescExpanded(v => !v)}
+                  style={{
+                    marginTop: '6px', background: 'none', border: 'none', cursor: 'pointer',
+                    color: '#2962FF', fontSize: '12px', fontWeight: '600', padding: 0,
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                  }}
+                >
+                  {isDescExpanded ? 'Voir moins ▲' : 'Voir plus ▼'}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Dashboard principal : Momentum pour crypto/indices/commodities, Score pour actions */}
@@ -357,7 +378,27 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             display: 'grid', gridTemplateColumns: '1fr 480px', gap: '24px', alignItems: 'stretch',
           }}>
             {/* Description */}
-            <p style={{ color: 'var(--text3)', lineHeight: '1.7', fontSize: '13px', margin: 0 }}>{d.description}</p>
+            <div>
+              <p style={{
+                color: 'var(--text3)', lineHeight: '1.7', fontSize: '13px', margin: 0,
+                ...(!isDescExpanded && isMobile && {
+                  display: '-webkit-box', WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                }),
+              }}>{d.description}</p>
+              {isMobile && d.description && d.description.length > 180 && (
+                <button
+                  onClick={() => setIsDescExpanded(v => !v)}
+                  style={{
+                    marginTop: '6px', background: 'none', border: 'none', cursor: 'pointer',
+                    color: '#2962FF', fontSize: '12px', fontWeight: '600', padding: 0,
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                  }}
+                >
+                  {isDescExpanded ? 'Voir moins ▲' : 'Voir plus ▼'}
+                </button>
+              )}
+            </div>
 
             {/* Fiche d'identité */}
             <div style={{
@@ -554,7 +595,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     };
 
     return (
-      <svg width={size} height={size} style={{ display: 'block' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', maxWidth: '100%', height: 'auto' }}>
         {/* Grilles */}
         {[0.25, 0.5, 0.75, 1].map(level => (
           <polygon key={level}

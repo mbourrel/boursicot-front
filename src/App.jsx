@@ -37,7 +37,7 @@ function Dashboard() {
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--bg0)', minHeight: '100vh', color: 'var(--text1)', fontFamily: 'sans-serif' }}>
+    <div style={{ backgroundColor: 'var(--bg0)', minHeight: '100vh', color: 'var(--text1)', fontFamily: 'sans-serif', overflowX: 'hidden', maxWidth: '100vw' }}>
 
       {/* Onboarding — affiché en overlay si aucun profil n'est encore choisi */}
       {profile === null && <WelcomeModal />}

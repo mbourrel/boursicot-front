@@ -253,7 +253,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--bg1)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+    <div style={{ backgroundColor: 'var(--bg1)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden', maxWidth: '100%' }}>
 
       {/* BARRE DE CONTRÔLE */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '15px' }}>
