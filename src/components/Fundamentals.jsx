@@ -117,6 +117,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                 ? <div key={i} style={{ flex: '0 0 44%', scrollSnapAlign: 'start', minWidth: 0 }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} /></div>
                 : <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
             })}
+            {metricsCarousel && <div aria-hidden="true" style={{ flex: '0 0 16px', flexShrink: 0 }} />}
           </div>
         </div>
       );
@@ -150,6 +151,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
               ? <div key={`${catKey}-${i}`} style={{ flex: '0 0 44%', scrollSnapAlign: 'start', minWidth: 0 }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large /></div>
               : <MetricCard key={`${catKey}-${i}`} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large />;
           })}
+          {isMobile && <div aria-hidden="true" style={{ flex: '0 0 16px', flexShrink: 0 }} />}
         </div>
       );
     };
@@ -306,6 +308,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                   ? <div key={name} style={{ flex: '0 0 44%', scrollSnapAlign: 'start', minWidth: 0 }}><MetricCard metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} /></div>
                   : <MetricCard key={name} metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} />;
               })}
+              {isMobile && <div aria-hidden="true" style={{ flex: '0 0 16px', flexShrink: 0 }} />}
             </div>
           </div>
 
@@ -661,40 +664,22 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     );
   };
 
-  const MetricNameCell = ({ name }) => (
-    <td style={{ ...tdStyle, color: 'var(--text3)' }}>
+  const MetricNameCell = ({ name, scrolled = false, rowBg = 'var(--bg1)' }) => (
+    <td style={{
+      ...tdStyle, color: 'var(--text3)',
+      position: 'sticky', left: 0, zIndex: 1,
+      backgroundColor: rowBg,
+      whiteSpace: 'nowrap', maxWidth: '130px', overflow: 'hidden', textOverflow: 'ellipsis',
+      boxShadow: scrolled ? '3px 0 8px -2px rgba(0,0,0,0.55)' : 'none',
+      borderRight: scrolled ? '1px solid var(--border)' : '1px solid transparent',
+      transition: 'box-shadow 0.2s, border-color 0.2s',
+    }}>
       <span style={{ display: 'inline-flex', alignItems: 'center' }}>
         {name}
         <MetricInfo name={name} />
       </span>
     </td>
   );
-
-  const renderCompareTable = (label, rows, renderRow) => {
-    if (rows.length === 0) return null;
-    return (
-      <div style={{ marginBottom: '36px' }}>
-        <h3 style={{ ...h3Style, borderBottom: '2px solid var(--border)', paddingBottom: '10px' }}>{label}</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th style={{ width: '20%', padding: '10px 12px', textAlign: 'left', color: 'var(--text3)', fontSize: '11px', borderBottom: '1px solid var(--border)', fontWeight: 'normal' }}>
-                MÉTRIQUE
-              </th>
-              {allSymbols.map((sym, i) => (
-                <th key={sym} style={{ width: colWidth, padding: '10px 12px', textAlign: 'right', color: ASSET_COLORS[i], fontSize: '12px', borderBottom: '1px solid var(--border)', fontWeight: 'bold' }}>
-                  {dataMap[sym]?.name || sym}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((name, rowIdx) => renderRow(name, rowIdx))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
 
   const scoreColor = s => s >= 7 ? '#26a69a' : s >= 4 ? '#ff9800' : '#ef5350';
 
@@ -880,39 +865,51 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
       {/* Catégories simples */}
       {SIMPLE_CATEGORIES.map(cat => {
         const metricNames = getSimpleMetricNames(cat.key);
-        return renderCompareTable(cat.label, metricNames, (name, rowIdx) => {
-          const vals = allSymbols.map(sym => getSimpleMetric(sym, cat.key, name));
-          const numerics = vals.map(m => m?.val ?? null).filter(v => v !== null && v !== 0);
-          const maxVal = numerics.length > 1 ? Math.max(...numerics) : null;
-          const minVal = numerics.length > 1 ? Math.min(...numerics) : null;
-          const unit = vals.find(Boolean)?.unit ?? '';
-          const isNeutral = NEUTRAL_METRICS.has(name);
-          const lowerBetter = LOWER_IS_BETTER.has(name);
-          const bestVal  = lowerBetter ? minVal : maxVal;
-          const worstVal = lowerBetter ? maxVal : minVal;
-          return (
-            <tr key={name} style={{ backgroundColor: rowIdx % 2 === 0 ? 'var(--bg1)' : 'var(--bg2)' }}>
-              <MetricNameCell name={name} />
-              {allSymbols.map(sym => {
-                const metric = getSimpleMetric(sym, cat.key, name);
-                const val = metric?.val ?? null;
-                let color = 'white';
-                if (!isNeutral && bestVal !== null && val !== null && val !== 0) {
-                  if (val === bestVal)  color = '#26a69a';
-                  else if (val === worstVal) color = '#ef5350';
-                }
-                const symCurrency = dataMap[sym]?.currency || 'USD';
-                return (
-                  <td key={sym} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', fontSize: '13px', color }}>
-                    {val !== null && val !== 0
-                      ? formatFinancialValue(val, unit, symCurrency, targetCurrency, rates)
-                      : <span style={{ color: 'var(--text3)' }}>—</span>}
-                  </td>
-                );
-              })}
-            </tr>
-          );
-        });
+        return (
+          <CompareTable
+            key={cat.key}
+            label={cat.label}
+            rows={metricNames}
+            allSymbols={allSymbols}
+            dataMap={dataMap}
+            colWidth={colWidth}
+            isMobile={isMobile}
+            renderRow={(name, rowIdx, scrolled) => {
+              const rowBg = rowIdx % 2 === 0 ? 'var(--bg1)' : 'var(--bg2)';
+              const vals = allSymbols.map(sym => getSimpleMetric(sym, cat.key, name));
+              const numerics = vals.map(m => m?.val ?? null).filter(v => v !== null && v !== 0);
+              const maxVal = numerics.length > 1 ? Math.max(...numerics) : null;
+              const minVal = numerics.length > 1 ? Math.min(...numerics) : null;
+              const unit = vals.find(Boolean)?.unit ?? '';
+              const isNeutral = NEUTRAL_METRICS.has(name);
+              const lowerBetter = LOWER_IS_BETTER.has(name);
+              const bestVal  = lowerBetter ? minVal : maxVal;
+              const worstVal = lowerBetter ? maxVal : minVal;
+              return (
+                <tr key={name} style={{ backgroundColor: rowBg }}>
+                  <MetricNameCell name={name} scrolled={scrolled} rowBg={rowBg} />
+                  {allSymbols.map(sym => {
+                    const metric = getSimpleMetric(sym, cat.key, name);
+                    const val = metric?.val ?? null;
+                    let color = 'white';
+                    if (!isNeutral && bestVal !== null && val !== null && val !== 0) {
+                      if (val === bestVal)  color = '#26a69a';
+                      else if (val === worstVal) color = '#ef5350';
+                    }
+                    const symCurrency = dataMap[sym]?.currency || 'USD';
+                    return (
+                      <td key={sym} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', fontSize: '13px', color, minWidth: isMobile ? '120px' : undefined }}>
+                        {val !== null && val !== 0
+                          ? formatFinancialValue(val, unit, symCurrency, targetCurrency, rates)
+                          : <span style={{ color: 'var(--text3)' }}>—</span>}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            }}
+          />
+        );
       })}
 
       {/* États financiers */}
@@ -925,43 +922,55 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           }
           return '';
         })();
-        return renderCompareTable(`${cat.label}${yearLabel}`, metricNames, (name, rowIdx) => {
-          const metrics = allSymbols.map(sym => getStmtMetric(sym, cat.key, name));
-          const numerics = metrics.map(m => m?.val ?? null).filter(v => v !== null && v !== 0);
-          const maxVal = numerics.length > 1 ? Math.max(...numerics) : null;
-          const minVal = numerics.length > 1 ? Math.min(...numerics) : null;
-          return (
-            <tr key={name} style={{ backgroundColor: rowIdx % 2 === 0 ? 'var(--bg1)' : 'var(--bg2)' }}>
-              <MetricNameCell name={name} />
-              {allSymbols.map((sym, i) => {
-                const m = metrics[i];
-                const val = m?.val ?? null;
-                let valueColor = 'white';
-                if (maxVal !== null && val !== null && val !== 0) {
-                  if (val === maxVal) valueColor = '#26a69a';
-                  else if (val === minVal) valueColor = '#ef5350';
-                }
-                let yoy = null;
-                if (m && m.val !== null && m.prev !== null && m.prev !== 0) {
-                  yoy = ((m.val - m.prev) / Math.abs(m.prev)) * 100;
-                }
-                const symCurrency = dataMap[sym]?.currency || 'USD';
-                return (
-                  <td key={sym} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', fontSize: '13px', color: valueColor }}>
-                    {val !== null && val !== 0
-                      ? formatFinancialValue(val, '$', symCurrency, targetCurrency, rates)
-                      : <span style={{ color: 'var(--text3)' }}>—</span>}
-                    {yoy !== null && (
-                      <span style={{ display: 'block', fontSize: '10px', fontWeight: 'normal', color: yoy >= 0 ? '#26a69a' : '#ef5350' }}>
-                        {yoy >= 0 ? '▲' : '▼'} {Math.abs(yoy).toFixed(1)}% vs N-1
-                      </span>
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          );
-        });
+        return (
+          <CompareTable
+            key={cat.key}
+            label={`${cat.label}${yearLabel}`}
+            rows={metricNames}
+            allSymbols={allSymbols}
+            dataMap={dataMap}
+            colWidth={colWidth}
+            isMobile={isMobile}
+            renderRow={(name, rowIdx, scrolled) => {
+              const rowBg = rowIdx % 2 === 0 ? 'var(--bg1)' : 'var(--bg2)';
+              const metrics = allSymbols.map(sym => getStmtMetric(sym, cat.key, name));
+              const numerics = metrics.map(m => m?.val ?? null).filter(v => v !== null && v !== 0);
+              const maxVal = numerics.length > 1 ? Math.max(...numerics) : null;
+              const minVal = numerics.length > 1 ? Math.min(...numerics) : null;
+              return (
+                <tr key={name} style={{ backgroundColor: rowBg }}>
+                  <MetricNameCell name={name} scrolled={scrolled} rowBg={rowBg} />
+                  {allSymbols.map((sym, i) => {
+                    const m = metrics[i];
+                    const val = m?.val ?? null;
+                    let valueColor = 'white';
+                    if (maxVal !== null && val !== null && val !== 0) {
+                      if (val === maxVal) valueColor = '#26a69a';
+                      else if (val === minVal) valueColor = '#ef5350';
+                    }
+                    let yoy = null;
+                    if (m && m.val !== null && m.prev !== null && m.prev !== 0) {
+                      yoy = ((m.val - m.prev) / Math.abs(m.prev)) * 100;
+                    }
+                    const symCurrency = dataMap[sym]?.currency || 'USD';
+                    return (
+                      <td key={sym} style={{ ...tdStyle, textAlign: 'right', fontWeight: 'bold', fontSize: '13px', color: valueColor, minWidth: isMobile ? '120px' : undefined }}>
+                        {val !== null && val !== 0
+                          ? formatFinancialValue(val, '$', symCurrency, targetCurrency, rates)
+                          : <span style={{ color: 'var(--text3)' }}>—</span>}
+                        {yoy !== null && (
+                          <span style={{ display: 'block', fontSize: '10px', fontWeight: 'normal', color: yoy >= 0 ? '#26a69a' : '#ef5350' }}>
+                            {yoy >= 0 ? '▲' : '▼'} {Math.abs(yoy).toFixed(1)}% vs N-1
+                          </span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            }}
+          />
+        );
       })}
       <SourceTag label="Yahoo Finance · FMP (prix live)" />
     </div>
@@ -975,5 +984,68 @@ const h3Style = {
 const tdStyle = {
   padding: '9px 12px', fontSize: '12px', borderBottom: '1px solid var(--border)',
 };
+
+// ── Tableau de comparaison avec colonne gauche sticky ──────────────────────
+function CompareTable({ label, rows, renderRow, allSymbols, dataMap, colWidth, isMobile }) {
+  const [scrolled, setScrolled] = useState(false);
+  if (rows.length === 0) return null;
+
+  // Largeur fixe pour la colonne label, largeur minimale par colonne data
+  const LABEL_W  = 130;
+  const DATA_W   = 120;
+  const tableMin = isMobile ? `${LABEL_W + allSymbols.length * DATA_W}px` : undefined;
+
+  const stickyBase = {
+    position: 'sticky', left: 0, zIndex: 10,
+    boxShadow: scrolled ? '3px 0 8px -2px rgba(0,0,0,0.55)' : 'none',
+    borderRight: scrolled ? '1px solid var(--border)' : '1px solid transparent',
+    transition: 'box-shadow 0.2s, border-color 0.2s',
+  };
+
+  return (
+    <div style={{ marginBottom: '36px' }}>
+      <h3 style={{ ...h3Style, borderBottom: '2px solid var(--border)', paddingBottom: '10px' }}>
+        {label}
+      </h3>
+      <div
+        style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', borderRadius: '6px' }}
+        onScroll={e => setScrolled(e.currentTarget.scrollLeft > 4)}
+      >
+        <table style={{ width: isMobile ? undefined : '100%', minWidth: tableMin, borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{
+                width: isMobile ? `${LABEL_W}px` : '20%',
+                padding: '10px 12px', textAlign: 'left',
+                color: 'var(--text3)', fontSize: '11px',
+                borderBottom: '1px solid var(--border)', fontWeight: 'normal',
+                backgroundColor: 'var(--bg0)',
+                ...stickyBase, zIndex: 20,
+              }}>
+                MÉTRIQUE
+              </th>
+              {allSymbols.map((sym, i) => (
+                <th key={sym} style={{
+                  width: isMobile ? `${DATA_W}px` : colWidth,
+                  minWidth: isMobile ? `${DATA_W}px` : undefined,
+                  padding: '10px 12px', textAlign: 'right',
+                  color: ASSET_COLORS[i], fontSize: '12px',
+                  borderBottom: '1px solid var(--border)', fontWeight: 'bold',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  maxWidth: isMobile ? `${DATA_W}px` : undefined,
+                }}>
+                  {dataMap[sym]?.name || sym}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((name, rowIdx) => renderRow(name, rowIdx, scrolled))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 export default Fundamentals;
