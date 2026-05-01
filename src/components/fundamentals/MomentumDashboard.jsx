@@ -153,7 +153,7 @@ export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetTyp
         >i</button>
         {open && (
           <div style={{
-            position: 'absolute', top: '18px', left: 0, zIndex: 100,
+            position: 'absolute', top: '-5px', left: '20px', zIndex: 100,
             width: '260px', backgroundColor: 'var(--bg2)',
             border: '1px solid #2962FF44', borderRadius: '8px',
             padding: '10px 12px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)',

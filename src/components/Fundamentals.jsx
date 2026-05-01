@@ -93,20 +93,39 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     if (errors[selectedSymbol]) return <p style={{ color: '#ef5350' }}>Aucune donnée disponible pour {selectedSymbol}</p>;
     if (!primaryData)           return <p style={{ color: 'var(--text3)' }}>Aucune donnée disponible.</p>;
 
-    const renderCategory = (title, dataArray, catKey, sectionId) => {
+    const renderCategory = (title, dataArray, catKey, sectionId, showTitle = true) => {
       if (!dataArray || dataArray.length === 0) return null;
       // Exclure les métriques sans valeur pour éviter les colonnes vides
       const visible = dataArray.filter(m => m.val !== null && m.val !== undefined && m.val !== 0);
       if (visible.length === 0) return null;
       return (
         <div id={sectionId}>
-          <h3 style={h3Style}>{title}</h3>
+          {showTitle && <h3 style={h3Style}>{title}</h3>}
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${visible.length}, 1fr)`, gap: '8px' }}>
             {visible.map((metric, i) => {
               const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
               return <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
             })}
           </div>
+        </div>
+      );
+    };
+
+    // Pour les non-stocks : grille plate full-width fusionnant toutes les métriques
+    const renderFlatMetrics = (categories) => {
+      const allCards = [];
+      for (const { dataArray, catKey } of categories) {
+        if (!dataArray) continue;
+        const visible = dataArray.filter(m => m.val !== null && m.val !== undefined && m.val !== 0);
+        for (let i = 0; i < visible.length; i++) {
+          const avg = sectorAvg?.[catKey]?.[visible[i].name] ?? undefined;
+          allCards.push(<MetricCard key={`${catKey}-${i}`} metric={{ ...visible[i], avg }} fmt={fmt} fmtRaw={fmtRaw} />);
+        }
+      }
+      if (allCards.length === 0) return null;
+      return (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', marginBottom: '32px' }}>
+          {allCards}
         </div>
       );
     };
@@ -372,21 +391,29 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           );
         })()}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '3fr 3fr 4fr', gap: '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
-          {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis',    'section-market')}
-          {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health',   'section-health')}
-          {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation', 'section-valuation')}
-          {renderCategory('4. Risque & Marché',                 d.risk_market,        'risk_market',        'section-risk')}
-          {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash',       'section-balance')}
-          {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth',      'section-growth')}
-        </div>
+        {getAssetType(selectedSymbol) !== 'stock' ? (
+          // Non-stock : grille plate sans titres, pleine largeur
+          renderFlatMetrics([
+            { dataArray: d.market_analysis,    catKey: 'market_analysis'    },
+            { dataArray: d.risk_market,        catKey: 'risk_market'        },
+          ])
+        ) : (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '3fr 3fr 4fr', gap: '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
+              {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis',    'section-market')}
+              {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health',   'section-health')}
+              {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation', 'section-valuation')}
+              {renderCategory('4. Risque & Marché',                 d.risk_market,        'risk_market',        'section-risk')}
+              {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash',       'section-balance')}
+              {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth',      'section-growth')}
+            </div>
 
-        {/* ── TABLEAUX FINANCIERS — mode Stratège uniquement ── */}
-        <>
-          <FinancialStatement title="7. Compte de Résultat — Historique"  stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data}   stmtAvgHistory={sectorHistory?.income_stmt_data}   companyName={d.name} />
-          <FinancialStatement title="8. Bilan Comptable — Historique"     stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} stmtAvgHistory={sectorHistory?.balance_sheet_data} companyName={d.name} />
-          <FinancialStatement title="9. Flux de Trésorerie — Historique"  stmtData={d.cashflow_data}      fmt={fmt} stmtAvg={sectorAvg?.cashflow_data}      stmtAvgHistory={sectorHistory?.cashflow_data}      companyName={d.name} />
-        </>
+            {/* ── TABLEAUX FINANCIERS — mode Stratège uniquement ── */}
+            <FinancialStatement title="7. Compte de Résultat — Historique"  stmtData={d.income_stmt_data}   fmt={fmt} stmtAvg={sectorAvg?.income_stmt_data}   stmtAvgHistory={sectorHistory?.income_stmt_data}   companyName={d.name} />
+            <FinancialStatement title="8. Bilan Comptable — Historique"     stmtData={d.balance_sheet_data} fmt={fmt} stmtAvg={sectorAvg?.balance_sheet_data} stmtAvgHistory={sectorHistory?.balance_sheet_data} companyName={d.name} />
+            <FinancialStatement title="9. Flux de Trésorerie — Historique"  stmtData={d.cashflow_data}      fmt={fmt} stmtAvg={sectorAvg?.cashflow_data}      stmtAvgHistory={sectorHistory?.cashflow_data}      companyName={d.name} />
+          </>
+        )}
         {dd.annual?.items?.length > 0 && (() => {
           const scalarRows = [
             dd.dividend_yield      && { name: 'Rendement Div.',     vals: [dd.dividend_yield],      unit: '%' },
