@@ -16,10 +16,12 @@ import MetricInfo from './fundamentals/MetricInfo';
 import MetricCard from './fundamentals/MetricCard';
 import FinancialStatement from './fundamentals/FinancialStatement';
 import ScoreDashboard from './fundamentals/ScoreDashboard';
+import MomentumDashboard from './fundamentals/MomentumDashboard';
 import MethodologyModal from './fundamentals/MethodologyModal';
 import { useFundamentals } from '../hooks/useFundamentals';
 import { useSectorAverages } from '../hooks/useSectorAverages';
 import { useSectorHistory } from '../hooks/useSectorHistory';
+import { captureEvent } from '../utils/analytics';
 
 // Métriques clés affichées en mode Explorateur (solo uniquement)
 // 'label' = libellé grand public affiché à la place du nom technique
@@ -73,6 +75,16 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
   const isSolo = isSoloMode;
   const primaryData = dataMap[selectedSymbol];
+
+  // Détermine le type d'actif depuis le ticker (même logique que Header.jsx)
+  const getAssetType = (ticker) => {
+    if (!ticker) return 'stock';
+    const t = ticker.toUpperCase();
+    if (t.includes('-USD'))  return 'crypto';
+    if (t.startsWith('^'))   return 'index';
+    if (t.endsWith('=F'))    return 'commodity';
+    return 'stock';
+  };
 
   // ══════════════════════════════════════════════════════════════════════════
   //  VUE SOLO
@@ -161,8 +173,22 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             <p style={{ color: 'var(--text3)', lineHeight: '1.7', fontSize: '13px', margin: 0, maxWidth: '720px' }}>{d.description}</p>
           </div>
 
-          {/* ScoreDashboard complet */}
+          {/* Dashboard principal : Momentum pour crypto/indices/commodities, Score pour actions */}
           {(() => {
+            const assetType = getAssetType(selectedSymbol);
+            if (assetType !== 'stock') {
+              const rm     = d.risk_market || [];
+              const price  = rm.find(m => m.name === 'Prix Actuel')?.val ?? null;
+              const mm50   = rm.find(m => m.name === 'MM50')?.val ?? null;
+              const mm200  = rm.find(m => m.name === 'MM200')?.val ?? null;
+              const perf1y = rm.find(m => m.name === 'Performance 1an')?.val ?? null;
+              return (
+                <MomentumDashboard
+                  price={price} mm50={mm50} mm200={mm200} perf1y={perf1y}
+                  assetType={assetType}
+                />
+              );
+            }
             const beta      = d.risk_market?.find(m => m.name === 'Beta')?.val ?? null;
             const marketCap = d.market_analysis?.find(m => m.name === 'Capitalisation')?.val ?? null;
             return (
@@ -173,7 +199,13 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                 beta={beta}
                 marketCap={marketCap}
                 isBeginnerMode={true}
-                onShowAdvanced={() => setProfile('stratege')}
+                onShowAdvanced={() => {
+                  captureEvent('profile_changed', { profile: 'stratege', source: 'score_dashboard' });
+                  setProfile('stratege');
+                  setTimeout(() => {
+                    document.getElementById('section-market')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 100);
+                }}
               />
             );
           })()}
@@ -310,8 +342,22 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           </div>
         </div>
 
-        {/* ── SCORE DASHBOARD ── */}
+        {/* ── DASHBOARD PRINCIPAL ── */}
         {(() => {
+          const assetType = getAssetType(selectedSymbol);
+          if (assetType !== 'stock') {
+            const rm     = d.risk_market || [];
+            const price  = rm.find(m => m.name === 'Prix Actuel')?.val ?? null;
+            const mm50   = rm.find(m => m.name === 'MM50')?.val ?? null;
+            const mm200  = rm.find(m => m.name === 'MM200')?.val ?? null;
+            const perf1y = rm.find(m => m.name === 'Performance 1an')?.val ?? null;
+            return (
+              <MomentumDashboard
+                price={price} mm50={mm50} mm200={mm200} perf1y={perf1y}
+                assetType={assetType}
+              />
+            );
+          }
           const beta      = d.risk_market?.find(m => m.name === 'Beta')?.val ?? null;
           const marketCap = d.market_analysis?.find(m => m.name === 'Capitalisation')?.val ?? null;
           return (

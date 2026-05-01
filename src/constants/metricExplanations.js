@@ -233,6 +233,20 @@ const EXPLANATIONS = {
     why:  "Négatif = la croissance de l'activité consomme du cash. Positif = l'entreprise libère de la trésorerie en optimisant son cycle opérationnel.",
   },
 
+  // ── Momentum (crypto, indices, matières premières) ──────────────────────
+  'MM50': {
+    what: "La moyenne des prix de clôture sur les 50 derniers jours.",
+    why:  "Si le prix actuel est au-dessus, l'actif est dans une dynamique positive à court terme. C'est la référence des traders pour juger la tendance récente.",
+  },
+  'MM200': {
+    what: "La moyenne des prix de clôture sur les 200 derniers jours.",
+    why:  "C'est la frontière structurelle entre un marché globalement haussier (prix au-dessus) ou baissier (prix en-dessous). Les investisseurs long terme la surveillent de près.",
+  },
+  'Performance 1an': {
+    what: "La variation du prix sur les 12 derniers mois, exprimée en pourcentage.",
+    why:  "Utile pour mesurer la force et la persistance de la tendance sur une période significative. Une performance positive sur 1 an confirme souvent une tendance de fond.",
+  },
+
   'Moy. Secteur': {
     what: "Moyenne calculée en temps réel à partir des données de toutes les entreprises du même secteur présentes dans notre base.",
     why:  "Valeurs nulles ou manquantes exclues du calcul. Sert de référence pour évaluer si une métrique est au-dessus ou en dessous de la norme sectorielle.",
