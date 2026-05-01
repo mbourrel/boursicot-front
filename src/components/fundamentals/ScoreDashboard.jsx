@@ -320,6 +320,28 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
   const { isMobile }    = useBreakpoint();
   if (!scores) return null;
 
+  // Actif non-scorable (indice, crypto, matière première)
+  if (scores.is_scorable === false) {
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: '12px', padding: '32px 24px', textAlign: 'center',
+        backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
+        borderRadius: '12px', marginBottom: '28px',
+      }}>
+        <span style={{ fontSize: '32px' }}>📊</span>
+        <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text1)' }}>
+          Scoring fondamental non applicable
+        </div>
+        <div style={{ fontSize: '13px', color: 'var(--text3)', maxWidth: '480px', lineHeight: '1.6' }}>
+          Le scoring Boursicot est conçu pour les actions d'entreprises cotées.
+          Il nécessite des données financières (bilans, comptes de résultat, ratios de valorisation)
+          qui ne sont pas disponibles pour les <strong>indices</strong>, <strong>cryptomonnaies</strong> et <strong>matières premières</strong>.
+        </div>
+      </div>
+    );
+  }
+
   const pillarByKey = Object.fromEntries(PILLARS.map(p => [p.key, p]));
   const openPillar  = (key, score) => setActivePillar({ pillar: pillarByKey[key], score });
 
