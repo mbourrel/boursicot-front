@@ -360,11 +360,20 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isMobile ? '10px' : '20px', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <img
-          src="/logo.png"
-          alt="Boursicot"
-          style={{ height: isMobile ? '32px' : '40px', width: 'auto', objectFit: 'contain' }}
-        />
+        <div style={{
+          width: isMobile ? '34px' : '42px',
+          height: isMobile ? '34px' : '42px',
+          borderRadius: '10px',
+          overflow: 'hidden',
+          flexShrink: 0,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
+        }}>
+          <img
+            src="/logo.png"
+            alt="Boursicot"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </div>
         <h1 style={{ margin: 0, color: 'var(--text1)', fontSize: isMobile ? '18px' : undefined }}>Boursicot Pro </h1>
       </div>
 
