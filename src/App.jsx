@@ -104,7 +104,7 @@ function Dashboard() {
 
 // Toggle Simple/Trading — visible uniquement pour le profil Stratège
 function ChartWithToggle({ selectedSymbol, compareSymbols, fundamentalsData }) {
-  const [chartMode, setChartMode] = useState('simple');
+  const [chartMode, setChartMode] = useState('trading');
 
   const toggleBtnStyle = (active) => ({
     padding: '7px 16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
