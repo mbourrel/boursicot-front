@@ -5,6 +5,7 @@ import { useProfile } from '../context/ProfileContext';
 import { UserButton } from '@clerk/clerk-react';
 import { captureEvent } from '../utils/analytics';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { usePWA } from '../context/PWAContext';
 
 // ── Bouton toggle dark/light ──────────────────────────────────────────────────
 function ThemeToggle({ isDark, onToggle }) {
@@ -139,6 +140,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   const { targetCurrency, setTargetCurrency, updatedAt } = useCurrency();
   const { profile, setProfile, showCoachMark, setShowCoachMark } = useProfile();
   const { isMobile } = useBreakpoint();
+  const { installPrompt, isInstalled, triggerInstall } = usePWA();
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Auto-dismiss du Coach Mark après 5 s
@@ -561,6 +563,25 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
               <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: '20px', cursor: 'pointer', lineHeight: 1 }}>✕</button>
             </div>
             <Controls />
+
+            {/* Bouton installation PWA — visible uniquement si le prompt est disponible */}
+            {installPrompt && !isInstalled && (
+              <button
+                onClick={() => { triggerInstall(); setMenuOpen(false); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  width: '100%', padding: '12px 14px', borderRadius: '8px',
+                  border: '1px solid #1a787844', backgroundColor: '#1a787812',
+                  color: '#1a7878', cursor: 'pointer', fontSize: '13px', fontWeight: '600',
+                  transition: 'background-color 0.15s',
+                }}
+                onTouchStart={e => e.currentTarget.style.backgroundColor = '#1a787824'}
+                onTouchEnd={e => e.currentTarget.style.backgroundColor = '#1a787812'}
+              >
+                <span style={{ fontSize: '18px' }}>📲</span>
+                Installer Boursicot sur l'écran d'accueil
+              </button>
+            )}
           </div>
         </div>
       )}
