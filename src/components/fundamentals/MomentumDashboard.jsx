@@ -26,7 +26,6 @@ function clamp(v, lo = 0, hi = 10) {
   return Math.max(lo, Math.min(hi, v));
 }
 
-// Normalisation → score 0-10 (mêmes formules que scoring_logic.py)
 function scoreMM50(price, mm50) {
   if (!price || !mm50 || mm50 === 0) return 5;
   return clamp(5 + (price / mm50 - 1) * 20);
@@ -39,18 +38,94 @@ function scoreMM200(price, mm200) {
 
 function scorePerf1y(perf) {
   if (perf == null) return 5;
-  // -50% → 0 | 0% → 5 | +50% → 10
   return clamp((perf + 50) / 100 * 10);
 }
 
-// ── Jauge circulaire SVG (identique à ScoreDashboard) ────────────────────────
+// ── Tooltips — définis au niveau module (évite la règle des hooks) ────────────
+const TIPS = {
+  MM50: {
+    title: 'Moyenne Mobile 50 jours (MM50)',
+    text: "La moyenne des prix de clôture sur les 50 derniers jours. Si le prix actuel est au-dessus, l'actif est dans une dynamique positive à court terme.",
+  },
+  MM200: {
+    title: 'Moyenne Mobile 200 jours (MM200)',
+    text: "La moyenne des prix de clôture sur les 200 derniers jours. C'est la frontière structurelle entre un marché globalement haussier (prix au-dessus) ou baissier (prix en-dessous). Référence clé des investisseurs long terme.",
+  },
+  Perf1y: {
+    title: 'Performance 1 an',
+    text: "La variation du prix sur les 12 derniers mois, exprimée en pourcentage. Utile pour mesurer la force et la persistance de la tendance sur une période significative.",
+  },
+};
+
+// Composant autonome au niveau module — chaque instance gère son propre état
+function TipButton({ id }) {
+  const [pos, setPos] = useState(null);
+  const btnRef        = useRef(null);
+  const tip           = TIPS[id];
+  const open          = pos !== null;
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (open) { setPos(null); return; }
+    const rect       = btnRef.current.getBoundingClientRect();
+    const tipWidth   = 280;
+    const spaceRight = window.innerWidth - rect.right;
+    const spaceLeft  = rect.left;
+    const left = spaceRight >= tipWidth + 12
+      ? rect.right + 8
+      : spaceLeft >= tipWidth + 12
+        ? rect.left - tipWidth - 8
+        : Math.max(8, rect.right + 8);
+    setPos({ left, top: rect.top - 4 });
+  };
+
+  return (
+    <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: '5px' }}>
+      <button
+        ref={btnRef}
+        onClick={handleClick}
+        style={{
+          background: open ? '#2962FF22' : 'transparent',
+          border: `1px solid ${open ? '#2962FF88' : 'var(--border)'}`,
+          color: open ? '#2962FF' : 'var(--text3)',
+          borderRadius: '50%', width: '14px', height: '14px',
+          fontSize: '9px', fontWeight: 'bold', cursor: 'pointer',
+          padding: 0, lineHeight: 1, flexShrink: 0,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.15s',
+        }}
+      >i</button>
+      {open && createPortal(
+        <>
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 998 }}
+            onClick={() => setPos(null)}
+          />
+          <div style={{
+            position: 'fixed', top: pos.top, left: pos.left, zIndex: 999,
+            width: '280px', backgroundColor: 'var(--bg2)',
+            border: '1px solid #2962FF44', borderRadius: '8px',
+            padding: '10px 12px', boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+            fontSize: '11px', lineHeight: '1.65',
+          }}>
+            <div style={{ color: 'var(--text2)', fontWeight: 'bold', marginBottom: '8px' }}>{tip.title}</div>
+            <div style={{ color: '#b0b8c4' }}>{tip.text}</div>
+          </div>
+        </>,
+        document.body
+      )}
+    </span>
+  );
+}
+
+// ── Jauge circulaire SVG ──────────────────────────────────────────────────────
 function CircularGauge({ score, label, size = 96, strokeWidth = 8 }) {
-  const radius      = (size - strokeWidth * 2) / 2;
-  const cx          = size / 2;
-  const cy          = size / 2;
+  const radius        = (size - strokeWidth * 2) / 2;
+  const cx            = size / 2;
+  const cy            = size / 2;
   const circumference = 2 * Math.PI * radius;
-  const progress    = (score / 10) * circumference;
-  const color       = scoreColor(score);
+  const progress      = (score / 10) * circumference;
+  const color         = scoreColor(score);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
@@ -88,110 +163,27 @@ const ASSET_LABEL = {
   commodity: 'Matière première',
 };
 
+// ── Composant principal ───────────────────────────────────────────────────────
 export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetType }) {
-  const [expandedTip, setExpandedTip] = useState(null);
+  const s50   = scoreMM50(price, mm50);
+  const s200  = scoreMM200(price, mm200);
+  const sPerf = scorePerf1y(perf1y);
 
-  const s50    = scoreMM50(price, mm50);
-  const s200   = scoreMM200(price, mm200);
-  const sPerf  = scorePerf1y(perf1y);
-
-  // ── Verdict global ────────────────────────────────────────────────────────
-  let verdict, verdictColor, verdictIcon;
   const aboveMM50  = price != null && mm50  != null && price > mm50;
   const aboveMM200 = price != null && mm200 != null && price > mm200;
   const belowMM50  = price != null && mm50  != null && price < mm50;
   const belowMM200 = price != null && mm200 != null && price < mm200;
 
+  let verdict, verdictColor, verdictIcon;
   if (aboveMM50 && aboveMM200) {
-    verdict      = 'Tendance Haussière';
-    verdictColor = COLOR_UP;
-    verdictIcon  = '🟢';
+    verdict = 'Tendance Haussière'; verdictColor = COLOR_UP;      verdictIcon = '🟢';
   } else if (belowMM50 && belowMM200) {
-    verdict      = 'Tendance Baissière';
-    verdictColor = COLOR_DOWN;
-    verdictIcon  = '🔴';
+    verdict = 'Tendance Baissière'; verdictColor = COLOR_DOWN;    verdictIcon = '🔴';
   } else {
-    verdict      = 'Tendance Neutre';
-    verdictColor = COLOR_NEUTRAL;
-    verdictIcon  = '🟡';
+    verdict = 'Tendance Neutre';    verdictColor = COLOR_NEUTRAL; verdictIcon = '🟡';
   }
 
   const assetLabel = ASSET_LABEL[assetType] ?? 'Actif';
-
-  // ── Tooltips inline ───────────────────────────────────────────────────────
-  const TIPS = {
-    MM50: {
-      title: 'Moyenne Mobile 50 jours (MM50)',
-      text: "La moyenne des prix de clôture sur les 50 derniers jours. Si le prix actuel est au-dessus, l'actif est dans une dynamique positive à court terme.",
-    },
-    MM200: {
-      title: 'Moyenne Mobile 200 jours (MM200)',
-      text: "La moyenne des prix de clôture sur les 200 derniers jours. C'est la frontière structurelle entre un marché globalement haussier (prix au-dessus) ou baissier (prix en-dessous). Référence clé des investisseurs long terme.",
-    },
-    Perf1y: {
-      title: 'Performance 1 an',
-      text: "La variation du prix sur les 12 derniers mois, exprimée en pourcentage. Utile pour mesurer la force et la persistance de la tendance sur une période significative.",
-    },
-  };
-
-  function TipButton({ id }) {
-    const open   = expandedTip === id;
-    const tip    = TIPS[id];
-    const btnRef = useRef(null);
-    const [pos, setPos] = useState(null);
-
-    const handleClick = (e) => {
-      e.stopPropagation();
-      if (open) { setExpandedTip(null); setPos(null); return; }
-      const rect        = btnRef.current.getBoundingClientRect();
-      const tipWidth    = 280;
-      const spaceRight  = window.innerWidth - rect.right;
-      const spaceLeft   = rect.left;
-      const left = spaceRight >= tipWidth + 12
-        ? rect.right + 8
-        : spaceLeft >= tipWidth + 12
-          ? rect.left - tipWidth - 8
-          : Math.max(8, rect.right + 8);
-      const top = rect.top - 4;
-      setPos({ left, top });
-      setExpandedTip(id);
-    };
-
-    return (
-      <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: '5px' }}>
-        <button
-          ref={btnRef}
-          onClick={handleClick}
-          style={{
-            background: open ? '#2962FF22' : 'transparent',
-            border: `1px solid ${open ? '#2962FF88' : 'var(--border)'}`,
-            color: open ? '#2962FF' : 'var(--text3)',
-            borderRadius: '50%', width: '14px', height: '14px',
-            fontSize: '9px', fontWeight: 'bold', cursor: 'pointer',
-            padding: 0, lineHeight: 1, flexShrink: 0,
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'all 0.15s',
-          }}
-        >i</button>
-        {open && pos && createPortal(
-          <>
-            <div style={{ position: 'fixed', inset: 0, zIndex: 998 }} onClick={() => { setExpandedTip(null); setPos(null); }} />
-            <div style={{
-              position: 'fixed', top: pos.top, left: pos.left, zIndex: 999,
-              width: '280px', backgroundColor: 'var(--bg2)',
-              border: '1px solid #2962FF44', borderRadius: '8px',
-              padding: '10px 12px', boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
-              fontSize: '11px', lineHeight: '1.65',
-            }}>
-              <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '11px', marginBottom: '8px' }}>{tip.title}</div>
-              <div style={{ color: '#b0b8c4' }}>{tip.text}</div>
-            </div>
-          </>,
-          document.body
-        )}
-      </span>
-    );
-  }
 
   return (
     <div style={{
@@ -217,7 +209,6 @@ export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetTyp
         display: 'grid',
         gridTemplateColumns: 'minmax(auto, 220px) 1fr',
         alignItems: 'center',
-        gap: '0',
         padding: '24px',
       }}>
 
@@ -231,10 +222,7 @@ export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetTyp
             Verdict
           </div>
           <div style={{ fontSize: '32px', lineHeight: 1 }}>{verdictIcon}</div>
-          <div style={{
-            fontSize: '15px', fontWeight: 'bold', color: verdictColor,
-            textAlign: 'center', lineHeight: '1.3',
-          }}>
+          <div style={{ fontSize: '15px', fontWeight: 'bold', color: verdictColor, textAlign: 'center', lineHeight: '1.3' }}>
             {verdict}
           </div>
           <div style={{ fontSize: '10px', color: 'var(--text3)', textAlign: 'center', lineHeight: '1.5', maxWidth: '170px' }}>
@@ -247,12 +235,8 @@ export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetTyp
         </div>
 
         {/* 3 jauges */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-around', alignItems: 'flex-start',
-          gap: '16px', paddingLeft: '24px',
-        }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-start', gap: '16px', paddingLeft: '24px' }}>
 
-          {/* MM50 */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
             <CircularGauge score={s50} label="Court terme" />
             <div style={{ fontSize: '11px', color: 'var(--text3)', textAlign: 'center' }}>
@@ -265,7 +249,6 @@ export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetTyp
             )}
           </div>
 
-          {/* MM200 */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
             <CircularGauge score={s200} label="Long terme" />
             <div style={{ fontSize: '11px', color: 'var(--text3)', textAlign: 'center' }}>
@@ -278,7 +261,6 @@ export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetTyp
             )}
           </div>
 
-          {/* Performance 1an */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
             <CircularGauge score={sPerf} label="Dynamique 1 an" />
             <div style={{ fontSize: '11px', color: 'var(--text3)', textAlign: 'center' }}>
