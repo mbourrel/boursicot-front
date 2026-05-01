@@ -1008,7 +1008,7 @@ function CompareTable({ label, rows, renderRow, allSymbols, dataMap, colWidth, i
         {label}
       </h3>
       <div
-        style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', borderRadius: '6px' }}
+        style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', borderRadius: '6px', maxWidth: '100%', overscrollBehaviorX: 'contain' }}
         onScroll={e => setScrolled(e.currentTarget.scrollLeft > 4)}
       >
         <table style={{ width: isMobile ? undefined : '100%', minWidth: tableMin, borderCollapse: 'collapse' }}>
