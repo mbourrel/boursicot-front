@@ -14,6 +14,8 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import MethodologyModal from './MethodologyModal';
 import { PILLARS } from '../../constants/pillars';
+import SwipeableContainer from '../SwipeableContainer';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 const COLOR_UP      = '#26a69a';
 const COLOR_DOWN    = '#ef5350';
@@ -315,6 +317,7 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
   const [activePillar,   setActivePillar]   = useState(null);
   const [showGlobalModal, setShowGlobalModal] = useState(false);
   const [btnHover,       setBtnHover]       = useState(false);
+  const { isMobile }    = useBreakpoint();
   if (!scores) return null;
 
   const pillarByKey = Object.fromEntries(PILLARS.map(p => [p.key, p]));
@@ -354,6 +357,215 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
     efficiency: scores.efficiency ?? 5,
   };
 
+  // ── Blocs réutilisables (desktop + slides mobiles) ───────────────────────────
+
+  const colLeft = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', alignItems: 'center', justifyContent: 'center', padding: '20px 12px' }}>
+      <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.1em', color: 'var(--text3)', textTransform: 'uppercase' }}>
+        Piliers Financiers
+      </div>
+      <CircularGauge score={s.health} label="Santé" icon="❤️" size={110} onPillarClick={() => openPillar('health', s.health)} />
+      <div style={{ display: 'flex', gap: '36px' }}>
+        <CircularGauge score={s.valuation} label="Valorisation" icon="📊" size={110} onPillarClick={() => openPillar('valuation', s.valuation)} />
+        <CircularGauge score={s.growth}    label="Croissance"   icon="📈" size={110} onPillarClick={() => openPillar('growth',    s.growth)}    />
+      </div>
+    </div>
+  );
+
+  const colCenter = (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      gap: '10px', padding: '20px',
+    }}>
+      {/* Zone cliquable : Label + Gauge + Verdict */}
+      <div
+        onClick={() => setShowGlobalModal(true)}
+        title="Voir le détail de la Note Globale"
+        style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+          cursor: 'pointer', borderRadius: '10px', padding: '8px 12px',
+          transition: 'background 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--border)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+      >
+        <div style={{ fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.1em', color: 'var(--text3)', textTransform: 'uppercase' }}>
+          Note Globale
+        </div>
+        <MasterGauge score={globalScore} size={104} strokeWidth={10} />
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '22px', fontWeight: 'bold', color: verdictColor, lineHeight: 1, marginBottom: '3px' }}>
+            {scores.verdict}
+          </div>
+          <div style={{ fontSize: '10px', color: 'var(--text3)', opacity: 0.75, lineHeight: '1.4' }}>
+            Synthèse de 60+ indicateurs<br />(Santé, Valo, Croissance…)
+          </div>
+        </div>
+      </div>
+
+      {/* Complexité */}
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: '9px', fontWeight: 'bold', letterSpacing: '0.08em', color: 'var(--text3)', textTransform: 'uppercase', marginBottom: '5px' }}>
+          Complexité
+        </div>
+        <span style={{
+          display: 'inline-block', padding: '3px 10px', borderRadius: '4px',
+          fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.04em',
+          backgroundColor: complexityColor + '22', color: complexityColor,
+          border: `1px solid ${complexityColor}55`,
+        }}>
+          {complexityLabel}
+        </span>
+        <div style={{ marginTop: '5px', fontSize: '10px', color: riskHint.color, opacity: 0.85, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+          <span>{riskHint.icon}</span>
+          <span>{riskHint.text}</span>
+        </div>
+      </div>
+
+      {/* Bouton Voir métriques détaillées */}
+      {onShowAdvanced && isBeginnerMode && (
+        <button
+          onClick={onShowAdvanced}
+          style={{
+            marginTop: '4px',
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
+            border: '1px solid var(--border)',
+            backgroundColor: 'transparent',
+            color: 'var(--text2)',
+            fontSize: '12px', fontWeight: '500',
+            transition: 'all 0.2s', whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = '#2962FF';
+            e.currentTarget.style.color = '#2962FF';
+            e.currentTarget.style.backgroundColor = '#2962FF11';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = 'var(--border)';
+            e.currentTarget.style.color = 'var(--text2)';
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+        >
+          <span style={{ fontSize: '13px' }}>📊</span>
+          Voir les métriques détaillées
+          <span style={{ fontSize: '10px', opacity: 0.6 }}>↓</span>
+        </button>
+      )}
+
+      {/* Contexte secteur */}
+      {(sector || companyCount) && (
+        <div style={{ fontSize: '10px', color: 'var(--text3)', textAlign: 'center', lineHeight: '1.5', opacity: 0.8, maxWidth: '190px' }}>
+          {companyCount !== null && companyCount < 3 && (
+            <span title="Échantillon faible — score moins représentatif" style={{ marginRight: '4px' }}>⚠️</span>
+          )}
+          {companyCount != null
+            ? <>Comparaison basée sur <strong style={{ color: 'var(--text2)' }}>{companyCount} entreprises</strong> du secteur {sector}</>
+            : <>Secteur : <strong style={{ color: 'var(--text2)' }}>{sector}</strong></>
+          }
+        </div>
+      )}
+    </div>
+  );
+
+  const colRight = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', alignItems: 'center', justifyContent: 'center', padding: '20px 12px' }}>
+      <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.1em', color: 'var(--text3)', textTransform: 'uppercase' }}>
+        Piliers Stratégiques
+      </div>
+      <CircularGauge score={s.dividend} label="Dividende" icon="💰" size={110} onPillarClick={() => openPillar('dividend', s.dividend)} />
+      <div style={{ display: 'flex', gap: '36px' }}>
+        <CircularGauge score={s.momentum}   label="Momentum"   icon="⚡"  size={110} onPillarClick={() => openPillar('momentum',   s.momentum)}   />
+        <CircularGauge score={s.efficiency} label="Efficacité" icon="⚙️" size={110} onPillarClick={() => openPillar('efficiency', s.efficiency)} />
+      </div>
+    </div>
+  );
+
+  const colLegend = (
+    <div style={{
+      display: 'flex', flexDirection: 'column', gap: '14px',
+      fontSize: '15px', color: 'var(--text3)',
+      padding: isMobile ? '20px' : undefined,
+      alignItems: isMobile ? 'center' : undefined,
+    }}>
+      <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '2px', color: 'var(--text3)' }}>
+        Légende
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: COLOR_UP,      flexShrink: 0 }} />
+        ≥ 7 — Favorable
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: COLOR_NEUTRAL, flexShrink: 0 }} />
+        4-7 — Neutre
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: COLOR_DOWN,    flexShrink: 0 }} />
+        &lt; 4 — Défavorable
+      </div>
+      <button
+        onClick={() => setShowModal(true)}
+        onMouseEnter={() => setBtnHover(true)}
+        onMouseLeave={() => setBtnHover(false)}
+        style={{
+          marginTop: '16px',
+          display: 'flex', alignItems: 'center', gap: '9px',
+          padding: '10px 18px', borderRadius: '20px', cursor: 'pointer',
+          border: `1px solid ${btnHover ? 'var(--text1)' : 'var(--border)'}`,
+          backgroundColor: 'transparent',
+          color: btnHover ? 'var(--text1)' : 'var(--text3)',
+          fontSize: '14px', fontWeight: '500',
+          transition: 'all 0.2s', whiteSpace: 'nowrap',
+        }}
+      >
+        <span style={{ fontSize: '16px' }}>📖</span>
+        Définition des indicateurs
+      </button>
+    </div>
+  );
+
+  const disclaimer = (
+    <div style={{
+      textAlign: 'center', fontSize: '9px', color: 'var(--text3)', opacity: 0.55,
+      letterSpacing: '0.02em', paddingTop: '10px', borderTop: '1px solid var(--border)',
+      marginTop: '4px',
+    }}>
+      Scores indicatifs uniquement — ne constituent pas un conseil en investissement.
+    </div>
+  );
+
+  const modals = (
+    <>
+      {showModal       && <MethodologyModal onClose={() => setShowModal(false)} sector={sector} />}
+      {activePillar    && <GaugePillarModal pillar={activePillar.pillar} score={activePillar.score} onClose={() => setActivePillar(null)} />}
+      {showGlobalModal && <GlobalScoreModal scores={s} globalScore={globalScore} verdictColor={verdictColor} onClose={() => setShowGlobalModal(false)} />}
+    </>
+  );
+
+  // ── Mobile : carousel 3 slides ───────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <div style={{
+        backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
+        borderRadius: '12px', marginBottom: '28px', overflow: 'hidden',
+        padding: '12px 0 16px',
+      }}>
+        <SwipeableContainer>
+          {colLeft}
+          {colCenter}
+          <div>
+            {colRight}
+            <div style={{ borderTop: '1px solid var(--border)', margin: '0 12px' }} />
+            {colLegend}
+          </div>
+        </SwipeableContainer>
+        <div style={{ padding: '0 16px' }}>{disclaimer}</div>
+        {modals}
+      </div>
+    );
+  }
+
+  // ── Desktop : grille 4 colonnes ──────────────────────────────────────────────
   return (
     <div style={{
       display: 'grid',

@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { useProfile } from '../context/ProfileContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function WelcomeModal() {
   const { setProfile } = useProfile();
+  const { isMobile }   = useBreakpoint();
 
   // ESC ou clic hors des cartes → Explorateur par défaut
   useEffect(() => {
@@ -29,8 +31,8 @@ export default function WelcomeModal() {
         style={{
           backgroundColor: 'var(--bg1)', borderRadius: '16px',
           border: '1px solid var(--border)',
-          padding: '40px 32px',
-          maxWidth: '660px', width: '100%',
+          padding: isMobile ? '24px 16px' : '40px 32px',
+          maxWidth: '660px', width: isMobile ? '95%' : '100%',
           boxShadow: '0 24px 48px rgba(0,0,0,0.65)',
         }}
       >
@@ -47,7 +49,7 @@ export default function WelcomeModal() {
         </div>
 
         {/* Cartes */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
           <ProfileCard
             icon="🧭"
             title="Explorateur"

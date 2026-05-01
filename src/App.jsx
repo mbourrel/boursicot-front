@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { useBreakpoint } from './hooks/useBreakpoint';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { registerTokenGetter } from './api/config';
 import { identifyUser, captureEvent } from './utils/analytics';
@@ -26,6 +27,7 @@ function Dashboard() {
 
   const { profile } = useProfile();
   const isExplorateur = profile === 'explorateur';
+  const { isMobile } = useBreakpoint();
 
   const { assets: fundamentalsData } = useAssets();
 
@@ -45,7 +47,7 @@ function Dashboard() {
         position: 'sticky', top: 0, zIndex: 100,
         backgroundColor: 'var(--bg0)',
         borderBottom: '1px solid var(--border)',
-        padding: '12px 20px 10px',
+        padding: isMobile ? '8px 12px 8px' : '12px 20px 10px',
       }}>
         <div style={{
           backgroundColor: '#1a1400', border: '1px solid #f59e0b40',
@@ -66,7 +68,7 @@ function Dashboard() {
       </div>
 
       {/* ── CONTENU SCROLLABLE ── */}
-      <div style={{ padding: '20px' }}>
+      <div style={{ padding: isMobile ? '12px' : '20px' }}>
 
         {viewMode !== 'macro' && (
           <CompareBar

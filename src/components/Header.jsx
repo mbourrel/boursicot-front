@@ -4,6 +4,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useProfile } from '../context/ProfileContext';
 import { UserButton } from '@clerk/clerk-react';
 import { captureEvent } from '../utils/analytics';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 // ── Bouton toggle dark/light ──────────────────────────────────────────────────
 function ThemeToggle({ isDark, onToggle }) {
@@ -137,6 +138,8 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   const { isDark, toggleTheme } = useTheme();
   const { targetCurrency, setTargetCurrency, updatedAt } = useCurrency();
   const { profile, setProfile, showCoachMark, setShowCoachMark } = useProfile();
+  const { isMobile } = useBreakpoint();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Auto-dismiss du Coach Mark après 5 s
   useEffect(() => {
@@ -267,11 +270,173 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   const countryItems = availableCountries.map(c => ({ key: c, label: c }));
   const sectorItems = availableSectors.map(s => ({ key: s, label: s }));
 
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-      <h1 style={{ margin: 0, color: 'var(--text1)' }}>Boursicot Pro 📈</h1>
+  // ── Contrôles réutilisables (Desktop inline + Mobile menu) ──────────────────
+  const Controls = () => (
+    <>
+      {/* TOGGLE DEVISE */}
+      {viewMode === 'fundamentals' && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <div style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+            {['LOCAL', 'EUR', 'USD'].map((cur, i) => (
+              <button
+                key={cur}
+                onClick={() => { captureEvent('currency_changed', { currency: cur }); setTargetCurrency(cur); }}
+                style={{
+                  padding: '6px 10px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold',
+                  borderRadius: i === 0 ? '5px 0 0 5px' : i === 2 ? '0 5px 5px 0' : '0',
+                  borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
+                  backgroundColor: targetCurrency === cur ? '#2962FF' : 'transparent',
+                  color: targetCurrency === cur ? 'white' : 'var(--text3)',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {cur === 'LOCAL' ? '🏳 Local' : cur === 'EUR' ? '€ EUR' : '$ USD'}
+              </button>
+            ))}
+          </div>
+          {updatedAt && targetCurrency !== 'LOCAL' && (
+            <span style={{ fontSize: '9px', color: 'var(--text3)' }}>
+              Taux du {new Date(updatedAt).toLocaleDateString('fr-FR')}
+            </span>
+          )}
+        </div>
+      )}
 
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* TOGGLE PROFIL */}
+      <div style={{ position: 'relative' }}>
+        <div style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+          {[
+            { value: 'explorateur', icon: '🧭', label: 'Explorateur' },
+            { value: 'stratege',    icon: '📈', label: 'Stratège' },
+          ].map(({ value, icon, label }, i) => (
+            <button
+              key={value}
+              onClick={() => { captureEvent('profile_changed', { profile: value }); setProfile(value); setMenuOpen(false); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '5px',
+                padding: '6px 11px', border: 'none', cursor: 'pointer',
+                borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
+                backgroundColor: profile === value ? '#2962FF' : 'transparent',
+                color: profile === value ? 'white' : 'var(--text3)',
+                fontSize: '11px', fontWeight: 'bold', transition: 'all 0.15s',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span>{icon}</span>{label}
+            </button>
+          ))}
+        </div>
+        {showCoachMark && !isMobile && (
+          <div
+            onClick={() => setShowCoachMark(false)}
+            style={{
+              position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+              backgroundColor: '#2962FF', color: 'white',
+              borderRadius: '8px', padding: '10px 14px',
+              fontSize: '12px', whiteSpace: 'nowrap',
+              boxShadow: '0 4px 16px rgba(41,98,255,0.45)',
+              cursor: 'pointer', zIndex: 200,
+            }}
+          >
+            <div style={{ position: 'absolute', top: '-6px', right: '20px', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '6px solid #2962FF' }} />
+            ✓ Mode {profile === 'explorateur' ? 'Explorateur' : 'Stratège'} activé
+          </div>
+        )}
+      </div>
+
+      {/* TOGGLE DARK / LIGHT */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+        <span style={{ fontSize: '11px', color: 'var(--text3)', letterSpacing: '0.04em', userSelect: 'none' }}>DARK</span>
+        <ThemeToggle isDark={isDark} onToggle={() => { captureEvent('theme_toggled', { theme: isDark ? 'light' : 'dark' }); toggleTheme(); }} />
+      </div>
+
+      {/* BOUTON UTILISATEUR CLERK */}
+      <UserButton />
+    </>
+  );
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isMobile ? '10px' : '20px', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+      <h1 style={{ margin: 0, color: 'var(--text1)', fontSize: isMobile ? '18px' : undefined }}>Boursicot Pro 📈</h1>
+
+      {/* ── MOBILE : barre de recherche + burger ── */}
+      {isMobile ? (
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%' }}>
+          {/* Boutons de navigation compacts */}
+          <div style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', flexShrink: 0 }}>
+            {[
+              { mode: 'chart',        label: '📈' },
+              { mode: 'fundamentals', label: '📊' },
+              { mode: 'macro',        label: '🌐' },
+            ].map(({ mode, label }) => (
+              <button
+                key={mode}
+                onClick={() => { captureEvent('view_changed', { view: mode }); setViewMode(mode); }}
+                style={{
+                  padding: '8px 11px', border: 'none', cursor: 'pointer', fontSize: '16px',
+                  backgroundColor: viewMode === mode ? '#2962FF' : 'transparent',
+                  color: viewMode === mode ? 'white' : 'var(--text3)',
+                  borderRadius: '6px', transition: 'background-color 0.2s',
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Barre de recherche (pleine largeur restante) */}
+          <div ref={dropdownRef} style={{ position: 'relative', flex: 1 }}>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setIsOpen(true); }}
+              onClick={() => { setSearchTerm(''); setIsOpen(true); }}
+              placeholder={fundamentalsData.length === 0 ? 'Chargement...' : 'Rechercher...'}
+              disabled={fundamentalsData.length === 0}
+              style={{
+                width: '100%', padding: '8px 12px', borderRadius: '6px',
+                backgroundColor: 'var(--bg3)', color: 'var(--text1)',
+                border: '1px solid var(--border)', outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+            {isOpen && (
+              <ul style={{
+                position: 'absolute', top: '100%', left: 0, width: '100%',
+                backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
+                borderRadius: '6px', marginTop: '4px', padding: 0, listStyle: 'none',
+                maxHeight: '260px', overflowY: 'auto', zIndex: 50, color: 'var(--text1)',
+                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)',
+              }}>
+                {filteredData.length > 0 ? filteredData.map((company) => (
+                  <li key={company.ticker} onClick={() => handleSelect(company.ticker)}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2962FF'}
+                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                    style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'baseline', transition: 'background-color 0.2s' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text1)', marginRight: '8px' }}>{company.name || company.ticker}</span>
+                    <span style={{ fontSize: '11px', color: '#00bcd4' }}>({company.ticker})</span>
+                  </li>
+                )) : (
+                  <li style={{ padding: '10px 12px', color: 'var(--text3)', fontStyle: 'italic', fontSize: '13px' }}>Aucun résultat</li>
+                )}
+              </ul>
+            )}
+          </div>
+
+          {/* Burger button */}
+          <button
+            onClick={() => setMenuOpen(v => !v)}
+            style={{
+              flexShrink: 0, padding: '8px 10px', border: '1px solid var(--border)',
+              borderRadius: '6px', backgroundColor: menuOpen ? '#2962FF' : 'var(--bg3)',
+              color: menuOpen ? 'white' : 'var(--text1)', cursor: 'pointer', fontSize: '18px',
+              lineHeight: 1,
+            }}
+          >
+            {menuOpen ? '✕' : '☰'}
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
 
         {/* FILTRE TYPE */}
         <FilterDropdown
@@ -372,106 +537,48 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
           <button onClick={() => { captureEvent('view_changed', { view: 'macro' }); setViewMode('macro'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'macro' ? '#26a69a' : 'transparent', color: 'var(--text1)', borderRadius: '0 6px 6px 0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🌐 Indicateurs Macroéconomiques</button>
         </div>
 
-        {/* TOGGLE DEVISE — visible uniquement en vue Fondamentaux */}
+          <Controls />
+        </div>
+      )}
 
-        {/* TOGGLE DEVISE — visible uniquement en vue Fondamentaux */}
-        {viewMode === 'fundamentals' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-            <div style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-              {['LOCAL', 'EUR', 'USD'].map((cur, i) => (
-                <button
-                  key={cur}
-                  onClick={() => { captureEvent('currency_changed', { currency: cur }); setTargetCurrency(cur); }}
-                  style={{
-                    padding: '6px 10px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold',
-                    borderRadius: i === 0 ? '5px 0 0 5px' : i === 2 ? '0 5px 5px 0' : '0',
-                    borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
-                    backgroundColor: targetCurrency === cur ? '#2962FF' : 'transparent',
-                    color: targetCurrency === cur ? 'white' : 'var(--text3)',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {cur === 'LOCAL' ? '🏳 Local' : cur === 'EUR' ? '€ EUR' : '$ USD'}
-                </button>
-              ))}
-            </div>
-            {updatedAt && targetCurrency !== 'LOCAL' && (
-              <span style={{ fontSize: '9px', color: 'var(--text3)' }}>
-                Taux du {new Date(updatedAt).toLocaleDateString('fr-FR')}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* TOGGLE PROFIL Explorateur / Stratège + Coach Mark */}
-        <div style={{ position: 'relative' }}>
+      {/* ── Panneau menu mobile (overlay slide-down) ── */}
+      {isMobile && menuOpen && (
+        <div
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 200, backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setMenuOpen(false)}
+        >
           <div
-            title={profile === 'explorateur' ? 'Passer en mode Stratège — vue complète' : 'Passer en mode Explorateur — vue simplifiée'}
-            style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', border: '1px solid var(--border)', overflow: 'hidden' }}
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: 'absolute', top: 0, left: 0, right: 0,
+              backgroundColor: 'var(--bg1)', borderBottom: '1px solid var(--border)',
+              padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            }}
           >
-            {[
-              { value: 'explorateur', icon: '🧭', label: 'Explorateur' },
-              { value: 'stratege',    icon: '📈', label: 'Stratège' },
-            ].map(({ value, icon, label }, i) => (
-              <button
-                key={value}
-                onClick={() => { captureEvent('profile_changed', { profile: value }); setProfile(value); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '5px',
-                  padding: '6px 11px', border: 'none', cursor: 'pointer',
-                  borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
-                  backgroundColor: profile === value ? '#2962FF' : 'transparent',
-                  color: profile === value ? 'white' : 'var(--text3)',
-                  fontSize: '11px', fontWeight: 'bold', transition: 'all 0.15s',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <span>{icon}</span>{label}
-              </button>
-            ))}
-          </div>
-
-          {/* Coach Mark — apparaît après un changement de profil, se ferme en 5 s */}
-          {showCoachMark && (
-            <div
-              onClick={() => setShowCoachMark(false)}
-              style={{
-                position: 'absolute', top: 'calc(100% + 10px)', right: 0,
-                backgroundColor: '#2962FF', color: 'white',
-                borderRadius: '8px', padding: '10px 14px',
-                fontSize: '12px', whiteSpace: 'nowrap',
-                boxShadow: '0 4px 16px rgba(41,98,255,0.45)',
-                cursor: 'pointer', zIndex: 200,
-                opacity: 1, transition: 'opacity 0.3s',
-              }}
-            >
-              {/* Triangle pointant vers le toggle */}
-              <div style={{
-                position: 'absolute', top: '-6px', right: '20px',
-                width: 0, height: 0,
-                borderLeft: '6px solid transparent',
-                borderRight: '6px solid transparent',
-                borderBottom: '6px solid #2962FF',
-              }} />
-              ✓ Mode {profile === 'explorateur' ? 'Explorateur' : 'Stratège'} activé — cliquez ici pour changer
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '13px' }}>Paramètres</span>
+              <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: '20px', cursor: 'pointer', lineHeight: 1 }}>✕</button>
             </div>
-          )}
+            <Controls />
+          </div>
         </div>
+      )}
 
-        {/* TOGGLE DARK / LIGHT */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text3)', letterSpacing: '0.04em', userSelect: 'none' }}>
-            DARK
-          </span>
-          <ThemeToggle isDark={isDark} onToggle={() => { captureEvent('theme_toggled', { theme: isDark ? 'light' : 'dark' }); toggleTheme(); }} />
+      {/* ── Coach Mark mobile (toast bas d'écran) ── */}
+      {isMobile && showCoachMark && (
+        <div onClick={() => setShowCoachMark(false)} style={{
+          position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
+          backgroundColor: '#2962FF', color: 'white', borderRadius: '8px', padding: '10px 18px',
+          fontSize: '12px', zIndex: 300, boxShadow: '0 4px 16px rgba(41,98,255,0.45)',
+          cursor: 'pointer', whiteSpace: 'nowrap',
+        }}>
+          ✓ Mode {profile === 'explorateur' ? 'Explorateur' : 'Stratège'} activé
         </div>
-
-        {/* BOUTON UTILISATEUR CLERK (profil + déconnexion) */}
-        <UserButton />
-      </div>
+      )}
 
       {/* DISCLAIMER MIF2 */}
-      <div style={{ fontSize: '10px', color: 'var(--text3)', textAlign: 'center', paddingTop: '5px', opacity: 0.65, letterSpacing: '0.02em' }}>
+      <div style={{ fontSize: '10px', color: 'var(--text3)', textAlign: 'center', paddingTop: '5px', opacity: 0.65, letterSpacing: '0.02em', width: '100%' }}>
         Informations à titre indicatif uniquement — ne constituent pas un conseil en investissement. Tout investissement comporte un risque de perte en capital.
       </div>
     </div>

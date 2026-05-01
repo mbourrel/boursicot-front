@@ -4,9 +4,12 @@ import { ASSET_COLORS } from './CompareBar';
 import { useTheme } from '../context/ThemeContext';
 import { API_URL, authFetch } from '../api/config';
 import SourceTag from './SourceTag';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   const { theme, isDark } = useTheme();
+  const { isMobile } = useBreakpoint();
+  const CHART_HEIGHT = isMobile ? 300 : 500;
   const getName = (ticker) => allAssets.find(a => a.ticker === ticker)?.name || ticker;
   const chartContainerRef = useRef();
   const chartInstanceRef = useRef(null);
@@ -68,7 +71,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
       layout: { background: { type: 'solid', color: theme.chartBg }, textColor: theme.chartText },
       grid: { vertLines: { color: theme.chartGrid }, horzLines: { color: theme.chartGrid } },
       width: chartContainerRef.current.clientWidth,
-      height: 500,
+      height: CHART_HEIGHT,
       timeScale: { timeVisible: true, borderColor: theme.chartGrid, minBarSpacing: 0.001 },
       rightPriceScale: { borderColor: theme.chartGrid },
       crosshair: { vertLine: { color: '#758696' }, horzLine: { color: '#758696' } },
@@ -350,7 +353,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             ))}
           </div>
         )}
-        <div ref={chartContainerRef} style={{ width: '100%', height: '500px' }} />
+        <div ref={chartContainerRef} style={{ width: '100%', height: `${CHART_HEIGHT}px` }} />
         <SourceTag label="Yahoo Finance" />
       </div>
     </div>

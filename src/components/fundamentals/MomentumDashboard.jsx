@@ -11,6 +11,7 @@
  */
 import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 const COLOR_UP      = '#26a69a';
 const COLOR_DOWN    = '#ef5350';
@@ -166,6 +167,7 @@ const ASSET_LABEL = {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetType }) {
+  const { isMobile } = useBreakpoint();
   const s50   = scoreMM50(price, mm50);
   const s200  = scoreMM200(price, mm200);
   const sPerf = scorePerf1y(perf1y);
@@ -207,17 +209,22 @@ export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetTyp
 
       {/* ── Corps : Verdict + 3 jauges ── */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(auto, 220px) 1fr',
+        display: isMobile ? 'flex' : 'grid',
+        flexDirection: isMobile ? 'column' : undefined,
+        gridTemplateColumns: isMobile ? undefined : 'minmax(auto, 220px) 1fr',
         alignItems: 'center',
         padding: '24px',
+        gap: isMobile ? '24px' : undefined,
       }}>
 
         {/* Verdict global */}
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'center', gap: '10px', paddingRight: '24px',
-          borderRight: '1px solid var(--border)',
+          justifyContent: 'center', gap: '10px',
+          paddingRight: isMobile ? undefined : '24px',
+          paddingBottom: isMobile ? '24px' : undefined,
+          borderRight: isMobile ? undefined : '1px solid var(--border)',
+          borderBottom: isMobile ? '1px solid var(--border)' : undefined,
         }}>
           <div style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.1em', color: 'var(--text3)', textTransform: 'uppercase' }}>
             Verdict
@@ -236,7 +243,7 @@ export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetTyp
         </div>
 
         {/* 3 jauges */}
-        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-start', gap: '16px', paddingLeft: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-start', gap: '16px', paddingLeft: isMobile ? undefined : '24px', flexWrap: isMobile ? 'wrap' : undefined }}>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
             <CircularGauge score={s50} label="Court terme" />
