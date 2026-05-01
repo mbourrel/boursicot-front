@@ -114,7 +114,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             {visible.map((metric, i) => {
               const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
               return metricsCarousel
-                ? <div key={i} style={{ flex: '0 0 82%', scrollSnapAlign: 'center', minWidth: 0 }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} /></div>
+                ? <div key={i} style={{ flex: '0 0 44%', scrollSnapAlign: 'start', minWidth: 0 }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} /></div>
                 : <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
             })}
           </div>
@@ -147,7 +147,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           {allMetrics.map(({ metric, catKey }, i) => {
             const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
             return isMobile
-              ? <div key={`${catKey}-${i}`} style={{ flex: '0 0 82%', scrollSnapAlign: 'center', minWidth: 0 }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large /></div>
+              ? <div key={`${catKey}-${i}`} style={{ flex: '0 0 44%', scrollSnapAlign: 'start', minWidth: 0 }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large /></div>
               : <MetricCard key={`${catKey}-${i}`} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large />;
           })}
         </div>
@@ -275,9 +275,16 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
           {/* Métriques Reines */}
           <div style={{ marginBottom: '16px' }}>
-            <h3 style={{ color: 'var(--text3)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
-              Indicateurs clés
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <h3 style={{ color: 'var(--text3)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>
+                Indicateurs clés
+              </h3>
+              {isMobile && (
+                <span style={{ fontSize: '10px', color: 'var(--text3)', opacity: 0.6, letterSpacing: '0.03em' }}>
+                  ↔ Swipe
+                </span>
+              )}
+            </div>
             <div style={isMobile ? {
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
               WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none',
@@ -296,7 +303,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                 }
                 if (!metric || metric.val === null || metric.val === undefined) return null;
                 return isMobile
-                  ? <div key={name} style={{ flex: '0 0 72%', scrollSnapAlign: 'center', minWidth: 0 }}><MetricCard metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} /></div>
+                  ? <div key={name} style={{ flex: '0 0 44%', scrollSnapAlign: 'start', minWidth: 0 }}><MetricCard metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} /></div>
                   : <MetricCard key={name} metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} />;
               })}
             </div>
@@ -469,12 +476,24 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
         {getAssetType(selectedSymbol) !== 'stock' ? (
           // Non-stock : grille plate sans titres, pleine largeur
-          renderFlatMetrics([
-            { dataArray: d.market_analysis,    catKey: 'market_analysis'    },
-            { dataArray: d.risk_market,        catKey: 'risk_market'        },
-          ])
+          <>
+            {isMobile && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--text3)', opacity: 0.6, letterSpacing: '0.03em' }}>↔ Swipe</span>
+              </div>
+            )}
+            {renderFlatMetrics([
+              { dataArray: d.market_analysis, catKey: 'market_analysis' },
+              { dataArray: d.risk_market,     catKey: 'risk_market'     },
+            ])}
+          </>
         ) : (
           <>
+            {isMobile && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--text3)', opacity: 0.6, letterSpacing: '0.03em' }}>↔ Swipe</span>
+              </div>
+            )}
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '3fr 3fr 4fr', gap: isMobile ? '16px' : '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
               {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis',    'section-market')}
               {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health',   'section-health')}
