@@ -76,7 +76,7 @@ function TipButton({ id }) {
       : spaceLeft >= tipWidth + 12
         ? rect.left - tipWidth - 8
         : Math.max(8, rect.right + 8);
-    setPos({ left, top: rect.top - 4 });
+    setPos({ left, top: rect.top + rect.height / 2 });
   };
 
   return (
@@ -103,6 +103,7 @@ function TipButton({ id }) {
           />
           <div style={{
             position: 'fixed', top: pos.top, left: pos.left, zIndex: 999,
+            transform: 'translateY(-50%)',
             width: '280px', backgroundColor: 'var(--bg2)',
             border: '1px solid #2962FF44', borderRadius: '8px',
             padding: '10px 12px', boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
