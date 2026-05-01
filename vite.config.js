@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'icons/*.png', 'robots.txt'],
       manifest: {
-        name: 'Boursicot',
-        short_name: 'Boursicot',
+        name: 'Boursicot Pro',
+        short_name: 'Boursicot Pro',
         description: 'Analyse fondamentale et graphiques boursiers',
         start_url: '/',
         display: 'standalone',
