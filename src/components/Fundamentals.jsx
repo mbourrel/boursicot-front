@@ -3,6 +3,7 @@ import { ASSET_COLORS } from './CompareBar';
 import { useCurrency } from '../context/CurrencyContext';
 import { useProfile } from '../context/ProfileContext';
 import { formatFinancialValue } from '../utils/formatFinancialValue';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import SourceTag from './SourceTag';
 
 const LOWER_IS_BETTER = new Set([
@@ -71,6 +72,8 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     return typeof r === 'string' ? r : '—';
   };
 
+  const { isMobile } = useBreakpoint();
+
   if (loading) return <p style={{ color: 'var(--text3)' }}>Chargement...</p>;
 
   const isSolo = isSoloMode;
@@ -98,13 +101,20 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
       // Exclure les métriques sans valeur pour éviter les colonnes vides
       const visible = dataArray.filter(m => m.val !== null && m.val !== undefined && m.val !== 0);
       if (visible.length === 0) return null;
+      const metricsCarousel = isMobile;
       return (
         <div id={sectionId}>
           {showTitle && <h3 style={h3Style}>{title}</h3>}
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${visible.length}, 1fr)`, gap: '8px' }}>
+          <div style={metricsCarousel ? {
+            display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none',
+            gap: '10px', paddingBottom: '4px',
+          } : { display: 'grid', gridTemplateColumns: `repeat(${visible.length}, 1fr)`, gap: '8px' }}>
             {visible.map((metric, i) => {
               const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
-              return <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
+              return metricsCarousel
+                ? <div key={i} style={{ flex: '0 0 82%', scrollSnapAlign: 'center', minWidth: 0 }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} /></div>
+                : <MetricCard key={i} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} />;
             })}
           </div>
         </div>
@@ -123,7 +133,11 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
       }
       if (allMetrics.length === 0) return null;
       return (
-        <div style={{
+        <div style={isMobile ? {
+          display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none',
+          gap: '10px', paddingBottom: '4px', marginBottom: '32px',
+        } : {
           display: 'grid',
           gridTemplateColumns: `repeat(${allMetrics.length}, 1fr)`,
           gap: '10px',
@@ -131,7 +145,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
         }}>
           {allMetrics.map(({ metric, catKey }, i) => {
             const avg = sectorAvg?.[catKey]?.[metric.name] ?? undefined;
-            return <MetricCard key={`${catKey}-${i}`} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large />;
+            return isMobile
+              ? <div key={`${catKey}-${i}`} style={{ flex: '0 0 82%', scrollSnapAlign: 'center', minWidth: 0 }}><MetricCard metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large /></div>
+              : <MetricCard key={`${catKey}-${i}`} metric={{ ...metric, avg }} fmt={fmt} fmtRaw={fmtRaw} large />;
           })}
         </div>
       );
@@ -241,12 +257,15 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             <h3 style={{ color: 'var(--text3)', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
               Indicateurs clés
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${METRIQUES_REINES.length}, 1fr)`, gap: '10px' }}>
+            <div style={isMobile ? {
+              display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
+              WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none',
+              gap: '10px', paddingBottom: '4px',
+            } : { display: 'grid', gridTemplateColumns: `repeat(${METRIQUES_REINES.length}, 1fr)`, gap: '10px' }}>
               {METRIQUES_REINES.map(({ cat, name, label }) => {
                 let metric;
                 let avg;
                 if (cat === '_dividends') {
-                  // Cas spécial : dividend_yield est un scalaire dans dividends_data
                   const val = d.dividends_data?.dividend_yield ?? null;
                   metric = val != null ? { name, val, unit: '%' } : null;
                   avg = sectorAvg?.dividends_data?.dividend_yield ?? undefined;
@@ -255,7 +274,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                   avg = sectorAvg?.[cat]?.[name] ?? undefined;
                 }
                 if (!metric || metric.val === null || metric.val === undefined) return null;
-                return <MetricCard key={name} metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} />;
+                return isMobile
+                  ? <div key={name} style={{ flex: '0 0 72%', scrollSnapAlign: 'center', minWidth: 0 }}><MetricCard metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} /></div>
+                  : <MetricCard key={name} metric={{ ...metric, avg, displayName: label }} fmt={fmt} fmtRaw={fmtRaw} />;
               })}
             </div>
           </div>
@@ -264,7 +285,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           <div style={{
             marginTop: '28px', padding: '16px 20px', borderRadius: '10px',
             backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+            display: 'flex', flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'stretch' : 'center',
+            justifyContent: 'space-between', gap: '16px',
           }}>
             <div>
               <div style={{ color: 'var(--text2)', fontWeight: 'bold', fontSize: '14px', marginBottom: '3px' }}>
@@ -281,6 +304,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                 border: '1px solid #2962FF', backgroundColor: '#2962FF',
                 color: 'white', fontSize: '13px', fontWeight: 'bold',
                 whiteSpace: 'nowrap', transition: 'opacity 0.2s',
+                flexShrink: 0,
               }}
               onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
               onMouseLeave={e => e.currentTarget.style.opacity = '1'}
@@ -327,7 +351,11 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             {d.sector}{d.industry && d.industry !== d.sector ? ` — ${d.industry}` : ''}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 480px', gap: '24px', alignItems: 'stretch' }}>
+          <div style={isMobile ? {
+            display: 'flex', flexDirection: 'column', gap: '20px',
+          } : {
+            display: 'grid', gridTemplateColumns: '1fr 480px', gap: '24px', alignItems: 'stretch',
+          }}>
             {/* Description */}
             <p style={{ color: 'var(--text3)', lineHeight: '1.7', fontSize: '13px', margin: 0 }}>{d.description}</p>
 
@@ -406,7 +434,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
           ])
         ) : (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: '3fr 3fr 4fr', gap: '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '3fr 3fr 4fr', gap: isMobile ? '16px' : '20px 24px', alignItems: 'start', marginBottom: '32px' }}>
               {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis',    'section-market')}
               {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health',   'section-health')}
               {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation', 'section-valuation')}
@@ -679,9 +707,9 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
         <h3 style={{ ...h3Style, borderBottom: '2px solid var(--border)', paddingBottom: '10px', marginBottom: '16px' }}>
           Synthèse des Scores Boursicot
         </h3>
-        <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '14px', alignItems: 'flex-start' }}>
           {/* Cartes de scores par actif */}
-          <div style={{ flex: 1, display: 'flex', gap: '10px', flexWrap: 'wrap', minWidth: 0 }}>
+          <div style={{ flex: 1, display: 'flex', gap: '10px', flexWrap: 'wrap', minWidth: 0, width: '100%' }}>
             {allSymbols.map((sym, i) => {
               const d = dataMap[sym];
               const s = d?.scores;
@@ -772,7 +800,8 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             border: '1px solid var(--border)',
             borderRadius: '10px',
             padding: '14px',
-            flexShrink: 0,
+            flexShrink: isMobile ? 1 : 0,
+            width: isMobile ? '100%' : undefined,
             display: 'flex', flexDirection: 'column', alignItems: 'center',
           }}>
             <RadarChart />
