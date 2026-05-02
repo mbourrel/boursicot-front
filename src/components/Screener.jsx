@@ -493,9 +493,12 @@ export default function Screener({ onSelectTicker }) {
 
   const [advFilters, setAdvFilters] = useState({ ...ADV_DEFAULTS });
 
-  const [showOnboarding, setShowOnboarding] = useState(
-    () => profile === 'explorateur' && !localStorage.getItem(ONBOARDING_KEY)
-  );
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  useEffect(() => {
+    if (profile === 'explorateur' && !localStorage.getItem(ONBOARDING_KEY)) {
+      setShowOnboarding(true);
+    }
+  }, [profile]);
   const dismissOnboarding = () => {
     localStorage.setItem(ONBOARDING_KEY, '1');
     setShowOnboarding(false);
