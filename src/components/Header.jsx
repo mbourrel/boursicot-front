@@ -366,15 +366,14 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </div>
-        <h1 style={{ margin: 0, color: 'var(--text1)', fontSize: isMobile ? '18px' : undefined }}>Boursicot Pro</h1>
-        {!isMobile && (
-          <span style={{
-            fontSize: '12px', color: 'var(--text3)', whiteSpace: 'nowrap',
-            paddingLeft: '12px', borderLeft: '1px solid var(--border)',
-          }}>
-            Votre intuition, validée par les chiffres.
-          </span>
-        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+          <h1 style={{ margin: 0, color: 'var(--text1)', fontSize: isMobile ? '18px' : undefined, lineHeight: 1.2 }}>Boursicot Pro</h1>
+          {!isMobile && (
+            <span style={{ fontSize: '13px', color: 'var(--text3)', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
+              Votre intuition, validée par les chiffres.
+            </span>
+          )}
+        </div>
       </div>
 
       {/* ── MOBILE : barre de recherche + burger ── */}

@@ -550,24 +550,6 @@ export default function Screener({ onSelectTicker }) {
   return (
     <div style={{ width: '100%', margin: '0 auto' }}>
 
-      {/* ── Intro ── */}
-      <div style={{ marginBottom: isMobile ? '20px' : '28px' }}>
-        <h1 style={{
-          margin: 0, fontWeight: '800', lineHeight: '1.08',
-          color: 'var(--text1)', fontSize: isMobile ? '26px' : '34px',
-          letterSpacing: '-0.02em',
-        }}>
-          Le bon sens boursier,
-        </h1>
-        <h2 style={{
-          margin: '5px 0 0', fontWeight: '600', lineHeight: '1.2',
-          color: 'var(--text3)', fontSize: isMobile ? '17px' : '22px',
-          letterSpacing: '-0.01em',
-        }}>
-          accessible sans Master en Finance.
-        </h2>
-      </div>
-
       {/* ── En-tête ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <div>
