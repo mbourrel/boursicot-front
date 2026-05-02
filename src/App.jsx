@@ -40,7 +40,7 @@ function Dashboard() {
   return (
     <div style={{ backgroundColor: 'var(--bg0)', minHeight: '100vh', color: 'var(--text1)', fontFamily: 'sans-serif', overflowX: 'hidden', maxWidth: '100vw' }}>
 
-      {profile === null && <WelcomeModal />}
+      {profile === null && <WelcomeModal onProfileSelected={setViewMode} />}
 
       {/* ── ZONE STICKY : bannière + header ── */}
       <div style={{

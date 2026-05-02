@@ -2,14 +2,19 @@ import { useEffect } from 'react';
 import { useProfile } from '../context/ProfileContext';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
-export default function WelcomeModal() {
+export default function WelcomeModal({ onProfileSelected = () => {} }) {
   const { setProfile } = useProfile();
   const { isMobile }   = useBreakpoint();
+
+  const handleSelect = (p) => {
+    setProfile(p);
+    onProfileSelected(p === 'stratege' ? 'chart' : 'screener');
+  };
 
   // ESC ou clic hors des cartes → Explorateur par défaut
   useEffect(() => {
     const handleKey = (e) => {
-      if (e.key === 'Escape') setProfile('explorateur');
+      if (e.key === 'Escape') handleSelect('explorateur');
     };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
@@ -17,7 +22,7 @@ export default function WelcomeModal() {
 
   return (
     <div
-      onClick={() => setProfile('explorateur')}
+      onClick={() => handleSelect('explorateur')}
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
         backgroundColor: 'rgba(0,0,0,0.78)',
@@ -61,7 +66,7 @@ export default function WelcomeModal() {
               'Cycle économique mondial',
             ]}
             color="#26a69a"
-            onClick={() => setProfile('explorateur')}
+            onClick={() => handleSelect('explorateur')}
           />
           <ProfileCard
             icon="📈"
@@ -74,7 +79,7 @@ export default function WelcomeModal() {
               'Analyse macro complète',
             ]}
             color="#2962FF"
-            onClick={() => setProfile('stratege')}
+            onClick={() => handleSelect('stratege')}
           />
         </div>
 

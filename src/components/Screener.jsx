@@ -4,6 +4,8 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useProfile } from '../context/ProfileContext';
 import { captureEvent } from '../utils/analytics';
 
+const ONBOARDING_KEY = 'boursicot_screener_onboarding_seen';
+
 // ── Filter options ────────────────────────────────────────────────────────────
 
 const HEALTH_OPTIONS = [
@@ -486,6 +488,15 @@ export default function Screener({ onSelectTicker }) {
 
   const [advFilters, setAdvFilters] = useState({ ...ADV_DEFAULTS });
 
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => profile === 'explorateur' && !localStorage.getItem(ONBOARDING_KEY)
+  );
+  const dismissOnboarding = () => {
+    localStorage.setItem(ONBOARDING_KEY, '1');
+    setShowOnboarding(false);
+    captureEvent('screener_onboarding_dismissed');
+  };
+
   const sectors = useMemo(() => {
     const s = new Set();
     data.forEach(a => { if (a.is_scorable && a.sector) s.add(a.sector); });
@@ -726,6 +737,87 @@ export default function Screener({ onSelectTicker }) {
         Tout investissement comporte un risque de perte en capital.
         Les labels des quadrants sont purement descriptifs et ne représentent aucune recommandation d'achat ou de vente.
       </div>
+
+      {/* ── Onboarding Explorateur ── */}
+      {showOnboarding && (
+        <div
+          onClick={dismissOnboarding}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 500,
+            backgroundColor: 'rgba(0,0,0,0.52)',
+            backdropFilter: 'blur(3px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              backgroundColor: 'var(--bg1)',
+              border: '1px solid var(--border)',
+              borderRadius: '16px',
+              padding: isMobile ? '24px 20px 28px' : '32px 28px 36px',
+              maxWidth: '420px',
+              width: '100%',
+              boxShadow: '0 24px 56px rgba(0,0,0,0.65)',
+              position: 'relative',
+            }}
+          >
+            <button
+              onClick={dismissOnboarding}
+              style={{
+                position: 'absolute', top: '14px', right: '16px',
+                background: 'none', border: 'none',
+                color: 'var(--text3)', fontSize: '18px', cursor: 'pointer',
+                lineHeight: 1, padding: '2px 6px',
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ fontSize: '30px', marginBottom: '14px' }}>🔍</div>
+
+            <h3 style={{
+              color: 'var(--text1)', fontWeight: '800', fontSize: isMobile ? '17px' : '19px',
+              margin: '0 0 12px', lineHeight: '1.3',
+            }}>
+              Trouvez les pépites qui correspondent à vos critères.
+            </h3>
+
+            <p style={{
+              color: 'var(--text3)', fontSize: '13px', lineHeight: '1.75',
+              margin: '0 0 24px',
+            }}>
+              Faites varier les curseurs{' '}
+              <strong style={{ color: 'var(--text2)' }}>Santé</strong>,{' '}
+              <strong style={{ color: 'var(--text2)' }}>Croissance</strong> ou{' '}
+              <strong style={{ color: 'var(--text2)' }}>Dividende</strong>{' '}
+              pour filtrer les entreprises et voir leur position évoluer sur la matrice en temps réel.
+            </p>
+
+            <button
+              onClick={dismissOnboarding}
+              style={{
+                width: '100%',
+                backgroundColor: '#2962FF',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '13px 20px',
+                fontSize: '14px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                letterSpacing: '0.01em',
+                transition: 'background-color 0.15s, transform 0.12s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#1e4fd8'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#2962FF'; e.currentTarget.style.transform = 'translateY(0)'; }}
+            >
+              Trouver ma première action →
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
