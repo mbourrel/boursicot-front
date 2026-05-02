@@ -278,7 +278,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
           bbUpperSeriesRef.current.setData(rawData.filter(d => d.bbUpper !== null).map(d => ({ time: d.time, value: d.bbUpper })));
           bbLowerSeriesRef.current.setData(rawData.filter(d => d.bbLower !== null).map(d => ({ time: d.time, value: d.bbLower })));
           atrSeriesRef.current.setData(rawData.filter(d => d.atr !== null).map(d => ({ time: d.time, value: d.atr })));
-          applyTimeRange(timeRange, chart, rawData);
+          applyTimeRange(['15m', '1h'].includes(candleInterval) ? 'ALL' : timeRange, chart, rawData);
         }
       })
       .catch(err => console.error('Erreur récupération prix:', err));
