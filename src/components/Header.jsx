@@ -377,7 +377,12 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
 
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isMobile ? '10px' : '20px', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div
+        onClick={() => setViewMode('home')}
+        role="link"
+        aria-label="Retour à l'accueil"
+        style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+      >
         <div style={{
           width: isMobile ? '34px' : '42px',
           height: isMobile ? '34px' : '42px',

@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Header from './components/Header';
+import HeroSection from './components/HeroSection';
 import CompareBar from './components/CompareBar';
 import TradingChart from './components/TradingChart';
 import SimpleChart from './components/SimpleChart';
@@ -24,7 +25,7 @@ import { useProfile } from './context/ProfileContext';
 function Dashboard() {
   const [selectedSymbol, setSelectedSymbol] = useState('AI.PA');
   const [compareSymbols, setCompareSymbols] = useState([]);
-  const [viewMode,       setViewMode]       = useState('chart');
+  const [viewMode,       setViewMode]       = useState('home');
 
   const { profile } = useProfile();
   const isExplorateur = profile === 'explorateur';
@@ -35,6 +36,7 @@ function Dashboard() {
   const handleSelectSymbol = (ticker) => {
     setSelectedSymbol(ticker);
     setCompareSymbols([]);
+    if (viewMode === 'home') setViewMode('chart');
   };
 
   return (
@@ -71,7 +73,7 @@ function Dashboard() {
       {/* ── CONTENU SCROLLABLE ── */}
       <div style={{ padding: isMobile ? '12px' : '20px' }}>
 
-        {viewMode !== 'macro' && viewMode !== 'screener' && (
+        {viewMode !== 'macro' && viewMode !== 'screener' && viewMode !== 'home' && (
           <CompareBar
             primarySymbol={selectedSymbol}
             compareSymbols={compareSymbols}
@@ -80,7 +82,9 @@ function Dashboard() {
           />
         )}
 
-        {viewMode === 'screener' ? (
+        {viewMode === 'home' ? (
+          <HeroSection setViewMode={setViewMode} />
+        ) : viewMode === 'screener' ? (
           <ErrorBoundary label="Screener">
             <Screener
               onSelectTicker={(ticker) => {
