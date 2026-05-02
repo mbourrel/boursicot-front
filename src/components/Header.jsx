@@ -367,7 +367,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
           />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-          <h1 style={{ margin: 0, color: 'var(--text1)', fontSize: isMobile ? '18px' : undefined, lineHeight: 1.2 }}>Boursicot Pro</h1>
+          <h1 style={{ margin: 0, color: 'var(--text1)', fontSize: isMobile ? '18px' : undefined, lineHeight: 1.2 }}>Boursicot</h1>
           {!isMobile && (
             <span style={{ fontSize: '13px', color: 'var(--text3)', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
               Votre intuition, validée par les chiffres.
