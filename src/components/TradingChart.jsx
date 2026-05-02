@@ -235,11 +235,16 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
           else if (candleInterval === '1h') { setTimeRange('ALL'); setCandleInterval('1D'); }
           return;
         }
-        let rawData = data.map(i => ({
-          time: ['15m', '1h'].includes(candleInterval) ? Math.floor(new Date(i.time).getTime() / 1000) : i.time.split('T')[0],
-          open: i.open, high: i.high, low: i.low, close: i.close, value: i.volume,
-          color: i.close >= i.open ? 'rgba(38, 166, 154, 0.4)' : 'rgba(239, 83, 80, 0.4)',
-        })).sort((a, b) => new Date(a.time) - new Date(b.time));
+        let rawData = data
+          .filter(i => i.open != null && i.high != null && i.low != null && i.close != null
+                    && isFinite(i.open) && isFinite(i.high) && isFinite(i.low) && isFinite(i.close))
+          .map(i => ({
+            time: ['15m', '1h'].includes(candleInterval) ? Math.floor(new Date(i.time).getTime() / 1000) : i.time.split('T')[0],
+            open: i.open, high: i.high, low: i.low, close: i.close, value: i.volume ?? 0,
+            color: i.close >= i.open ? 'rgba(38, 166, 154, 0.4)' : 'rgba(239, 83, 80, 0.4)',
+          }))
+          .sort((a, b) => (a.time > b.time ? 1 : a.time < b.time ? -1 : 0))
+          .filter((d, i, arr) => i === 0 || d.time !== arr[i - 1].time);
 
         for (let i = 0; i < rawData.length; i++) {
           rawData[i].tr = i === 0
