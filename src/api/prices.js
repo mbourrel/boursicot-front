@@ -5,6 +5,6 @@ export async function fetchPrices(ticker, interval, signal) {
     `${API_URL}/api/prices?ticker=${encodeURIComponent(ticker)}&interval=${interval}`,
     { signal }
   );
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) return [];
   return res.json();
 }

@@ -230,6 +230,11 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
     fetchPrices(selectedSymbol, candleInterval)
       .then(data => {
         if (!isMounted || !Array.isArray(data)) return;
+        if (data.length === 0) {
+          if (candleInterval === '15m') { setTimeRange('ALL'); setCandleInterval('1h'); }
+          else if (candleInterval === '1h') { setTimeRange('ALL'); setCandleInterval('1D'); }
+          return;
+        }
         let rawData = data.map(i => ({
           time: ['15m', '1h'].includes(candleInterval) ? Math.floor(new Date(i.time).getTime() / 1000) : i.time.split('T')[0],
           open: i.open, high: i.high, low: i.low, close: i.close, value: i.volume,

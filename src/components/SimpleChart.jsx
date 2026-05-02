@@ -117,9 +117,18 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
 
     const fetchAndDraw = (ticker, colorIndex) => {
       return authFetch(`${API_URL}/api/prices?ticker=${encodeURIComponent(ticker)}&interval=${candleInterval}`)
-        .then(res => res.json())
+        .then(res => res.ok ? res.json() : [])
         .then(data => {
           if (!isMounted || !Array.isArray(data)) return;
+
+          if (data.length === 0) {
+            loadedCount++;
+            if (colorIndex === 0) {
+              if (candleInterval === '15m') { setCandleInterval('1h'); return; }
+              if (candleInterval === '1h')  { setCandleInterval('1D'); return; }
+            }
+            return;
+          }
 
           const rawData = data.map(i => ({
             time: ['15m', '1h'].includes(candleInterval)
