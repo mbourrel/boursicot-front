@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { useCurrency } from '../context/CurrencyContext';
 import { useProfile } from '../context/ProfileContext';
 import { UserButton } from '@clerk/clerk-react';
 import { captureEvent } from '../utils/analytics';
@@ -137,7 +136,6 @@ function FilterDropdown({ label, items, filters, onChange, onSelectAll, onSelect
 // ── Header principal ──────────────────────────────────────────────────────────
 function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode, setViewMode }) {
   const { isDark, toggleTheme } = useTheme();
-  const { targetCurrency, setTargetCurrency, updatedAt } = useCurrency();
   const { profile, setProfile, showCoachMark, setShowCoachMark } = useProfile();
   const { isMobile } = useBreakpoint();
   const { installPrompt, isInstalled, triggerInstall } = usePWA();
@@ -293,35 +291,6 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   // ── Contrôles réutilisables (Desktop inline + Mobile menu) ──────────────────
   const Controls = () => (
     <>
-      {/* TOGGLE DEVISE */}
-      {viewMode === 'fundamentals' && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <div style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-            {['LOCAL', 'EUR', 'USD'].map((cur, i) => (
-              <button
-                key={cur}
-                onClick={() => { captureEvent('currency_changed', { currency: cur }); setTargetCurrency(cur); }}
-                style={{
-                  padding: '6px 10px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold',
-                  borderRadius: i === 0 ? '5px 0 0 5px' : i === 2 ? '0 5px 5px 0' : '0',
-                  borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
-                  backgroundColor: targetCurrency === cur ? '#2962FF' : 'transparent',
-                  color: targetCurrency === cur ? 'white' : 'var(--text3)',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {cur === 'LOCAL' ? '🏳 Local' : cur === 'EUR' ? '€ EUR' : '$ USD'}
-              </button>
-            ))}
-          </div>
-          {updatedAt && targetCurrency !== 'LOCAL' && (
-            <span style={{ fontSize: '9px', color: 'var(--text3)' }}>
-              Taux du {new Date(updatedAt).toLocaleDateString('fr-FR')}
-            </span>
-          )}
-        </div>
-      )}
-
       {/* TOGGLE PROFIL */}
       <div style={{ position: 'relative' }}>
         <div style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', border: '1px solid var(--border)', overflow: 'hidden' }}>
@@ -378,9 +347,9 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isMobile ? '10px' : '20px', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
       <div
-        onClick={() => setViewMode('home')}
+        onClick={() => setViewMode('screener')}
         role="link"
-        aria-label="Retour à l'accueil"
+        aria-label="Retour au screener"
         style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
       >
         <div style={{
@@ -397,7 +366,15 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </div>
-        <h1 style={{ margin: 0, color: 'var(--text1)', fontSize: isMobile ? '18px' : undefined }}>Boursicot Pro </h1>
+        <h1 style={{ margin: 0, color: 'var(--text1)', fontSize: isMobile ? '18px' : undefined }}>Boursicot Pro</h1>
+        {!isMobile && (
+          <span style={{
+            fontSize: '12px', color: 'var(--text3)', whiteSpace: 'nowrap',
+            paddingLeft: '12px', borderLeft: '1px solid var(--border)',
+          }}>
+            Votre intuition, validée par les chiffres.
+          </span>
+        )}
       </div>
 
       {/* ── MOBILE : barre de recherche + burger ── */}

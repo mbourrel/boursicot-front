@@ -34,7 +34,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
   const sectorAvg     = useSectorAverages(primarySector);
   // useSectorHistory est coûteux — réservé au profil Stratège
   const sectorHistory = useSectorHistory(isExplorateur ? null : primarySector);
-  const { targetCurrency, rates } = useCurrency();
+  const { targetCurrency, setTargetCurrency, updatedAt, rates } = useCurrency();
 
   const { isMobile } = useBreakpoint();
 
@@ -74,6 +74,34 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     if (t.endsWith('=F'))   return 'commodity';
     return 'stock';
   };
+
+  const currencyBar = (
+    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+        {['LOCAL', 'EUR', 'USD'].map((cur, i) => (
+          <button
+            key={cur}
+            onClick={() => { captureEvent('currency_changed', { currency: cur }); setTargetCurrency(cur); }}
+            style={{
+              padding: '6px 10px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold',
+              borderRadius: i === 0 ? '5px 0 0 5px' : i === 2 ? '0 5px 5px 0' : '0',
+              borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
+              backgroundColor: targetCurrency === cur ? '#2962FF' : 'transparent',
+              color: targetCurrency === cur ? 'white' : 'var(--text3)',
+              transition: 'all 0.15s',
+            }}
+          >
+            {cur === 'LOCAL' ? '🏳 Local' : cur === 'EUR' ? '€ EUR' : '$ USD'}
+          </button>
+        ))}
+      </div>
+      {updatedAt && targetCurrency !== 'LOCAL' && (
+        <span style={{ fontSize: '9px', color: 'var(--text3)' }}>
+          Taux du {new Date(updatedAt).toLocaleDateString('fr-FR')}
+        </span>
+      )}
+    </div>
+  );
 
   // ══════════════════════════════════════════════════════════════════════════
   //  VUE SOLO
@@ -174,6 +202,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     if (isExplorateur) {
       return (
         <div>
+          {currencyBar}
           {/* En-tête simplifié */}
           <div style={{ marginBottom: '28px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '4px' }}>
@@ -326,6 +355,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     // ── VUE STRATÈGE SOLO (inchangée) ───────────────────────────────────────
     return (
       <div>
+        {currencyBar}
         {/* ── EN-TÊTE : description + fiche d'identité ── */}
         <div style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '2px' }}>
@@ -595,6 +625,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
   return (
     <div>
+      {currencyBar}
       {/* En-têtes actifs */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
         {allSymbols.map((sym, i) => {

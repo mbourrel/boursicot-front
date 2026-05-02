@@ -8,7 +8,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Header from './components/Header';
-import HeroSection from './components/HeroSection';
 import CompareBar from './components/CompareBar';
 import TradingChart from './components/TradingChart';
 import SimpleChart from './components/SimpleChart';
@@ -25,7 +24,7 @@ import { useProfile } from './context/ProfileContext';
 function Dashboard() {
   const [selectedSymbol, setSelectedSymbol] = useState('AI.PA');
   const [compareSymbols, setCompareSymbols] = useState([]);
-  const [viewMode,       setViewMode]       = useState('home');
+  const [viewMode,       setViewMode]       = useState('screener');
 
   const { profile } = useProfile();
   const isExplorateur = profile === 'explorateur';
@@ -36,13 +35,11 @@ function Dashboard() {
   const handleSelectSymbol = (ticker) => {
     setSelectedSymbol(ticker);
     setCompareSymbols([]);
-    if (viewMode === 'home') setViewMode('chart');
   };
 
   return (
     <div style={{ backgroundColor: 'var(--bg0)', minHeight: '100vh', color: 'var(--text1)', fontFamily: 'sans-serif', overflowX: 'hidden', maxWidth: '100vw' }}>
 
-      {/* Onboarding — affiché en overlay si aucun profil n'est encore choisi */}
       {profile === null && <WelcomeModal />}
 
       {/* ── ZONE STICKY : bannière + header ── */}
@@ -73,7 +70,7 @@ function Dashboard() {
       {/* ── CONTENU SCROLLABLE ── */}
       <div style={{ padding: isMobile ? '12px' : '20px' }}>
 
-        {viewMode !== 'macro' && viewMode !== 'screener' && viewMode !== 'home' && (
+        {viewMode !== 'macro' && viewMode !== 'screener' && (
           <CompareBar
             primarySymbol={selectedSymbol}
             compareSymbols={compareSymbols}
@@ -82,9 +79,7 @@ function Dashboard() {
           />
         )}
 
-        {viewMode === 'home' ? (
-          <HeroSection setViewMode={setViewMode} />
-        ) : viewMode === 'screener' ? (
+        {viewMode === 'screener' ? (
           <ErrorBoundary label="Screener">
             <Screener
               onSelectTicker={(ticker) => {
