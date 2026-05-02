@@ -1,18 +1,14 @@
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { ASSET_COLORS } from './CompareBar';
 import { useCurrency } from '../context/CurrencyContext';
 import { useProfile } from '../context/ProfileContext';
 import { formatFinancialValue } from '../utils/formatFinancialValue';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import SourceTag from './SourceTag';
-
-const LOWER_IS_BETTER = new Set([
-  'PER', 'Forward PE', 'Price to Book', 'EV / EBITDA', 'PEG Ratio',
-  'Dette/Fonds Propres', 'Actions Shortées',
-]);
-const NEUTRAL_METRICS = new Set([
-  'Capitalisation', 'Beta', 'Plus Haut 52w', 'Plus Bas 52w',
-]);
+import { LOWER_IS_BETTER, NEUTRAL_METRICS, METRIQUES_REINES } from '../constants/metrics';
+import FundamentalsSkeleton from './fundamentals/FundamentalsSkeleton';
+import RadarChart from './fundamentals/RadarChart';
+import ScoreCompareCard from './fundamentals/ScoreCompareCard';
 import MetricInfo from './fundamentals/MetricInfo';
 import MetricCard from './fundamentals/MetricCard';
 import FinancialStatement from './fundamentals/FinancialStatement';
@@ -23,17 +19,6 @@ import { useFundamentals } from '../hooks/useFundamentals';
 import { useSectorAverages } from '../hooks/useSectorAverages';
 import { useSectorHistory } from '../hooks/useSectorHistory';
 import { captureEvent } from '../utils/analytics';
-
-// Métriques clés affichées en mode Explorateur (solo uniquement)
-// 'label' = libellé grand public affiché à la place du nom technique
-// cat '_dividends' = cas spécial : valeur scalaire dans d.dividends_data
-const METRIQUES_REINES = [
-  { cat: 'market_analysis',  name: 'PER',                label: 'Valorisation' },
-  { cat: 'financial_health', name: 'Marge Nette',        label: 'Rentabilité' },
-  { cat: '_dividends',       name: 'Rendement Div.',     label: 'Dividende' },
-  { cat: 'financial_health', name: 'Dette/Fonds Propres',label: 'Endettement' },
-  { cat: 'income_growth',    name: 'Croissance CA',      label: 'Croissance' },
-];
 
 // ── Composant principal ────────────────────────────────────────────────────
 function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
@@ -51,12 +36,22 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
   const sectorHistory = useSectorHistory(isExplorateur ? null : primarySector);
   const { targetCurrency, rates } = useCurrency();
 
-  // ── Formateur de base (sans conversion devise) ─────────────────────────────
-  // Utilisé pour les moyennes sectorielles (devise mixte non convertible).
-  // En mode solo, fmt est redéfini plus bas avec la devise du ticker courant.
-  let fmt = (val, unit) => {
-    if (val === null || val === undefined) return <span style={{ color: 'var(--text3)' }}>—</span>;
-    if (val === 0) return <span style={{ color: 'var(--text3)' }}>—</span>;
+  const { isMobile } = useBreakpoint();
+
+  if (loading) return <FundamentalsSkeleton />;
+
+  const isSolo = isSoloMode;
+  const primaryData = dataMap[selectedSymbol];
+
+  const sourceCurrency = primaryData?.currency || 'USD';
+  const fmt = (val, unit) => {
+    if (val === null || val === undefined || val === 0)
+      return <span style={{ color: 'var(--text3)' }}>—</span>;
+    const str = formatFinancialValue(val, unit, sourceCurrency, targetCurrency, rates);
+    return str === '—' ? <span style={{ color: 'var(--text3)' }}>—</span> : str;
+  };
+  const fmtRaw = (val, unit) => {
+    if (val === null || val === undefined || val === 0) return '—';
     if (unit === '%') return `${val.toFixed(2)}%`;
     if (unit === 'x') return `${val.toFixed(2)}x`;
     const abs = Math.abs(val);
@@ -67,29 +62,16 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     return `${sign}${abs.toFixed(2)} $`;
   };
 
-  // fmtRaw : toujours sans conversion (moyennes sectorielles)
-  const fmtRaw = (val, unit) => {
-    const r = fmt(val, unit);
-    return typeof r === 'string' ? r : '—';
-  };
-
-  const { isMobile } = useBreakpoint();
-
-  if (loading) return <p style={{ color: 'var(--text3)' }}>Chargement...</p>;
-
-  const isSolo = isSoloMode;
-  const primaryData = dataMap[selectedSymbol];
-
-  // Détermine le type d'actif depuis le ticker (même logique que Header.jsx)
-  const ETF_TICKERS = new Set(['CW8.PA']);
-
+  // Priorité : asset_class depuis l'API (peuplé par seed_fundamentals)
+  // Fallback : pattern ticker pour la période de transition avant re-seed
   const getAssetType = (ticker) => {
+    const cls = dataMap[ticker]?.asset_class;
+    if (cls) return cls;
     if (!ticker) return 'stock';
-    if (ETF_TICKERS.has(ticker)) return 'etf';
     const t = ticker.toUpperCase();
-    if (t.includes('-USD'))  return 'crypto';
-    if (t.startsWith('^'))   return 'index';
-    if (t.endsWith('=F'))    return 'commodity';
+    if (t.includes('-USD')) return 'crypto';
+    if (t.startsWith('^'))  return 'index';
+    if (t.endsWith('=F'))   return 'commodity';
     return 'stock';
   };
 
@@ -160,17 +142,6 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     };
 
     const d = primaryData;
-
-    // ── Formateur currency-aware pour le ticker courant ──────────────────────
-    // Remplace le fmt de base : convertit les valeurs monétaires selon targetCurrency.
-    // fmtRaw reste non-converti pour les moyennes sectorielles (devise mixte).
-    const sourceCurrency = d.currency || 'USD';
-    fmt = (val, unit) => {
-      if (val === null || val === undefined || val === 0)
-        return <span style={{ color: 'var(--text3)' }}>—</span>;
-      const str = formatFinancialValue(val, unit, sourceCurrency, targetCurrency, rates);
-      return str === '—' ? <span style={{ color: 'var(--text3)' }}>—</span> : str;
-    };
 
     const dd = d.dividends_data || {};
     const divSectorAvg = sectorAvg?.dividends_data || {};
@@ -567,6 +538,15 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     { key: 'cashflow_data',      label: '9. Flux de Trésorerie — Historique' },
   ];
 
+  const simpleMetricNames = useMemo(
+    () => Object.fromEntries(SIMPLE_CATEGORIES.map(c => [c.key, getSimpleMetricNames(c.key)])),
+    [dataMap, allSymbols], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const stmtMetricNames = useMemo(
+    () => Object.fromEntries(STMT_CATEGORIES.map(c => [c.key, getStmtMetricNames(c.key)])),
+    [dataMap, allSymbols], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   const getSimpleMetricNames = (catKey) => {
     const names = new Set();
     allSymbols.forEach(sym => { const d = dataMap[sym]; if (d && d[catKey]) d[catKey].forEach(m => names.add(m.name)); });
@@ -595,77 +575,6 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
   const colWidth = `${Math.floor(80 / allSymbols.length)}%`;
 
-  // ── Radar Chart SVG 6 axes (pur, sans librairie) ─────────────────────────
-  const RadarChart = () => {
-    const size      = 280;
-    const cx        = size / 2;
-    const cy        = size / 2;
-    const maxRadius = 88;
-    const labelGap  = 20;
-    const axes      = ['health', 'valuation', 'growth', 'efficiency', 'dividend', 'momentum'];
-    const axisLabels= ['Santé', 'Valorisation', 'Croissance', 'Efficacité', 'Dividende', 'Momentum'];
-    // 6 axes à 60° d'intervalle, départ à 12h (-90°)
-    const angles = axes.map((_, i) => ((i * 60 - 90) * Math.PI) / 180);
-    const pt = (angle, value) => ({
-      x: cx + ((value / 10) * maxRadius) * Math.cos(angle),
-      y: cy + ((value / 10) * maxRadius) * Math.sin(angle),
-    });
-    // anchor déduit de la position angulaire
-    const anchor = (a) => {
-      const deg = (a * 180 / Math.PI + 360) % 360;
-      if (deg < 30 || deg > 330) return 'middle';
-      if (deg < 150) return 'start';
-      if (deg < 210) return 'middle';
-      return 'end';
-    };
-
-    return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', maxWidth: '100%', height: 'auto' }}>
-        {/* Grilles */}
-        {[0.25, 0.5, 0.75, 1].map(level => (
-          <polygon key={level}
-            points={angles.map(a => `${cx + level * maxRadius * Math.cos(a)},${cy + level * maxRadius * Math.sin(a)}`).join(' ')}
-            fill="none" stroke="var(--border)" strokeWidth="1"
-          />
-        ))}
-        {/* Axes */}
-        {angles.map((a, i) => (
-          <line key={i} x1={cx} y1={cy}
-            x2={cx + maxRadius * Math.cos(a)} y2={cy + maxRadius * Math.sin(a)}
-            stroke="var(--border)" strokeWidth="1"
-          />
-        ))}
-        {/* Libellés */}
-        {angles.map((a, i) => {
-          const r = maxRadius + labelGap;
-          return (
-            <text key={i}
-              x={cx + r * Math.cos(a)} y={cy + r * Math.sin(a)}
-              textAnchor={anchor(a)} dominantBaseline="middle"
-              fill="var(--text3)" fontSize="9" fontFamily="sans-serif"
-            >
-              {axisLabels[i]}
-            </text>
-          );
-        })}
-        {/* Polygones par entreprise */}
-        {allSymbols.map((sym, si) => {
-          const s = dataMap[sym]?.scores;
-          if (!s) return null;
-          const vals   = [s.health, s.valuation, s.growth, s.efficiency ?? 5, s.dividend ?? 5, s.momentum ?? 5];
-          const points = angles.map((a, i) => pt(a, vals[i]));
-          const pStr   = points.map(p => `${p.x},${p.y}`).join(' ');
-          const clr    = ASSET_COLORS[si];
-          return (
-            <g key={sym}>
-              <polygon points={pStr} fill={clr + '28'} stroke={clr} strokeWidth="1.5" strokeLinejoin="round" />
-              {points.map((p, pi) => <circle key={pi} cx={p.x} cy={p.y} r="3" fill={clr} />)}
-            </g>
-          );
-        })}
-      </svg>
-    );
-  };
 
   const MetricNameCell = ({ name, scrolled = false, rowBg = 'var(--bg1)' }) => (
     <td style={{
@@ -683,8 +592,6 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
       </span>
     </td>
   );
-
-  const scoreColor = s => s >= 7 ? '#26a69a' : s >= 4 ? '#ff9800' : '#ef5350';
 
   return (
     <div>
@@ -758,88 +665,15 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '14px', alignItems: 'flex-start' }}>
           {/* Cartes de scores par actif */}
           <div style={{ flex: 1, display: 'flex', gap: '10px', flexWrap: 'wrap', minWidth: 0, width: '100%' }}>
-            {allSymbols.map((sym, i) => {
-              const d = dataMap[sym];
-              const s = d?.scores;
-              const color = ASSET_COLORS[i];
-              const globalScore = s?.global_score ?? null;
-              const verdictColor = { 'Profil Fort': '#26a69a', 'Profil Solide': '#26a69a', 'Profil Neutre': '#ff9800', 'Profil Prudent': '#ef5350', 'Profil Fragile': '#ef5350' }[s?.verdict] ?? 'var(--text3)';
-              const METRICS = [
-                { label: 'Santé',        icon: '❤️',  key: 'health' },
-                { label: 'Valorisation', icon: '📊',  key: 'valuation' },
-                { label: 'Croissance',   icon: '📈',  key: 'growth' },
-                { label: 'Dividende',    icon: '💰',  key: 'dividend' },
-                { label: 'Momentum',     icon: '⚡',  key: 'momentum' },
-                { label: 'Efficacité',   icon: '⚙️', key: 'efficiency' },
-              ];
-              return (
-                <div key={sym} style={{
-                  flex: 1, minWidth: '160px',
-                  backgroundColor: 'var(--bg3)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '10px',
-                  borderTop: `3px solid ${color}`,
-                  padding: '14px',
-                }}>
-                  {/* En-tête carte */}
-                  <div style={{ fontSize: '12px', fontWeight: 'bold', color, marginBottom: '10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {d?.name || sym}
-                  </div>
-
-                  {s ? (
-                    <>
-                      {/* Note globale + verdict */}
-                      {globalScore != null && (
-                        <div style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          padding: '8px 10px', marginBottom: '10px',
-                          background: scoreColor(globalScore) + '18',
-                          border: `1px solid ${scoreColor(globalScore)}44`,
-                          borderRadius: '7px',
-                        }}>
-                          <span style={{ fontSize: '11px', color: 'var(--text3)', fontWeight: 'bold' }}>Note Globale</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {s.verdict && (
-                              <span style={{ fontSize: '10px', fontWeight: 'bold', color: verdictColor }}>{s.verdict}</span>
-                            )}
-                            <span style={{
-                              fontSize: '14px', fontWeight: '900',
-                              color: scoreColor(globalScore),
-                            }}>
-                              {globalScore.toFixed(1)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 6 métriques */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {METRICS.map(({ label, icon, key }) => {
-                          const value = s[key] ?? 5;
-                          const c = scoreColor(value);
-                          const barW = `${(value / 10) * 100}%`;
-                          return (
-                            <div key={key}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
-                                <span style={{ fontSize: '11px', color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                  <span style={{ fontSize: '12px' }}>{icon}</span>{label}
-                                </span>
-                                <span style={{ fontSize: '12px', fontWeight: 'bold', color: c }}>{value.toFixed(1)}</span>
-                              </div>
-                              <div style={{ height: '3px', background: 'var(--border)', borderRadius: '2px', overflow: 'hidden' }}>
-                                <div style={{ width: barW, height: '100%', background: c, borderRadius: '2px' }} />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </>
-                  ) : (
-                    <div style={{ color: 'var(--text3)', fontSize: '11px' }}>Scores indisponibles</div>
-                  )}
-                </div>
-              );
-            })}
+            {allSymbols.map((sym, i) => (
+              <ScoreCompareCard
+                key={sym}
+                sym={sym}
+                color={ASSET_COLORS[i]}
+                name={dataMap[sym]?.name}
+                scores={dataMap[sym]?.scores}
+              />
+            ))}
           </div>
 
           {/* Radar Chart — masqué sur mobile (illisible en dessous de 768px) */}
@@ -853,7 +687,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             flexDirection: 'column',
             alignItems: 'center',
           }}>
-            <RadarChart />
+            <RadarChart allSymbols={allSymbols} dataMap={dataMap} />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', justifyContent: 'center' }}>
               {allSymbols.map((sym, i) => (
                 <div key={sym} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: 'var(--text3)' }}>
@@ -868,7 +702,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
       {/* Catégories simples */}
       {SIMPLE_CATEGORIES.map(cat => {
-        const metricNames = getSimpleMetricNames(cat.key);
+        const metricNames = simpleMetricNames[cat.key];
         return (
           <CompareTable
             key={cat.key}
@@ -918,7 +752,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
 
       {/* États financiers */}
       {STMT_CATEGORIES.map(cat => {
-        const metricNames = getStmtMetricNames(cat.key);
+        const metricNames = stmtMetricNames[cat.key];
         const yearLabel = (() => {
           for (const sym of allSymbols) {
             const y = dataMap[sym]?.[cat.key]?.years?.[0]?.slice(0, 4);
@@ -990,7 +824,7 @@ const tdStyle = {
 };
 
 // ── Tableau de comparaison avec colonne gauche sticky ──────────────────────
-function CompareTable({ label, rows, renderRow, allSymbols, dataMap, colWidth, isMobile }) {
+const CompareTable = memo(function CompareTable({ label, rows, renderRow, allSymbols, dataMap, colWidth, isMobile }) {
   const [scrolled, setScrolled] = useState(false);
   if (rows.length === 0) return null;
 
@@ -1050,6 +884,6 @@ function CompareTable({ label, rows, renderRow, allSymbols, dataMap, colWidth, i
       </div>
     </div>
   );
-}
+});
 
 export default Fundamentals;

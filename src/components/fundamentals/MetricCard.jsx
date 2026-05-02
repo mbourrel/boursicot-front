@@ -1,16 +1,6 @@
 import MetricInfo from './MetricInfo';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
-
-// Métriques où une valeur PLUS BASSE est un meilleur signal
-const LOWER_IS_BETTER = new Set([
-  'PER', 'Forward PE', 'Price to Book', 'EV / EBITDA', 'PEG Ratio',
-  'Dette/Fonds Propres', 'Actions Shortées',
-]);
-
-// Métriques sans signal directionnel clair (pas de coloration)
-const NEUTRAL = new Set([
-  'Capitalisation', 'Beta', 'Plus Haut 52w', 'Plus Bas 52w',
-]);
+import { LOWER_IS_BETTER, NEUTRAL_METRICS as NEUTRAL } from '../../constants/metrics';
 
 function MetricCard({ metric, fmt, fmtRaw, large = false }) {
   const { isMobile } = useBreakpoint();
