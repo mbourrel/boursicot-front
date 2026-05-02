@@ -185,7 +185,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
               };
             });
             setAssetStats(stats);
-            applyTimeRange(['15m', '1h'].includes(candleInterval) ? 'ALL' : timeRange, chart);
+            applyTimeRange(timeRange, chart);
 
             // % dynamique sur la fenêtre visible + auto-upgrade d'intervalle
             chart.timeScale().subscribeVisibleLogicalRangeChange((lr) => {
