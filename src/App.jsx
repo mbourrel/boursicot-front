@@ -68,7 +68,8 @@ function Dashboard() {
       </div>
 
       {/* ── CONTENU SCROLLABLE ── */}
-      <div style={{ padding: isMobile ? '12px' : '20px' }}>
+      <div style={{ padding: isMobile ? '12px' : '20px 24px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
 
         {viewMode !== 'macro' && viewMode !== 'screener' && (
           <CompareBar
@@ -106,7 +107,8 @@ function Dashboard() {
             <Fundamentals selectedSymbol={selectedSymbol} compareSymbols={compareSymbols} />
           </ErrorBoundary>
         )}
-      </div>
+      </div>{/* /max-width container */}
+      </div>{/* /scrollable */}
     </div>
   );
 }

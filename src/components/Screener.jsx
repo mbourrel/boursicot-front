@@ -209,14 +209,14 @@ function QuadrantMatrix({ assets, onSelectTicker }) {
         Score Valorisation →
       </text>
 
-      {/* Quadrant labels */}
+      {/* Quadrant labels — très atténués pour ne pas masquer les bulles */}
       {QUADRANTS.map((q, i) => {
         const lx = q.x + q.w / 2;
         const ly = q.y + q.h / 2 - (q.label.length - 1) * 8;
         return (
-          <g key={`ql${i}`} style={{ pointerEvents: 'none', userSelect: 'none' }}>
+          <g key={`ql${i}`} style={{ pointerEvents: 'none', userSelect: 'none' }} opacity="0.18">
             {q.label.map((line, j) => (
-              <text key={j} x={lx} y={ly + j * 17} textAnchor="middle" fontSize="12" fill="var(--text3)" fontWeight="500">
+              <text key={j} x={lx} y={ly + j * 16} textAnchor="middle" fontSize="11" fill="var(--text3)" fontWeight="500">
                 {line}
               </text>
             ))}
@@ -399,44 +399,49 @@ function ResultsTable({ assets, onSelectTicker }) {
 // ── AdvancedFilters ───────────────────────────────────────────────────────────
 
 function AdvancedFilters({ filters, onChange, sectors }) {
+  const selectStyle = { width: '100%', padding: '6px 8px', backgroundColor: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text1)', fontSize: '12px' };
+  const labelStyle  = { display: 'block', fontSize: '10px', color: 'var(--text3)', marginBottom: '5px', fontWeight: '700', letterSpacing: '0.06em' };
+
   return (
     <div style={{
       backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
       borderRadius: '8px', padding: '16px 20px', marginBottom: '20px',
     }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '14px 20px', marginBottom: '14px' }}>
 
+      {/* Ligne 1 — menus déroulants */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px 20px', marginBottom: '20px' }}>
         <div>
-          <label style={{ display: 'block', fontSize: '10px', color: 'var(--text3)', marginBottom: '5px', fontWeight: '700', letterSpacing: '0.06em' }}>GÉOGRAPHIE</label>
-          <select value={filters.geo} onChange={e => onChange({ ...filters, geo: e.target.value })}
-            style={{ width: '100%', padding: '6px 8px', backgroundColor: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text1)', fontSize: '12px' }}>
+          <label style={labelStyle}>GÉOGRAPHIE</label>
+          <select value={filters.geo} onChange={e => onChange({ ...filters, geo: e.target.value })} style={selectStyle}>
             {GEO_OPTIONS_ADV.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
-
         <div>
-          <label style={{ display: 'block', fontSize: '10px', color: 'var(--text3)', marginBottom: '5px', fontWeight: '700', letterSpacing: '0.06em' }}>SECTEUR</label>
-          <select value={filters.sector} onChange={e => onChange({ ...filters, sector: e.target.value })}
-            style={{ width: '100%', padding: '6px 8px', backgroundColor: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text1)', fontSize: '12px' }}>
+          <label style={labelStyle}>SECTEUR</label>
+          <select value={filters.sector} onChange={e => onChange({ ...filters, sector: e.target.value })} style={selectStyle}>
             <option value="all">Tous les secteurs</option>
             {sectors.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
-
         <div>
-          <label style={{ display: 'block', fontSize: '10px', color: 'var(--text3)', marginBottom: '5px', fontWeight: '700', letterSpacing: '0.06em' }}>VERDICT</label>
-          <select value={filters.verdict} onChange={e => onChange({ ...filters, verdict: e.target.value })}
-            style={{ width: '100%', padding: '6px 8px', backgroundColor: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text1)', fontSize: '12px' }}>
+          <label style={labelStyle}>VERDICT</label>
+          <select value={filters.verdict} onChange={e => onChange({ ...filters, verdict: e.target.value })} style={selectStyle}>
             <option value="all">Tous les profils</option>
             {['Profil Fort', 'Profil Solide', 'Profil Neutre', 'Profil Prudent', 'Profil Fragile'].map(v => (
               <option key={v} value={v}>{v}</option>
             ))}
           </select>
         </div>
+      </div>
 
+      {/* Séparateur */}
+      <div style={{ borderTop: '1px solid var(--border)', marginBottom: '18px' }} />
+
+      {/* Ligne 2 — sliders de scores */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '14px 24px', marginBottom: '14px' }}>
         {ADV_DIMS.map(dim => (
           <div key={dim}>
-            <label style={{ display: 'block', fontSize: '10px', color: 'var(--text3)', marginBottom: '5px', fontWeight: '700', letterSpacing: '0.06em' }}>
+            <label style={labelStyle}>
               {ADV_LABELS[dim].toUpperCase()} ≥ <span style={{ color: 'var(--text1)', fontWeight: 'bold' }}>{filters[dim].toFixed(1)}</span>
             </label>
             <input type="range" min={0} max={10} step={0.5} value={filters[dim]}
