@@ -68,8 +68,8 @@ function Dashboard() {
       </div>
 
       {/* ── CONTENU SCROLLABLE ── */}
-      <div style={{ padding: isMobile ? '6px' : '10px 12px' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+      <div style={{ padding: isMobile ? '6px' : '10px 32px' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
 
         {viewMode !== 'macro' && viewMode !== 'screener' && (
           <CompareBar
