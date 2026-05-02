@@ -287,15 +287,6 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     setIsOpen(false);
   };
 
-  // ── Items pour les filtres génériques ────────────────────────────────────────
-  const TYPE_FILTERS = [
-    { key: 'stock',     label: 'Actions' },
-    { key: 'index',     label: 'Indices' },
-    { key: 'crypto',    label: 'Cryptos' },
-    { key: 'commodity', label: 'Matières' },
-    { key: 'etf',       label: 'ETFs' },
-  ];
-
   const countryItems = availableCountries.map(c => ({ key: c, label: c }));
   const sectorItems = availableSectors.map(s => ({ key: s, label: s }));
 
