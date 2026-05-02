@@ -81,8 +81,11 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
   const primaryData = dataMap[selectedSymbol];
 
   // Détermine le type d'actif depuis le ticker (même logique que Header.jsx)
+  const ETF_TICKERS = new Set(['CW8.PA']);
+
   const getAssetType = (ticker) => {
     if (!ticker) return 'stock';
+    if (ETF_TICKERS.has(ticker)) return 'etf';
     const t = ticker.toUpperCase();
     if (t.includes('-USD'))  return 'crypto';
     if (t.startsWith('^'))   return 'index';

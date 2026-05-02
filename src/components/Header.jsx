@@ -158,18 +158,44 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
   const sectorFilterRef = useRef(null);
 
   // ── Filtre par type ──────────────────────────────────────────────────────────
-  const [assetFilters, setAssetFilters] = useState({
-    stock: true, index: true, crypto: true, commodity: true,
-  });
+  const ASSET_CLASS_LABELS = {
+    stock: 'Actions', index: 'Indices', crypto: 'Cryptos', commodity: 'Matières', etf: 'ETFs',
+  };
 
-  const getAssetType = (ticker) => {
+  // Fallback par pattern ticker quand asset_class n'est pas encore en DB
+  const _assetTypeFromTicker = (ticker) => {
     if (!ticker) return 'stock';
     const t = ticker.toUpperCase();
     if (t.includes('-USD')) return 'crypto';
-    if (t.startsWith('^')) return 'index';
-    if (t.endsWith('=F')) return 'commodity';
+    if (t.startsWith('^'))  return 'index';
+    if (t.endsWith('=F'))   return 'commodity';
     return 'stock';
   };
+
+  const getAssetType = (company) =>
+    company.asset_class || _assetTypeFromTicker(company.ticker);
+
+  // Types disponibles — extraits dynamiquement depuis les données API
+  const availableAssetTypes = useMemo(() => {
+    const ORDER = ['stock', 'index', 'crypto', 'commodity', 'etf'];
+    const found = new Set(fundamentalsData.map(c => getAssetType(c)));
+    return ORDER.filter(t => found.has(t)).concat(
+      Array.from(found).filter(t => !ORDER.includes(t)).sort()
+    );
+  }, [fundamentalsData]);
+
+  const [assetFilters, setAssetFilters] = useState(null);
+  useEffect(() => {
+    if (availableAssetTypes.length > 0 && assetFilters === null) {
+      const init = {};
+      availableAssetTypes.forEach(t => { init[t] = true; });
+      setAssetFilters(init);
+    }
+  }, [availableAssetTypes, assetFilters]);
+
+  const TYPE_FILTERS = availableAssetTypes.map(key => ({
+    key, label: ASSET_CLASS_LABELS[key] || key,
+  }));
 
   // Pays dérivé du ticker (lieu de cotation), pas de la base
   const getCountry = (ticker) => {
@@ -242,7 +268,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
 
   // ── Données filtrées pour la liste déroulante ────────────────────────────────
   const filteredData = fundamentalsData.filter(company => {
-    if (!assetFilters[getAssetType(company.ticker)]) return false;
+    if (assetFilters && !assetFilters[getAssetType(company)]) return false;
     if (countryFilters) {
       if (!countryFilters[getCountry(company.ticker)]) return false;
     }
@@ -267,6 +293,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
     { key: 'index',     label: 'Indices' },
     { key: 'crypto',    label: 'Cryptos' },
     { key: 'commodity', label: 'Matières' },
+    { key: 'etf',       label: 'ETFs' },
   ];
 
   const countryItems = availableCountries.map(c => ({ key: c, label: c }));
@@ -458,15 +485,17 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
 
         {/* FILTRE TYPE */}
-        <FilterDropdown
-          label="TYPE"
-          items={TYPE_FILTERS}
-          filters={assetFilters}
-          onChange={key => setAssetFilters(prev => ({ ...prev, [key]: !prev[key] }))}
-          onSelectAll={() => setAssetFilters(Object.fromEntries(TYPE_FILTERS.map(f => [f.key, true])))}
-          onSelectNone={() => setAssetFilters(Object.fromEntries(TYPE_FILTERS.map(f => [f.key, false])))}
-          dropdownRef={typeFilterRef}
-        />
+        {TYPE_FILTERS.length > 0 && assetFilters && (
+          <FilterDropdown
+            label="TYPE"
+            items={TYPE_FILTERS}
+            filters={assetFilters}
+            onChange={key => setAssetFilters(prev => ({ ...prev, [key]: !prev[key] }))}
+            onSelectAll={() => setAssetFilters(Object.fromEntries(TYPE_FILTERS.map(f => [f.key, true])))}
+            onSelectNone={() => setAssetFilters(Object.fromEntries(TYPE_FILTERS.map(f => [f.key, false])))}
+            dropdownRef={typeFilterRef}
+          />
+        )}
 
         {/* FILTRE PAYS */}
         {countryItems.length > 0 && countryFilters && (
