@@ -28,19 +28,23 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
       width: containerRef.current.clientWidth,
       height: 280,
       timeScale: { borderColor: theme.chartGrid },
-      rightPriceScale: { borderColor: theme.chartGrid },
+      // Double axe Y : M2 à gauche (plage ~85–130), BTC à droite (plage 100–1000+)
+      leftPriceScale:  { visible: true, borderColor: theme.chartGrid },
+      rightPriceScale: { visible: true, borderColor: theme.chartGrid },
     });
     chartRef.current = chart;
 
     const m2Series = chart.addSeries(LineSeries, {
       color: '#60A5FA',
       lineWidth: 2,
+      priceScaleId: 'left',
       priceFormat: { type: 'custom', formatter: v => Math.round(v).toString() },
       title: 'M2',
     });
     const btcSeries = chart.addSeries(LineSeries, {
       color: '#F97316',
       lineWidth: 2,
+      priceScaleId: 'right',
       priceFormat: { type: 'custom', formatter: v => Math.round(v).toString() },
       title: 'BTC',
     });
@@ -87,6 +91,7 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
       layout: { background: { type: 'solid', color: theme.bg1 }, textColor: theme.chartText },
       grid:   { vertLines: { color: theme.chartGrid }, horzLines: { color: theme.chartGrid } },
       timeScale:       { borderColor: theme.chartGrid },
+      leftPriceScale:  { borderColor: theme.chartGrid },
       rightPriceScale: { borderColor: theme.chartGrid },
     });
   }, [theme]);
@@ -111,9 +116,24 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
             }}
           >i</button>
         </div>
-        <div style={{ display: 'flex', gap: '18px', fontSize: '12px', color: 'var(--text2)' }}>
-          <span><span style={{ color: '#60A5FA', fontWeight: 'bold', marginRight: '5px' }}>—</span>M2 USA</span>
-          <span><span style={{ color: '#F97316', fontWeight: 'bold', marginRight: '5px' }}>—</span>Bitcoin</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '12px', color: 'var(--text2)', flexWrap: 'wrap' }}>
+          <span>
+            <span style={{ color: '#60A5FA', fontWeight: 'bold', marginRight: '5px' }}>←</span>
+            M2 USA
+          </span>
+          <span>
+            <span style={{ color: '#F97316', fontWeight: 'bold', marginRight: '5px' }}>—</span>
+            Bitcoin
+            <span style={{ color: '#F97316', fontWeight: 'bold', marginLeft: '5px' }}>→</span>
+          </span>
+          <span style={{
+            fontSize: '10px', color: 'var(--text3)',
+            border: '1px solid var(--border)',
+            borderRadius: '4px', padding: '2px 7px',
+            letterSpacing: '0.03em',
+          }}>
+            Double axe Y
+          </span>
         </div>
       </div>
 
@@ -155,11 +175,12 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
             </div>
           </div>
           <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--bg2)', border: '1px solid #2962FF40' }}>
-            <span style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '11px' }}>Signal à surveiller : </span>
+            <span style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '11px' }}>Observation historique : </span>
             <span style={{ color: 'var(--text3)', fontSize: '11px' }}>
-              Quand la courbe M2 repart à la hausse après une contraction, c'est historiquement un signal
-              précurseur d'un rallye Bitcoin à horizon 3-6 mois. Quand BTC diverge fortement au-dessus de M2,
-              un recalibrage est possible.
+              Les cycles d'expansion de M2 ont souvent coïncidé avec des périodes d'appréciation des actifs risqués,
+              dont les crypto-actifs. Une divergence marquée entre BTC et la tendance M2 illustre une prime de risque
+              accrue et une volatilité potentiellement élevée. Ces corrélations passées ne préjugent pas des
+              comportements futurs et <strong>ne constituent pas un signal d'investissement.</strong>
             </span>
           </div>
         </div>
