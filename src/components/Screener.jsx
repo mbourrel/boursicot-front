@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useScreener } from '../hooks/useScreener';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useProfile } from '../context/ProfileContext';
 import { captureEvent } from '../utils/analytics';
 
 // ── Filter options ────────────────────────────────────────────────────────────
@@ -19,8 +20,16 @@ const VALUATION_OPTIONS = [
   { value: 'elevee',     label: 'Élevée',               max: 3.5 },
 ];
 
+// Labels adjectivaux pour la phrase guidée ("une entreprise européenne")
 const GEO_OPTIONS = [
-  { value: 'all',    label: 'Monde' },
+  { value: 'all',    label: 'internationale' },
+  { value: 'europe', label: 'européenne' },
+  { value: 'us',     label: 'américaine' },
+];
+
+// Labels nominaux pour les filtres avancés
+const GEO_OPTIONS_ADV = [
+  { value: 'all',    label: 'Monde entier' },
   { value: 'europe', label: 'Europe' },
   { value: 'us',     label: 'États-Unis' },
 ];
@@ -399,7 +408,7 @@ function AdvancedFilters({ filters, onChange, sectors }) {
           <label style={{ display: 'block', fontSize: '10px', color: 'var(--text3)', marginBottom: '5px', fontWeight: '700', letterSpacing: '0.06em' }}>GÉOGRAPHIE</label>
           <select value={filters.geo} onChange={e => onChange({ ...filters, geo: e.target.value })}
             style={{ width: '100%', padding: '6px 8px', backgroundColor: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text1)', fontSize: '12px' }}>
-            {GEO_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            {GEO_OPTIONS_ADV.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
 
@@ -450,8 +459,13 @@ function AdvancedFilters({ filters, onChange, sectors }) {
 export default function Screener({ onSelectTicker }) {
   const { data, loading, error } = useScreener();
   const { isMobile } = useBreakpoint();
+  const { profile } = useProfile();
 
-  const [mode, setMode] = useState('guided');
+  // Stratège → avancé par défaut, Explorateur → guidé par défaut
+  const [mode, setMode] = useState(() => profile === 'stratege' ? 'advanced' : 'guided');
+  useEffect(() => {
+    setMode(profile === 'stratege' ? 'advanced' : 'guided');
+  }, [profile]);
 
   // Default: matrix on desktop, list on mobile
   const [activeTab, setActiveTab] = useState(() =>
@@ -563,22 +577,31 @@ export default function Screener({ onSelectTicker }) {
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
-          rowGap: '2px',
+          gap: '0 4px',
           lineHeight: 2.5,
         }}>
-          <span>Je cherche une entreprise située en</span>
-          <InlineSelect value={guidedFilters.geo} options={GEO_OPTIONS} onChange={v => setGuidedFilters(f => ({ ...f, geo: v }))} />
-          <span>dans le secteur</span>
-          <InlineSelect
-            value={guidedFilters.sector}
-            options={[{ value: 'all', label: 'Tous les secteurs' }, ...sectors.map(s => ({ value: s, label: s }))]}
-            onChange={v => setGuidedFilters(f => ({ ...f, sector: v }))}
-          />
-          <span>avec une santé financière</span>
-          <InlineSelect value={guidedFilters.health} options={HEALTH_OPTIONS} onChange={v => setGuidedFilters(f => ({ ...f, health: v }))} />
-          <span>et une valorisation</span>
-          <InlineSelect value={guidedFilters.valuation} options={VALUATION_OPTIONS} onChange={v => setGuidedFilters(f => ({ ...f, valuation: v }))} />
-          <span>.</span>
+          {/* Chaque <span nowrap> est un item flex atomique : le texte et son select restent ensemble */}
+          <span style={{ whiteSpace: 'nowrap' }}>
+            Je cherche une entreprise
+            <InlineSelect value={guidedFilters.geo} options={GEO_OPTIONS} onChange={v => setGuidedFilters(f => ({ ...f, geo: v }))} />
+          </span>
+          <span style={{ whiteSpace: 'nowrap' }}>
+            dans le secteur
+            <InlineSelect
+              value={guidedFilters.sector}
+              options={[{ value: 'all', label: 'tous les secteurs' }, ...sectors.map(s => ({ value: s, label: s }))]}
+              onChange={v => setGuidedFilters(f => ({ ...f, sector: v }))}
+            />
+            ,
+          </span>
+          <span style={{ whiteSpace: 'nowrap' }}>
+            avec une santé financière
+            <InlineSelect value={guidedFilters.health} options={HEALTH_OPTIONS} onChange={v => setGuidedFilters(f => ({ ...f, health: v }))} />
+          </span>
+          <span style={{ whiteSpace: 'nowrap' }}>
+            et une valorisation
+            <InlineSelect value={guidedFilters.valuation} options={VALUATION_OPTIONS} onChange={v => setGuidedFilters(f => ({ ...f, valuation: v }))} />.
+          </span>
         </div>
       )}
 
