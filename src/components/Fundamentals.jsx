@@ -839,15 +839,16 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
             })}
           </div>
 
-          {/* Radar Chart */}
+          {/* Radar Chart — masqué sur mobile (illisible en dessous de 768px) */}
           <div style={{
             backgroundColor: 'var(--bg3)',
             border: '1px solid var(--border)',
             borderRadius: '10px',
             padding: '14px',
-            flexShrink: isMobile ? 1 : 0,
-            width: isMobile ? '100%' : undefined,
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            flexShrink: 0,
+            display: isMobile ? 'none' : 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
           }}>
             <RadarChart />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', justifyContent: 'center' }}>
