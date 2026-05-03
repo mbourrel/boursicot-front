@@ -1,48 +1,47 @@
 # Fundamentals.jsx
 
 ## Rôle
-Affiche l'analyse fondamentale d'un ou plusieurs actifs : en mode solo, une fiche complète avec scores, métriques par catégorie et tableaux financiers historiques ; en mode comparaison, des tableaux côte-à-côte avec radar chart SVG.
+Vue principale d'analyse fondamentale. Gère deux modes : **Solo** (un actif sélectionné) et **Comparaison** (jusqu'à 5 actifs via `CompareBar`). Affiche les scores, métriques, états financiers, momentum et données de dividendes. S'affiche en **pleine largeur** sans contrainte `maxWidth` (App.jsx retire cette contrainte quand `viewMode === 'fundamentals'`).
 
 ## Dépendances
-- **Internes** : `./CompareBar` (ASSET_COLORS), `../context/CurrencyContext` (useCurrency), `../utils/formatFinancialValue`, `./SourceTag`, `./fundamentals/MetricInfo`, `./fundamentals/MetricCard`, `./fundamentals/FinancialStatement`, `./fundamentals/ScoreDashboard`, `./fundamentals/MethodologyModal`, `../hooks/useFundamentals`, `../hooks/useSectorAverages`, `../hooks/useSectorHistory`, `../hooks/useBreakpoint`, `./SwipeableContainer`
-- **Externes** : `react` (useState)
+- **Contextes** : `CurrencyContext` (`targetCurrency, setTargetCurrency, updatedAt, rates`), `ProfileContext`
+- **Hooks** : `useFundamentals`, `useSectorAverages`, `useSectorHistory`, `useBreakpoint`
+- **Sous-composants** : `ScoreDashboard`, `MetricCard`, `MetricInfo`, `MetricHistoryModal`, `MomentumDashboard`, `FinancialStatement`, `MethodologyModal`, `RadarChart`, `ScoreCompareCard`, `FundamentalsSkeleton`
+- **Utilitaires** : `formatFinancialValue`, `captureEvent`, `LOWER_IS_BETTER`, `NEUTRAL_METRICS`, `METRIQUES_REINES`
+- **Externes** : `react (useState, useMemo, memo)`
+
+## Props
+| Prop | Type | Description |
+|------|------|-------------|
+| `selectedSymbol` | `string` | Ticker principal |
+| `compareSymbols` | `string[]` | Tickers en comparaison (défaut `[]`) |
 
 ## Fonctionnement
 
-### Mode Solo (`isSolo === true`)
-- Charge les données via `useFundamentals([selectedSymbol])`.
-- Charge les moyennes sectorielles (`useSectorAverages`) et l'historique sectoriel (`useSectorHistory`).
-- Affiche : en-tête (nom, badge verdict, badge complexité, description avec truncature mobile "Voir plus/Voir moins", fiche d'identité), puis `ScoreDashboard`, puis métriques par catégorie.
-- **Mobile** : description tronquée à 3 lignes (`-webkit-line-clamp: 3`) avec toggle. Grille identité → colonne. Métriques en carousel scroll-snap (cartes 44% + spacer `calc(56% - 10px)`). Catégories en colonne unique.
-- **Desktop** : grille 3 colonnes, layout habituel.
-- Mode avancé (`profil === 'stratege'`) : 3 `FinancialStatement` (compte de résultat, bilan, flux) + dividendes si disponibles.
+### Barre devise (currencyBar)
+`div` avec le toggle LOCAL/EUR/USD aligné à droite (`justifyContent: 'flex-end'`). Défini comme constante JSX **avant** les branches `isSolo`, injecté comme premier enfant dans chaque branche de retour (Explorateur solo, Stratège solo, Comparaison). L'indicateur de date de taux s'affiche uniquement si `updatedAt && targetCurrency !== 'LOCAL'`.
 
-### Mode Comparaison (`isSolo === false`)
-- Charge les données de tous les symboles en parallèle.
-- Affiche scores avec barres de progression et radar chart SVG 6 axes.
-- Tableaux via `CompareTable` (composant module-level) : métriques avec coloration meilleur/pire, états financiers avec sous-ligne YoY.
-- **Mobile** : scores au-dessus du radar, radar pleine largeur, `CompareTable` avec colonne gauche sticky + scroll horizontal isolé.
+### Mode Solo — Explorateur
+Vue simplifiée : currencyBar + ScoreDashboard + 5 métriques clés + MomentumDashboard. États financiers masqués.
 
-### `CompareTable`
-Composant React au niveau module (non inline) pour pouvoir utiliser `useState` (état `scrolled` pour l'ombre sur la colonne sticky). Reçoit `allSymbols`, `dataMap`, `colWidth`, `isMobile` en props. La première colonne est `position: sticky; left: 0` avec ombre conditionnelle au scroll.
+### Mode Solo — Stratège
+Vue complète : currencyBar + description entreprise (tronquée 3 lignes mobile, toggle "Voir plus") + ScoreDashboard + toutes les catégories de métriques (6) + FinancialStatement (3 tableaux) + MomentumDashboard.
 
-### Constantes
-- `LOWER_IS_BETTER` : métriques où une valeur basse est positive (PER, EV/EBITDA…).
-- `NEUTRAL_METRICS` : métriques sans signal directionnel (Bêta, Capitalisation…).
+### Mode Comparaison
+currencyBar + RadarChart 6 axes (masqué mobile < 768px) + CompareTable multi-colonnes triable avec coloration meilleur/pire + ScoreCompareCard par actif.
 
-## Utilisé par
-`App.jsx` (Dashboard, vue `fundamentals`)
+### CompareTable
+Composant défini au niveau module (non inline) pour pouvoir avoir ses propres hooks (`useState` pour l'ombre scroll sticky). Première colonne `position: sticky; left: 0`.
 
-## Props / API
-| Prop | Type | Description |
-|---|---|---|
-| `selectedSymbol` | string | Ticker principal |
-| `compareSymbols` | string[] | Tickers en comparaison (défaut `[]`) |
+### Conversion devise
+`fmt(val, unit)` → `formatFinancialValue(val, unit, sourceCurrency, targetCurrency, rates)`. `sourceCurrency` = `company.currency` (EUR pour CAC 40, USD pour Mag7).
+
+### getAssetType
+Priorité : `company.asset_class` (API). Fallback : pattern ticker (`-USD` → crypto, `^` → index, `=F` → commodity, sinon stock).
 
 ## Points d'attention
-- `fmt` est réassigné dans le corps du composant selon la devise — ne pas capturer avant réassignation.
-- `fmtRaw` reste sans conversion (moyennes sectorielles en devise mixte).
-- Le radar chart est un SVG pur sans librairie — scores manquants → série non rendue.
-- `CompareTable` doit rester au niveau module (pas inline) pour pouvoir avoir ses propres hooks.
-- `overscrollBehaviorX: 'contain'` sur les wrappers de tableaux pour isoler le scroll horizontal.
-- Spacer carousel = `calc(56% - 10px)` : formule mathématique fixe indépendante du nombre de cartes (100% − card 44% − gap 10px).
+- `useSectorHistory` reçoit `null` si profil Explorateur — requête coûteuse évitée.
+- `currencyBar` est défini avant le `if (isSolo)` pour être partagé sans duplication dans toutes les branches.
+- Vue **pleine largeur** depuis 2026-05-03 : App.jsx utilise `{ width: '100%' }` au lieu de `{ maxWidth: '1600px', margin: '0 auto' }` pour cette vue.
+- `fmt` et `fmtRaw` sont deux helpers distincts : `fmt` convertit et retourne du JSX, `fmtRaw` retourne une string formatée sans conversion devise.
+- `Fundamentals.jsx` dépasse 700 lignes — dette technique identifiée, refactoring en `SoloView`/`ComparisonView` planifié.
