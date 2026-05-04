@@ -520,7 +520,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
               {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis',    'section-market')}
               {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health',   'section-health')}
               {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation', 'section-valuation')}
-              {renderCategory('4. Risque & Marché',                 ['Beta', 'Plus Haut 52W', 'Plus Bas 52W', 'Performance 1an'].map(n => d.risk_market?.find(m => m.name === n)).filter(Boolean),        'risk_market',        'section-risk')}
+              {renderCategory('4. Risque & Marché',                 ['Beta', 'Plus Haut 52w', 'Plus Bas 52w', 'Performance 1an'].map(n => d.risk_market?.find(m => m.name === n)).filter(Boolean),        'risk_market',        'section-risk')}
               {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash',       'section-balance')}
               {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth',      'section-growth')}
             </div>

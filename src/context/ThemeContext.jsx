@@ -43,10 +43,10 @@ const CSS_VARS = {
   '--text3':  'text3',
 };
 
-const ThemeContext = createContext({ isDark: true, toggleTheme: () => {}, theme: DARK });
+const ThemeContext = createContext({ isDark: false, toggleTheme: () => {}, theme: LIGHT });
 
 export function ThemeProvider({ children }) {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
   const theme = isDark ? DARK : LIGHT;
 
   // Applique les variables CSS sur <html> à chaque changement de thème
