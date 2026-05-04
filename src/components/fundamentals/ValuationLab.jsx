@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import MetricInfo from './MetricInfo';
 import { h3Style } from './styles';
@@ -37,7 +38,7 @@ function Sigma({ from, to }) {
 
 // ── Shared UI ─────────────────────────────────────────────────────────────
 
-function SliderInput({ label, value, min, max, step, onChange, format, infoName }) {
+function SliderInput({ label, value, min, max, step, onChange, format, infoName, note }) {
   return (
     <div style={{ marginBottom: '10px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
@@ -57,6 +58,11 @@ function SliderInput({ label, value, min, max, step, onChange, format, infoName 
         <span>{format(min)}</span>
         <span>{format(max)}</span>
       </div>
+      {note && (
+        <div style={{ fontSize: '10px', color: 'var(--text3)', fontStyle: 'italic', lineHeight: '1.5', marginTop: '4px' }}>
+          {note}
+        </div>
+      )}
     </div>
   );
 }
@@ -115,15 +121,15 @@ function verdictOf(theoreticalPrice, closePrice, currency) {
 
 // ── Calculation functions ──────────────────────────────────────────────────
 
-function calcDCF(fcf, shares, g, wacc, gTerminal) {
+function calcDCF(fcf, shares, g, wacc, gT) {
   if (!fcf || fcf === 0 || !shares || shares <= 0) return null;
-  if (wacc <= gTerminal) return null;
+  if (wacc <= gT) return null;
   let pv = 0;
   for (let t = 1; t <= 5; t++) {
     pv += (fcf * Math.pow(1 + g, t)) / Math.pow(1 + wacc, t);
   }
-  const fcf6 = fcf * Math.pow(1 + g, 5) * (1 + gTerminal);
-  pv += (fcf6 / (wacc - gTerminal)) / Math.pow(1 + wacc, 5);
+  const fcf6 = fcf * Math.pow(1 + g, 5) * (1 + gT);
+  pv += (fcf6 / (wacc - gT)) / Math.pow(1 + wacc, 5);
   return pv / shares > 0 ? pv / shares : null;
 }
 
@@ -134,10 +140,8 @@ function calcDDM(d0, ke, g) {
 
 function calcEV(ebitda, multiple, netDebt, shares) {
   if (!ebitda || ebitda <= 0 || !shares || shares <= 0) return null;
-  const ev       = ebitda * multiple;
-  const equity   = ev - (netDebt ?? 0);
-  const price    = equity / shares;
-  return price > 0 ? price : null;
+  const equity = ebitda * multiple - (netDebt ?? 0);
+  return equity / shares > 0 ? equity / shares : null;
 }
 
 function calcPE(eps, targetPE) {
@@ -166,7 +170,7 @@ const FORMULA_DCF = (
       <Frac num="VT" den={<span>(1+WACC){sup('n')}</span>} />
     </div>
     <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '2px' }}>
-      VT = FCF{sub('n+1')} / (WACC − g) &nbsp;·&nbsp; g terminal fixé à 2.5%
+      VT = FCF{sub('n+1')} / (WACC − g∞) &nbsp;·&nbsp; n = 5 ans (période explicite)
     </div>
   </div>
 );
@@ -215,6 +219,14 @@ const FORMULA_ANCC = (
   </div>
 );
 
+// ── Notes ordres de grandeur ───────────────────────────────────────────────
+
+const NOTE_G_EXPLICIT = 'g = croissance annuelle du FCF sur 5 ans. Ordres : déclin <0% · maturité 0-5% · croissance 5-15% · hypercroissance 15%+';
+const NOTE_WACC       = 'WACC : 6-8% défensif (utilities, telecom) · 8-10% industriel · 10-15% tech · 15-20% startup ou entreprise risquée';
+const NOTE_GT         = 'g∞ = croissance perpétuelle après la période explicite. PIB réel (~1.5-2%) + inflation (~1.5%) = PIB nominal ~3%. Dépasser 3% revient à supposer que l\'entreprise croît plus vite que l\'économie mondiale à l\'infini — hérésie académique (Damodaran).';
+const NOTE_KE         = 'Kₑ = coût des capitaux propres (CAPM : rf + β × prime). Initialisé sur le WACC calculé par le backend (rf + β × 5.5%).';
+const NOTE_G_DDM      = 'g = taux de croissance annuel durable des dividendes. Ordres : grandes capitalisations 2-5% · utilities 1-3% · banques 2-4%. g doit impérativement rester inférieur à Kₑ, sinon la formule diverge.';
+
 // ── Composant principal ────────────────────────────────────────────────────
 
 export default function ValuationLab({ data }) {
@@ -225,30 +237,29 @@ export default function ValuationLab({ data }) {
   const marketCap    = findMetric(data.market_analysis,    'Capitalisation');
   const per          = findMetric(data.market_analysis,    'PER');
   const priceToBook  = findMetric(data.advanced_valuation, 'Price to Book');
-  const egrowth      = findMetric(data.income_growth,      'Croissance Bénéfices'); // %
+  const egrowth      = findMetric(data.income_growth,      'Croissance Bénéfices');
   const eps          = findEPS(data);
   const closePrice   = data.close_price;
   const currency     = data.currency || '$';
 
-  const ebitda    = findStmt(data.income_stmt_data,  'EBITDA');
+  const ebitda    = findStmt(data.income_stmt_data,   'EBITDA');
   const totalDebt = findStmt(data.balance_sheet_data, 'Dette Totale');
   const cash      = findStmt(data.balance_sheet_data, 'Trésorerie & Équivalents');
-  const netDebt   = (totalDebt != null || cash != null)
-    ? ((totalDebt ?? 0) - (cash ?? 0))
-    : null;
+  const netDebt   = (totalDebt != null || cash != null) ? ((totalDebt ?? 0) - (cash ?? 0)) : null;
 
-  const d0          = data.dividends_data?.dividend_rate ?? null; // dividende annuel
-  const shares      = marketCap && closePrice > 0 ? marketCap / closePrice : null;
-  const bvps        = priceToBook && priceToBook > 0 && closePrice > 0 ? closePrice / priceToBook : null;
+  const d0     = data.dividends_data?.dividend_rate ?? null;
+  const shares = marketCap && closePrice > 0 ? marketCap / closePrice : null;
+  const bvps   = priceToBook && priceToBook > 0 && closePrice > 0 ? closePrice / priceToBook : null;
 
   // ── Defaults API ────────────────────────────────────────────────────────
-  const apiDef   = data.valuation_defaults || {};
-  const dWacc    = apiDef.default_wacc     ?? 0.08;
-  const dGrowth  = apiDef.default_growth   ?? 0.05;
-  const dPE      = apiDef.default_pe       ?? (per != null ? Math.min(50, Math.max(5, Math.round(per))) : 15);
+  const apiDef    = data.valuation_defaults || {};
+  const dWacc     = apiDef.default_wacc     ?? 0.08;
+  const dGrowth   = apiDef.default_growth   ?? 0.05;
+  const dPE       = apiDef.default_pe       ?? (per != null ? Math.min(50, Math.max(5, Math.round(per))) : 15);
   const dEvEbitda = apiDef.sector_ev_ebitda ?? 10;
 
-  // ── État des sliders par méthode ────────────────────────────────────────
+  // ── État UI ─────────────────────────────────────────────────────────────
+  const [showLab, setShowLab] = useState(false);
   const [dcf,  setDcf]  = useState({ g: dGrowth, wacc: dWacc, gT: 0.025 });
   const [ddm,  setDdm]  = useState({ ke: dWacc, g: 0.03 });
   const [ev,   setEv]   = useState({ multiple: dEvEbitda });
@@ -263,31 +274,27 @@ export default function ValuationLab({ data }) {
   });
 
   // ── Calculs ─────────────────────────────────────────────────────────────
-  const dcfPrice    = useMemo(() => calcDCF(fcf, shares, dcf.g, dcf.wacc, dcf.gT),        [fcf, shares, dcf.g, dcf.wacc, dcf.gT]);
-  const ddmPrice    = useMemo(() => calcDDM(d0, ddm.ke, ddm.g),                            [d0, ddm.ke, ddm.g]);
-  const evPrice     = useMemo(() => calcEV(ebitda, ev.multiple, netDebt, shares),           [ebitda, ev.multiple, netDebt, shares]);
-  const pePrice     = useMemo(() => calcPE(eps, pe.pe),                                     [eps, pe.pe]);
-  const anccPrice   = useMemo(() => calcANCC(bvps, ancc.adj),                               [bvps, ancc.adj]);
+  const dcfPrice  = useMemo(() => calcDCF(fcf, shares, dcf.g, dcf.wacc, dcf.gT),  [fcf, shares, dcf.g, dcf.wacc, dcf.gT]);
+  const ddmPrice  = useMemo(() => calcDDM(d0, ddm.ke, ddm.g),                      [d0, ddm.ke, ddm.g]);
+  const evPrice   = useMemo(() => calcEV(ebitda, ev.multiple, netDebt, shares),    [ebitda, ev.multiple, netDebt, shares]);
+  const pePrice   = useMemo(() => calcPE(eps, pe.pe),                              [eps, pe.pe]);
+  const anccPrice = useMemo(() => calcANCC(bvps, ancc.adj),                        [bvps, ancc.adj]);
 
-  // ── Verdicts (header preview) ────────────────────────────────────────────
-  const vDCF    = verdictOf(dcfPrice,  closePrice, currency);
-  const vDDM    = verdictOf(ddmPrice,  closePrice, currency);
-  const vEV     = verdictOf(evPrice,   closePrice, currency);
-  const vPE     = verdictOf(pePrice,   closePrice, currency);
-  const vANCC   = verdictOf(anccPrice, closePrice, currency);
+  // ── Verdicts ─────────────────────────────────────────────────────────────
+  const vDCF  = verdictOf(dcfPrice,  closePrice, currency);
+  const vDDM  = verdictOf(ddmPrice,  closePrice, currency);
+  const vEV   = verdictOf(evPrice,   closePrice, currency);
+  const vPE   = verdictOf(pePrice,   closePrice, currency);
+  const vANCC = verdictOf(anccPrice, closePrice, currency);
 
-  // ── Raisons d'indisponibilité ─────────────────────────────────────────────
-  const unavDCF = !fcf || fcf === 0 ? 'Free Cash Flow introuvable.'
+  // ── Indisponibilités ──────────────────────────────────────────────────────
+  const unavDCF  = !fcf || fcf === 0 ? 'Free Cash Flow introuvable.'
     : !shares ? 'Capitalisation boursière introuvable.' : null;
-
-  const unavDDM = !d0 || d0 <= 0 ? 'Aucun dividende versé — modèle non applicable.'
+  const unavDDM  = !d0 || d0 <= 0 ? 'Aucun dividende versé — modèle non applicable.'
     : ddm.ke <= ddm.g ? 'Ke ≤ g : la formule diverge, ajustez les paramètres.' : null;
-
-  const unavEV  = !ebitda || ebitda <= 0 ? 'EBITDA introuvable pour ce ticker.' : null;
-
-  const unavPE  = eps === null ? 'Données BPA introuvables.'
+  const unavEV   = !ebitda || ebitda <= 0 ? 'EBITDA introuvable pour ce ticker.' : null;
+  const unavPE   = eps === null ? 'Données BPA introuvables.'
     : eps <= 0 ? 'Modèle indisponible — bénéfices négatifs.' : null;
-
   const unavANCC = !bvps ? 'Price to Book introuvable (valeur comptable non dérivable).' : null;
 
   // ── isDirty par méthode ───────────────────────────────────────────────────
@@ -298,247 +305,250 @@ export default function ValuationLab({ data }) {
   const dirtyANCC = ancc.adj !== 0;
 
   // ── PEG ratio ─────────────────────────────────────────────────────────────
-  const peg = egrowth && egrowth > 0 && pe.pe > 0
-    ? (pe.pe / egrowth).toFixed(2)
-    : null;
+  const peg = egrowth && egrowth > 0 && pe.pe > 0 ? (pe.pe / egrowth).toFixed(2) : null;
 
   const epsFmt  = eps?.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const bvpsFmt = bvps?.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  // ── Layout helpers ────────────────────────────────────────────────────────
+  const gridTwo = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+    gap: '8px',
+    marginBottom: '16px',
+    alignItems: 'start',
+  };
+
   return (
     <div style={{ marginBottom: '36px' }}>
-      <h3 style={h3Style}>Laboratoire d'Évaluation (Simulateurs)</h3>
 
-      {/* Cours de référence */}
-      {closePrice != null && (
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: '10px',
-          marginBottom: '16px', padding: '6px 12px', borderRadius: '7px',
-          backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
-        }}>
-          <span style={{ fontSize: '11px', color: 'var(--text3)' }}>Cours actuel de référence</span>
-          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text1)' }}>
-            {fmtNum(closePrice, currency)}
-          </span>
+      {/* ── Titre accordéon principal ────────────────────────────────── */}
+      <div
+        onClick={() => setShowLab(v => !v)}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          cursor: 'pointer', userSelect: 'none',
+          marginBottom: showLab ? '16px' : '0',
+        }}
+      >
+        <h3 style={{ ...h3Style, margin: 0 }}>Laboratoire d'Évaluation (Simulateurs)</h3>
+        <div style={{ transform: showLab ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s', color: '#2962FF' }}>
+          <ChevronDown size={16} />
         </div>
+      </div>
+
+      {/* ── Contenu dépliant ─────────────────────────────────────────── */}
+      {showLab && (
+        <>
+          {/* Cours de référence */}
+          {closePrice != null && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '10px',
+              marginBottom: '16px', padding: '6px 12px', borderRadius: '7px',
+              backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
+            }}>
+              <span style={{ fontSize: '11px', color: 'var(--text3)' }}>Cours actuel de référence</span>
+              <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text1)' }}>
+                {fmtNum(closePrice, currency)}
+              </span>
+            </div>
+          )}
+
+          {/* ── Catégorie 1 : Intrinsèque ──────────────────────────────── */}
+          <div style={{ fontSize: '11px', color: '#2962FF', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px' }}>
+            Approche Intrinsèque (Flux Futurs)
+          </div>
+          <div style={gridTwo}>
+
+            {/* DCF */}
+            <ValuationMethodCard
+              categoryLabel="Intrinsèque" categoryColor="#2962FF"
+              title="DCF — Discounted Cash Flow"
+              verdict={!unavDCF ? vDCF : null} unavailable={unavDCF}
+              isOpen={open.has('dcf')} onToggle={() => toggle('dcf')}
+              isDirty={dirtyDCF} onReset={() => setDcf({ g: dGrowth, wacc: dWacc, gT: 0.025 })}
+              formulaNode={FORMULA_DCF}
+              usageText="Idéal pour les entreprises matures avec des FCF prévisibles (M&A, grands groupes industriels). À éviter pour les startups ou les cycliques dont les FCF sont erratiques."
+              warningText="Dépasser 3% pour g∞ revient à supposer une croissance à l'infini supérieure à l'économie mondiale — hérésie académique selon Damodaran."
+            >
+              {!unavDCF && (
+                <>
+                  <InputRow label="Free Cash Flow :" value={fmtCompact(fcf, currency)} />
+                  <SliderInput
+                    label="g — croissance FCF (5 ans)"
+                    value={dcf.g} min={-0.05} max={0.20} step={0.005}
+                    onChange={v => setDcf(s => ({ ...s, g: v }))}
+                    format={v => `${(v * 100).toFixed(1)}%`}
+                    infoName="Taux de Croissance Annuel"
+                    note={NOTE_G_EXPLICIT}
+                  />
+                  <SliderInput
+                    label="WACC — taux d'actualisation"
+                    value={dcf.wacc} min={0.05} max={0.20} step={0.005}
+                    onChange={v => setDcf(s => ({ ...s, wacc: v }))}
+                    format={v => `${(v * 100).toFixed(1)}%`}
+                    infoName="WACC"
+                    note={NOTE_WACC}
+                  />
+                  <SliderInput
+                    label="g∞ — croissance terminale"
+                    value={dcf.gT} min={0} max={0.04} step={0.005}
+                    onChange={v => setDcf(s => ({ ...s, gT: v }))}
+                    format={v => `${(v * 100).toFixed(1)}%`}
+                    note={NOTE_GT}
+                  />
+                </>
+              )}
+            </ValuationMethodCard>
+
+            {/* DDM */}
+            <ValuationMethodCard
+              categoryLabel="Intrinsèque" categoryColor="#2962FF"
+              title="DDM — Dividend Discount Model"
+              verdict={!unavDDM ? vDDM : null} unavailable={unavDDM}
+              isOpen={open.has('ddm')} onToggle={() => toggle('ddm')}
+              isDirty={dirtyDDM} onReset={() => setDdm({ ke: dWacc, g: 0.03 })}
+              formulaNode={FORMULA_DDM}
+              usageText="Conçu pour les entreprises versant un dividende stable et croissant : banques, assurances, utilities. Inadapté aux entreprises en hypercroissance qui ne distribuent pas."
+            >
+              {!unavDDM && (
+                <>
+                  <InputRow label="Dividende D₀ (annuel) :" value={`${d0?.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`} />
+                  <SliderInput
+                    label="Kₑ — coût des capitaux propres"
+                    value={ddm.ke} min={0.04} max={0.20} step={0.005}
+                    onChange={v => setDdm(s => ({ ...s, ke: v }))}
+                    format={v => `${(v * 100).toFixed(1)}%`}
+                    infoName="WACC"
+                    note={NOTE_KE}
+                  />
+                  <SliderInput
+                    label="g — croissance des dividendes"
+                    value={ddm.g} min={0} max={0.08} step={0.005}
+                    onChange={v => setDdm(s => ({ ...s, g: v }))}
+                    format={v => `${(v * 100).toFixed(1)}%`}
+                    note={NOTE_G_DDM}
+                  />
+                  {ddm.ke <= ddm.g && (
+                    <div style={{ fontSize: '11px', color: '#ef5350', marginBottom: '6px' }}>
+                      ⚠ Ke doit être supérieur à g — augmentez Ke ou réduisez g.
+                    </div>
+                  )}
+                </>
+              )}
+            </ValuationMethodCard>
+          </div>
+
+          {/* ── Catégorie 2 : Relative ──────────────────────────────────── */}
+          <div style={{ fontSize: '11px', color: '#7B1FA2', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px' }}>
+            Approche Relative (Multiples de Marché)
+          </div>
+          <div style={gridTwo}>
+
+            {/* EV/EBITDA */}
+            <ValuationMethodCard
+              categoryLabel="Relative" categoryColor="#7B1FA2"
+              title="EV / EBITDA"
+              verdict={!unavEV ? vEV : null} unavailable={unavEV}
+              isOpen={open.has('ev')} onToggle={() => toggle('ev')}
+              isDirty={dirtyEV} onReset={() => setEv({ multiple: dEvEbitda })}
+              formulaNode={FORMULA_EV}
+              usageText="Méthode reine en banque d'affaires (M&A). Neutralise la structure de dette — utile pour comparer des entreprises du même secteur avec des leviers différents."
+            >
+              {!unavEV && (
+                <>
+                  <InputRow label="EBITDA :" value={fmtCompact(ebitda, currency)} />
+                  {netDebt != null && <InputRow label="Dette nette :" value={fmtCompact(netDebt, currency)} />}
+                  <SliderInput
+                    label="Multiple EV/EBITDA cible"
+                    value={ev.multiple} min={3} max={30} step={0.5}
+                    onChange={v => setEv(s => ({ ...s, multiple: v }))}
+                    format={v => `${v.toFixed(1)}x`}
+                    note="Ordres : 4-8x utilities · 8-12x industriel · 12-20x tech · 20x+ hypercroissance. Multiple initialisé sur la moyenne sectorielle."
+                  />
+                </>
+              )}
+            </ValuationMethodCard>
+
+            {/* P/E */}
+            <ValuationMethodCard
+              categoryLabel="Relative" categoryColor="#7B1FA2"
+              title="P/E — Multiples de Capitaux Propres"
+              verdict={!unavPE ? vPE : null} unavailable={unavPE}
+              isOpen={open.has('pe')} onToggle={() => toggle('pe')}
+              isDirty={dirtyPE} onReset={() => setPe({ pe: dPE })}
+              formulaNode={FORMULA_PE}
+              usageText="Screener rapide pour particuliers. Simple et largement répandu. Biaisé par la structure de financement (l'endettement gonfle le BPA)."
+            >
+              {!unavPE && (
+                <>
+                  <InputRow label="BPA (dilué) :" value={`${epsFmt} ${currency}`} />
+                  <SliderInput
+                    label="Multiple P/E cible"
+                    value={pe.pe} min={5} max={50} step={0.5}
+                    onChange={v => setPe(s => ({ ...s, pe: v }))}
+                    format={v => `${v.toFixed(1)}x`}
+                    infoName="Multiple P/E Cible"
+                    note="Ordres : 10-15x valeur · 15-25x croissance modérée · 25-50x hypercroissance. Multiple initialisé sur la moyenne sectorielle."
+                  />
+                  {peg != null && (
+                    <div style={{ fontSize: '11px', color: 'var(--text2)', marginTop: '4px' }}>
+                      Ratio PEG ={' '}
+                      <strong style={{ color: parseFloat(peg) < 1 ? '#26a69a' : parseFloat(peg) > 2 ? '#ef5350' : 'var(--text1)' }}>
+                        {peg}
+                      </strong>
+                      <span style={{ color: 'var(--text3)', fontSize: '10px' }}> (P/E ÷ g bénéfices {egrowth?.toFixed(1)}%)</span>
+                      <br />
+                      <span style={{ fontSize: '10px', color: 'var(--text3)' }}>
+                        PEG &lt; 1 : potentiellement sous-évalué · PEG &gt; 2 : attention
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
+            </ValuationMethodCard>
+          </div>
+
+          {/* ── Catégorie 3 : Patrimoniale ──────────────────────────────── */}
+          <div style={{ fontSize: '11px', color: '#00695C', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px' }}>
+            Approche Patrimoniale (Actif Net)
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <ValuationMethodCard
+              categoryLabel="Patrimoniale" categoryColor="#00695C"
+              title="ANCC — Actif Net Comptable Corrigé"
+              verdict={!unavANCC ? vANCC : null} unavailable={unavANCC}
+              isOpen={open.has('ancc')} onToggle={() => toggle('ancc')}
+              isDirty={dirtyANCC} onReset={() => setAncc({ adj: 0 })}
+              formulaNode={FORMULA_ANCC}
+              usageText="Adapté aux foncières (REITs), holdings et banques dont les actifs sont au bilan à leur valeur réelle. Peu pertinent pour les services ou la technologie dont la valeur repose sur des intangibles."
+              warningText="Cette approche ignore les perspectives de croissance future — elle représente une valeur de liquidation comptable, non une valeur économique."
+            >
+              {!unavANCC && (
+                <>
+                  <InputRow label="Valeur comptable par action :" value={`${bvpsFmt} ${currency}`} />
+                  <SliderInput
+                    label="Ajustement plus-values latentes"
+                    value={ancc.adj} min={-0.20} max={0.50} step={0.01}
+                    onChange={v => setAncc(s => ({ ...s, adj: v }))}
+                    format={v => `${(v * 100 >= 0 ? '+' : '')}${(v * 100).toFixed(0)}%`}
+                    note="Ajustement manuel pour les plus-values latentes sur actifs (immobilier, participations…) non reflétées dans les comptes. Ordres : REITs +10-30% · holdings -10-+20%."
+                  />
+                </>
+              )}
+            </ValuationMethodCard>
+          </div>
+
+          {/* ── Disclaimer MIF2 ─────────────────────────────────────────── */}
+          <div style={{
+            padding: '10px 14px', borderRadius: '7px',
+            backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
+            fontSize: '11px', color: 'var(--text3)', lineHeight: '1.6',
+          }}>
+            Ces modèles sont des simulations mathématiques basées sur des hypothèses. Ils ne constituent pas un conseil en investissement.
+          </div>
+        </>
       )}
-
-      {/* ── Catégorie 1 : Intrinsèque ───────────────────────────────────── */}
-      <div style={{ fontSize: '11px', color: '#2962FF', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px', marginTop: '4px' }}>
-        Approche Intrinsèque (Flux Futurs)
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-
-        {/* ── DCF ─────────────────────────────────────────────────────── */}
-        <ValuationMethodCard
-          categoryLabel="Intrinsèque"
-          categoryColor="#2962FF"
-          title="DCF — Discounted Cash Flow"
-          verdict={!unavDCF ? vDCF : null}
-          unavailable={unavDCF}
-          isOpen={open.has('dcf')}
-          onToggle={() => toggle('dcf')}
-          isDirty={dirtyDCF}
-          onReset={() => setDcf({ g: dGrowth, wacc: dWacc, gT: 0.025 })}
-          formulaNode={FORMULA_DCF}
-          usageText="Idéal pour les entreprises matures avec des flux de trésorerie prévisibles (M&A, grands groupes industriels). À éviter pour les startups en croissance ou les cycliques dont les FCF sont erratiques."
-          warningText={`Dépasser 3 % pour le taux de croissance terminal (g) est considéré comme une hérésie académique (Damodaran) — la croissance à l'infini ne peut excéder celle du PIB nominal.`}
-        >
-          {!unavDCF && (
-            <>
-              <InputRow label="Free Cash Flow :" value={fmtCompact(fcf, currency)} />
-              <SliderInput
-                label="Taux de croissance (5 ans)"
-                value={dcf.g} min={-0.05} max={0.20} step={0.005}
-                onChange={v => setDcf(s => ({ ...s, g: v }))}
-                format={v => `${(v * 100).toFixed(1)}%`}
-                infoName="Taux de Croissance Annuel"
-              />
-              <SliderInput
-                label="WACC (taux d'actualisation)"
-                value={dcf.wacc} min={0.05} max={0.20} step={0.005}
-                onChange={v => setDcf(s => ({ ...s, wacc: v }))}
-                format={v => `${(v * 100).toFixed(1)}%`}
-                infoName="WACC"
-              />
-              <SliderInput
-                label="Croissance terminale (g∞)"
-                value={dcf.gT} min={0} max={0.04} step={0.005}
-                onChange={v => setDcf(s => ({ ...s, gT: v }))}
-                format={v => `${(v * 100).toFixed(1)}%`}
-              />
-              <div style={{ fontSize: '10px', color: 'var(--text3)', fontStyle: 'italic', marginBottom: '4px' }}>
-                Ordres de grandeur — WACC : 6-8 % défensif · 8-10 % industriel · 10-15 % tech · 15-20 % startup
-              </div>
-            </>
-          )}
-        </ValuationMethodCard>
-
-        {/* ── DDM ─────────────────────────────────────────────────────── */}
-        <ValuationMethodCard
-          categoryLabel="Intrinsèque"
-          categoryColor="#2962FF"
-          title="DDM — Dividend Discount Model"
-          verdict={!unavDDM ? vDDM : null}
-          unavailable={unavDDM}
-          isOpen={open.has('ddm')}
-          onToggle={() => toggle('ddm')}
-          isDirty={dirtyDDM}
-          onReset={() => setDdm({ ke: dWacc, g: 0.03 })}
-          formulaNode={FORMULA_DDM}
-          usageText="Conçu pour les entreprises versant un dividende stable et croissant : banques, assurances, utilities. Inadapté aux entreprises en hypercroissance qui ne distribuent pas (GAFAM)."
-        >
-          {!unavDDM && (
-            <>
-              <InputRow label="Dividende D₀ (annuel) :" value={`${d0?.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`} />
-              <SliderInput
-                label="Kₑ — coût des capitaux propres"
-                value={ddm.ke} min={0.04} max={0.20} step={0.005}
-                onChange={v => setDdm(s => ({ ...s, ke: v }))}
-                format={v => `${(v * 100).toFixed(1)}%`}
-                infoName="WACC"
-              />
-              <SliderInput
-                label="g — croissance des dividendes"
-                value={ddm.g} min={0} max={0.08} step={0.005}
-                onChange={v => setDdm(s => ({ ...s, g: v }))}
-                format={v => `${(v * 100).toFixed(1)}%`}
-              />
-              {ddm.ke <= ddm.g && (
-                <div style={{ fontSize: '11px', color: '#ef5350', marginBottom: '6px' }}>
-                  ⚠ Ke doit être supérieur à g — augmentez Ke ou réduisez g.
-                </div>
-              )}
-            </>
-          )}
-        </ValuationMethodCard>
-      </div>
-
-      {/* ── Catégorie 2 : Relative ──────────────────────────────────────── */}
-      <div style={{ fontSize: '11px', color: '#7B1FA2', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px' }}>
-        Approche Relative (Multiples de Marché)
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-
-        {/* ── EV/EBITDA ────────────────────────────────────────────────── */}
-        <ValuationMethodCard
-          categoryLabel="Relative"
-          categoryColor="#7B1FA2"
-          title="EV / EBITDA — Multiples de Valeur d'Entreprise"
-          verdict={!unavEV ? vEV : null}
-          unavailable={unavEV}
-          isOpen={open.has('ev')}
-          onToggle={() => toggle('ev')}
-          isDirty={dirtyEV}
-          onReset={() => setEv({ multiple: dEvEbitda })}
-          formulaNode={FORMULA_EV}
-          usageText="Méthode reine en banque d'affaires (M&A). Neutralise la structure de dette — utile pour comparer des entreprises du même secteur avec des leviers financiers différents. Le multiple cible est initialisé à la moyenne sectorielle."
-        >
-          {!unavEV && (
-            <>
-              <InputRow label="EBITDA :" value={fmtCompact(ebitda, currency)} />
-              {netDebt != null && <InputRow label="Dette nette :" value={fmtCompact(netDebt, currency)} />}
-              <SliderInput
-                label="Multiple EV/EBITDA cible"
-                value={ev.multiple} min={3} max={30} step={0.5}
-                onChange={v => setEv(s => ({ ...s, multiple: v }))}
-                format={v => `${v.toFixed(1)}x`}
-              />
-              <div style={{ fontSize: '10px', color: 'var(--text3)', fontStyle: 'italic' }}>
-                Ordres de grandeur : 4-8x utilities · 8-12x industriel · 12-20x tech · 20x+ hypercroissance
-              </div>
-            </>
-          )}
-        </ValuationMethodCard>
-
-        {/* ── P/E ──────────────────────────────────────────────────────── */}
-        <ValuationMethodCard
-          categoryLabel="Relative"
-          categoryColor="#7B1FA2"
-          title="P/E — Multiples de Capitaux Propres"
-          verdict={!unavPE ? vPE : null}
-          unavailable={unavPE}
-          isOpen={open.has('pe')}
-          onToggle={() => toggle('pe')}
-          isDirty={dirtyPE}
-          onReset={() => setPe({ pe: dPE })}
-          formulaNode={FORMULA_PE}
-          usageText="Screener rapide pour particuliers. Simple et largement répandu. Biaisé par la structure de financement (l'endettement gonfle le BPA). Le multiple cible est initialisé à la moyenne sectorielle."
-        >
-          {!unavPE && (
-            <>
-              <InputRow label="BPA (dilué) :" value={`${epsFmt} ${currency}`} />
-              <SliderInput
-                label="Multiple P/E cible"
-                value={pe.pe} min={5} max={50} step={0.5}
-                onChange={v => setPe(s => ({ ...s, pe: v }))}
-                format={v => `${v.toFixed(1)}x`}
-                infoName="Multiple P/E Cible"
-              />
-              {peg != null && (
-                <div style={{ fontSize: '11px', color: 'var(--text2)', marginTop: '4px' }}>
-                  Ratio PEG ={' '}
-                  <strong style={{ color: parseFloat(peg) < 1 ? '#26a69a' : parseFloat(peg) > 2 ? '#ef5350' : 'var(--text1)' }}>
-                    {peg}
-                  </strong>
-                  <span style={{ color: 'var(--text3)', fontSize: '10px' }}> (P/E ÷ croissance bénéfices {egrowth?.toFixed(1)}%)</span>
-                  <br />
-                  <span style={{ fontSize: '10px', color: 'var(--text3)' }}>
-                    PEG &lt; 1 : potentiellement sous-évalué · PEG &gt; 2 : attention
-                  </span>
-                </div>
-              )}
-            </>
-          )}
-        </ValuationMethodCard>
-      </div>
-
-      {/* ── Catégorie 3 : Patrimoniale ──────────────────────────────────── */}
-      <div style={{ fontSize: '11px', color: '#00695C', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px' }}>
-        Approche Patrimoniale (Actif Net)
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-
-        {/* ── ANCC ─────────────────────────────────────────────────────── */}
-        <ValuationMethodCard
-          categoryLabel="Patrimoniale"
-          categoryColor="#00695C"
-          title="ANCC — Actif Net Comptable Corrigé"
-          verdict={!unavANCC ? vANCC : null}
-          unavailable={unavANCC}
-          isOpen={open.has('ancc')}
-          onToggle={() => toggle('ancc')}
-          isDirty={dirtyANCC}
-          onReset={() => setAncc({ adj: 0 })}
-          formulaNode={FORMULA_ANCC}
-          usageText="Adapté aux foncières (REITs), holdings et banques dont les actifs sont au bilan à leur valeur réelle. Peu pertinent pour les entreprises de services ou de technologie dont la valeur repose sur des intangibles."
-          warningText="Cette approche ignore totalement les perspectives de croissance future. Elle représente la valeur de liquidation comptable, non la valeur économique."
-        >
-          {!unavANCC && (
-            <>
-              <InputRow label="Valeur comptable par action :" value={`${bvpsFmt} ${currency}`} />
-              <SliderInput
-                label="Ajustement plus-values latentes (%)"
-                value={ancc.adj} min={-0.20} max={0.50} step={0.01}
-                onChange={v => setAncc(s => ({ ...s, adj: v }))}
-                format={v => `${(v * 100 >= 0 ? '+' : '')}${(v * 100).toFixed(0)}%`}
-              />
-              <div style={{ fontSize: '10px', color: 'var(--text3)', fontStyle: 'italic' }}>
-                Ajustement manuel pour estimer les plus-values latentes sur actifs (immobilier, participations…) non reflétées dans les comptes.
-              </div>
-            </>
-          )}
-        </ValuationMethodCard>
-      </div>
-
-      {/* ── Disclaimer MIF2 ────────────────────────────────────────────── */}
-      <div style={{
-        padding: '10px 14px', borderRadius: '7px',
-        backgroundColor: 'var(--bg3)', border: '1px solid var(--border)',
-        fontSize: '11px', color: 'var(--text3)', lineHeight: '1.6',
-      }}>
-        Ces modèles sont des simulations mathématiques basées sur des hypothèses. Ils ne constituent pas un conseil en investissement.
-      </div>
     </div>
   );
 }
