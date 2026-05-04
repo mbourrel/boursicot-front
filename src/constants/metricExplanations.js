@@ -252,6 +252,16 @@ const EXPLANATIONS = {
     why:  "Valeurs nulles ou manquantes exclues du calcul. Sert de référence pour évaluer si une métrique est au-dessus ou en dessous de la norme sectorielle.",
   },
 
+  // ── Laboratoire d'Évaluation — sliders ──────────────────────────────────
+  'g∞ Terminale': {
+    what: "Taux de croissance perpétuelle appliqué après la période explicite (5 ans) dans le modèle DCF, pour calculer la Valeur Terminale via le modèle de Gordon Growth.",
+    why:  "Ce taux représente la croissance à l'infini de l'entreprise. PIB réel (~1.5-2%) + inflation (~1.5%) = PIB nominal ~3%. Dépasser 3% revient à supposer que l'entreprise croît éternellement plus vite que l'économie mondiale — ce qu'Aswath Damodaran qualifie d'hérésie académique. La valeur standard en pratique est 2.5%.",
+  },
+  'g Dividendes': {
+    what: "Taux de croissance annuel des dividendes utilisé dans le Dividend Discount Model (DDM). Il s'applique à la fois au numérateur (D₁ = D₀ × (1+g)) et au dénominateur (Kₑ − g).",
+    why:  "C'est l'hypothèse centrale du DDM. Si g est trop proche de Kₑ, le prix théorique explose (la formule diverge). Ordres de grandeur observés : grandes capitalisations 2-5% · utilities 1-3% · banques 2-4%. Ce taux doit absolument rester inférieur au coût des capitaux propres Kₑ.",
+  },
+
   // ── Prisme de Valorisation (sliders) ────────────────────────────────────
   'Taux de Croissance Annuel': {
     what: "Hypothèse de croissance annuelle appliquée au Free Cash Flow sur les 5 prochaines années dans le modèle DCF.",

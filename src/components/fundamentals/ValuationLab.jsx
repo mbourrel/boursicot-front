@@ -316,7 +316,7 @@ export default function ValuationLab({ data }) {
     gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
     gap: '8px',
     marginBottom: '16px',
-    alignItems: 'start',
+    alignItems: 'stretch',
   };
 
   return (
@@ -324,16 +324,29 @@ export default function ValuationLab({ data }) {
 
       {/* ── Titre accordéon principal ────────────────────────────────── */}
       <div
-        onClick={() => setShowLab(v => !v)}
+        onClick={() => {
+          const next = !showLab;
+          setShowLab(next);
+          if (next) setOpen(new Set(['dcf', 'ddm', 'ev', 'pe', 'ancc']));
+        }}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           cursor: 'pointer', userSelect: 'none',
+          padding: '10px 14px',
+          backgroundColor: 'var(--bg3)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
           marginBottom: showLab ? '16px' : '0',
         }}
       >
         <h3 style={{ ...h3Style, margin: 0 }}>Laboratoire d'Évaluation (Simulateurs)</h3>
-        <div style={{ transform: showLab ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s', color: '#2962FF' }}>
-          <ChevronDown size={16} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#2962FF', flexShrink: 0 }}>
+          <span style={{ fontSize: '11px', fontWeight: '600' }}>
+            {showLab ? 'Réduire' : 'Ouvrir'}
+          </span>
+          <div style={{ transform: showLab ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+            <ChevronDown size={16} />
+          </div>
         </div>
       </div>
 
@@ -395,6 +408,7 @@ export default function ValuationLab({ data }) {
                     value={dcf.gT} min={0} max={0.04} step={0.005}
                     onChange={v => setDcf(s => ({ ...s, gT: v }))}
                     format={v => `${(v * 100).toFixed(1)}%`}
+                    infoName="g∞ Terminale"
                     note={NOTE_GT}
                   />
                 </>
@@ -427,6 +441,7 @@ export default function ValuationLab({ data }) {
                     value={ddm.g} min={0} max={0.08} step={0.005}
                     onChange={v => setDdm(s => ({ ...s, g: v }))}
                     format={v => `${(v * 100).toFixed(1)}%`}
+                    infoName="g Dividendes"
                     note={NOTE_G_DDM}
                   />
                   {ddm.ke <= ddm.g && (

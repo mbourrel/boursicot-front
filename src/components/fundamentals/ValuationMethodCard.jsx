@@ -25,6 +25,9 @@ export default function ValuationMethodCard({
       border: '1px solid var(--border)',
       borderRadius: '10px',
       overflow: 'hidden',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
