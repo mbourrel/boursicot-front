@@ -430,7 +430,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
             {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis',    'section-market')}
             {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health',   'section-health')}
             {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation', 'section-valuation')}
-            {renderCategory('4. Risque & Marché',                 ['Beta', 'Plus Haut 52W', 'Plus Bas 52W', 'Performance 1an'].map(n => d.risk_market?.find(m => m.name === n)).filter(Boolean), 'risk_market', 'section-risk')}
+            {renderCategory('4. Risque & Marché',                 ['Beta', 'Plus Haut 52w', 'Plus Bas 52w', 'Performance 1an'].map(n => d.risk_market?.find(m => m.name === n)).filter(Boolean), 'risk_market', 'section-risk')}
             {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash',       'section-balance')}
             {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth',      'section-growth')}
           </div>
@@ -448,7 +448,22 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
           dd.payout_ratio        && { name: 'Ratio Distribution', vals: [dd.payout_ratio],        unit: '%' },
           dd.five_year_avg_yield && { name: 'Rend. Moy. 5 ans',   vals: [dd.five_year_avg_yield], unit: '%' },
         ].filter(Boolean);
-        const dividendStmtData = { years: dd.annual.years, items: [...dd.annual.items, ...scalarRows] };
+
+        const sharesRow = dd.shares_history?.years?.length > 0
+          ? {
+              name: 'Actions en Circulation',
+              unit: 'M',
+              vals: dd.annual.years.map(y => {
+                const idx = dd.shares_history.years.indexOf(y);
+                return idx >= 0 ? dd.shares_history.vals[idx] : null;
+              }),
+            }
+          : null;
+
+        const dividendStmtData = {
+          years: dd.annual.years,
+          items: [...dd.annual.items, ...scalarRows, ...(sharesRow ? [sharesRow] : [])],
+        };
         const dividendStmtAvg = {
           'Dividende Annuel':   divSectorAvg.dividend_rate,
           'Rendement Div.':     divSectorAvg.dividend_yield,
@@ -457,14 +472,34 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
           'Rend. Moy. 5 ans':   divSectorAvg.five_year_avg_yield,
         };
         return (
-          <FinancialStatement
-            title="10. Politique de Dividende — Historique"
-            stmtData={dividendStmtData}
-            fmt={fmt}
-            stmtAvg={dividendStmtAvg}
-            stmtAvgHistory={{ 'Dividende Annuel': sectorHistory?.dividends_data?.annual_dividend }}
-            companyName={d.name}
-          />
+          <>
+            <FinancialStatement
+              title="10. Politique de Dividende — Historique"
+              stmtData={dividendStmtData}
+              fmt={fmt}
+              stmtAvg={dividendStmtAvg}
+              stmtAvgHistory={{ 'Dividende Annuel': sectorHistory?.dividends_data?.annual_dividend }}
+              companyName={d.name}
+              maxCols={10}
+            />
+            {dd.stock_splits?.length > 0 && (
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{ margin: '0 0 10px', color: '#2962FF', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                  Historique des Splits
+                </h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {dd.stock_splits.map((s, i) => (
+                    <span key={i} style={{
+                      padding: '4px 10px', borderRadius: '4px', fontSize: '12px',
+                      backgroundColor: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text2)',
+                    }}>
+                      {s.date} — {s.ratio}:1
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         );
       })()}
 

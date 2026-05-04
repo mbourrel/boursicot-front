@@ -13,12 +13,12 @@ const h3Style = {
   margin: '0 0 14px', color: '#2962FF', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em',
 };
 
-function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, companyName }) {
+function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, companyName, maxCols = 4 }) {
   const [modal, setModal] = useState(null); // { item } | null
 
   if (!stmtData?.items?.length) return null;
   const { years, items } = stmtData;
-  const cols = years.slice(0, 4);
+  const cols = years.slice(0, maxCols);
   const hasAvg = stmtAvg && Object.keys(stmtAvg).length > 0;
 
   return (
@@ -26,7 +26,7 @@ function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, com
       <div style={{ marginBottom: '36px' }}>
         <h3 style={h3Style}>{title}</h3>
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: `${Math.max(560, 300 + cols.length * 75)}px` }}>
             <thead>
               <tr style={{ backgroundColor: 'var(--bg2)' }}>
                 <th style={{ ...thStyle, textAlign: 'left', width: '34%' }}>Indicateur</th>
@@ -49,7 +49,7 @@ function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, com
             </thead>
             <tbody>
               {items.map((item, rowIdx) => {
-                const vals = item.vals.slice(0, 4);
+                const vals = item.vals.slice(0, maxCols);
                 const avgVal = stmtAvg?.[item.name] ?? null;
                 const mostRecentVal = vals[0] ?? null;
                 const hasHistory = years.length > 1 || (stmtAvgHistory?.[item.name] && Object.keys(stmtAvgHistory[item.name]).length > 1);
@@ -64,7 +64,7 @@ function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, com
                     {vals.map((val, colIdx) => {
                       const next = vals[colIdx + 1];
                       let trend = null;
-                      if (colIdx === 0 && val !== null && next !== null && next !== 0) {
+                      if (colIdx === 0 && val != null && next != null && next !== 0) {
                         const pct = ((val - next) / Math.abs(next)) * 100;
                         trend = { pct, up: pct >= 0 };
                       }
