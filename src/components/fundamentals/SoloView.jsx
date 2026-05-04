@@ -485,9 +485,9 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
         };
 
         const cagrItems = [
-          { label: 'CAGR 3 ans',  val: cagr3Div },
-          { label: 'CAGR 5 ans',  val: cagr5Div },
-          { label: 'CAGR 10 ans', val: cagr10Div },
+          { label: 'Taux de croissance du dividende sur 3 ans',  val: cagr3Div },
+          { label: 'Taux de croissance du dividende sur 5 ans',  val: cagr5Div },
+          { label: 'Taux de croissance du dividende sur 10 ans', val: cagr10Div },
         ].filter(x => x.val != null);
 
         const cagrPanel = cagrItems.length > 0 ? (
