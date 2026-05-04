@@ -251,6 +251,20 @@ const EXPLANATIONS = {
     what: "Moyenne calculée en temps réel à partir des données de toutes les entreprises du même secteur présentes dans notre base.",
     why:  "Valeurs nulles ou manquantes exclues du calcul. Sert de référence pour évaluer si une métrique est au-dessus ou en dessous de la norme sectorielle.",
   },
+
+  // ── Prisme de Valorisation (sliders) ────────────────────────────────────
+  'Taux de Croissance Annuel': {
+    what: "Hypothèse de croissance annuelle appliquée au Free Cash Flow sur les 5 prochaines années dans le modèle DCF.",
+    why:  "C'est l'hypothèse la plus sensible du modèle. +1 % de croissance peut changer le prix théorique de 10–15 %. Utilisez la croissance historique des bénéfices ou du CA comme point de départ.",
+  },
+  'WACC': {
+    what: "Weighted Average Cost of Capital — coût moyen pondéré du capital. C'est le taux utilisé pour actualiser les flux futurs et ramener leur valeur à aujourd'hui.",
+    why:  "Plus le WACC est élevé, plus les flux futurs sont 'dévalorisés', ce qui réduit le prix théorique. Il reflète le risque de l'entreprise : secteur risqué = WACC élevé (12–15 %), secteur défensif = WACC faible (6–8 %).",
+  },
+  'Multiple P/E Cible': {
+    what: "Le ratio cours/bénéfice que vous jugez juste pour cette entreprise, multiplié par le BPA pour obtenir un prix théorique.",
+    why:  "Un P/E cible de 15x est souvent considéré comme la 'moyenne historique du marché'. Un P/E > 25x est souvent justifié pour une forte croissance ; < 12x pour une entreprise mature ou cyclique.",
+  },
 };
 
 export default EXPLANATIONS;

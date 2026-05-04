@@ -1,6 +1,6 @@
 # fundamentals/SoloView.jsx
 
-**Dernière mise à jour :** 2026-05-04
+**Dernière mise à jour :** 2026-05-04 (ajout ValuationPrism)
 
 ## Rôle
 Rendu de la vue analyse fondamentale pour un actif unique. Gère les deux profils utilisateur en un seul composant : **Explorateur** (vue simplifiée avec métriques clés et CTA Stratège) et **Stratège** (vue complète avec métriques avancées, tableaux financiers et dividendes).
@@ -8,7 +8,7 @@ Rendu de la vue analyse fondamentale pour un actif unique. Gère les deux profil
 ## Dépendances
 - **Contextes** : `ProfileContext` (`profile, setProfile`), `CurrencyContext` (`targetCurrency, rates`)
 - **Hooks** : `useBreakpoint`
-- **Sous-composants** : `CurrencyBar`, `MetricCard`, `FinancialStatement`, `ScoreDashboard`, `MomentumDashboard`, `SourceTag`
+- **Sous-composants** : `CurrencyBar`, `MetricCard`, `FinancialStatement`, `ScoreDashboard`, `MomentumDashboard`, `ValuationPrism`, `SourceTag`
 - **Constantes** : `METRIQUES_REINES`
 - **Utilitaires** : `formatFinancialValue`, `captureEvent`
 - **Externes** : `react (useState)`
@@ -45,7 +45,7 @@ Grille plate multi-catégories sans titres séparateurs — utilisée pour les n
 `CurrencyBar` + en-tête (nom, verdict, secteur, description) + `ScoreDashboard` (isBeginnerMode) ou `MomentumDashboard` (non-stock) + 5 métriques reines + CTA "Passer en mode Stratège".
 
 ### Vue Stratège
-`CurrencyBar` + en-tête complet (description + fiche d'identité en grid 2 colonnes) + `ScoreDashboard` ou `MomentumDashboard` + 6 catégories de métriques en grid 3 colonnes + 3 `FinancialStatement` (compte de résultat, bilan, trésorerie) + dividendes si disponibles.
+`CurrencyBar` + en-tête complet (description + fiche d'identité en grid 2 colonnes) + `ScoreDashboard` ou `MomentumDashboard` + **`ValuationPrism`** (stocks uniquement, entre le dashboard et les métriques) + 6 catégories de métriques en grid 3 colonnes + 3 `FinancialStatement` (compte de résultat, bilan, trésorerie) + dividendes si disponibles.
 
 ## Utilisé par
 `Fundamentals.jsx` — branche `isSoloMode === true`

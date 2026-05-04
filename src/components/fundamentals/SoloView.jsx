@@ -10,6 +10,7 @@ import FinancialStatement from './FinancialStatement';
 import ScoreDashboard from './ScoreDashboard';
 import MomentumDashboard from './MomentumDashboard';
 import CurrencyBar from './CurrencyBar';
+import ValuationPrism from './ValuationPrism';
 import { h3Style } from './styles';
 import { captureEvent } from '../../utils/analytics';
 
@@ -403,6 +404,8 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
           isBeginnerMode={false}
         />
       )}
+
+      {assetType === 'stock' && <ValuationPrism data={d} />}
 
       {assetType !== 'stock' ? (
         <>
