@@ -7,7 +7,7 @@ Fonctions de fetch pour les données fondamentales d'un ticker et les moyennes s
 - `api/config.js` — API_URL, authFetch
 
 ## Exports
-- `fetchFundamentals(ticker, signal)` — GET /api/fundamentals/{ticker} → Company + scores + close_price
+- `fetchFundamentals(ticker, signal)` — GET /api/fundamentals/{ticker} → Company + scores + close_price + `valuation_defaults: { default_wacc, default_growth, default_pe, sector_ev_ebitda }`
 - `fetchSectorAverages(sector, signal)` — GET /api/fundamentals/sector-averages/{sector}
 - `fetchSectorHistory(sector, signal)` — GET /api/fundamentals/sector-averages/{sector}/history
 
