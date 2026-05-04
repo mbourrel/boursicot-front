@@ -405,7 +405,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
         />
       )}
 
-      {assetType === 'stock' && <ValuationPrism data={d} />}
+      {assetType === 'stock' && <ValuationPrism key={d.ticker} data={d} />}
 
       {assetType !== 'stock' ? (
         <>
