@@ -1,47 +1,33 @@
 # Fundamentals.jsx
 
+**Dernière mise à jour :** 2026-05-04
+
 ## Rôle
-Vue principale d'analyse fondamentale. Gère deux modes : **Solo** (un actif sélectionné) et **Comparaison** (jusqu'à 5 actifs via `CompareBar`). Affiche les scores, métriques, états financiers, momentum et données de dividendes. S'affiche en **pleine largeur** sans contrainte `maxWidth` (App.jsx retire cette contrainte quand `viewMode === 'fundamentals'`).
+Orchestrateur de l'analyse fondamentale. Charge les données, calcule les dépendances sectorielles, puis délègue le rendu à `SoloView` (actif unique) ou `ComparisonView` (multi-actifs). Depuis le refactoring du 2026-05-04, ce fichier ne contient plus aucun JSX de rendu direct (935 lignes → 38 lignes).
 
 ## Dépendances
-- **Contextes** : `CurrencyContext` (`targetCurrency, setTargetCurrency, updatedAt, rates`), `ProfileContext`
-- **Hooks** : `useFundamentals`, `useSectorAverages`, `useSectorHistory`, `useBreakpoint`
-- **Sous-composants** : `ScoreDashboard`, `MetricCard`, `MetricInfo`, `MetricHistoryModal`, `MomentumDashboard`, `FinancialStatement`, `MethodologyModal`, `RadarChart`, `ScoreCompareCard`, `FundamentalsSkeleton`
-- **Utilitaires** : `formatFinancialValue`, `captureEvent`, `LOWER_IS_BETTER`, `NEUTRAL_METRICS`, `METRIQUES_REINES`
-- **Externes** : `react (useState, useMemo, memo)`
+- **Internes** : `../context/ProfileContext`, `../hooks/useFundamentals`, `../hooks/useSectorAverages`, `../hooks/useSectorHistory`, `./fundamentals/FundamentalsSkeleton`, `./fundamentals/SoloView`, `./fundamentals/ComparisonView`
+- **Externes** : aucune
+
+## Fonctionnement
+1. Construit `allSymbols = [selectedSymbol, ...compareSymbols]`.
+2. Appelle `useFundamentals(allSymbols)` → `{ dataMap, loading, errors }`.
+3. Détermine `isSoloMode` (`allSymbols.length === 1`).
+4. Appelle `useSectorAverages(primarySector)` et `useSectorHistory` (ce dernier uniquement si profil Stratège, coûteux).
+5. Si `loading` → `<FundamentalsSkeleton />`.
+6. Si solo → `<SoloView data={dataMap[selectedSymbol]} error={errors[selectedSymbol]} sectorAvg sectorHistory />`.
+7. Sinon → `<ComparisonView allSymbols dataMap />`.
+
+## Utilisé par
+`App.jsx` — vue `'fundamentals'`
 
 ## Props
 | Prop | Type | Description |
 |------|------|-------------|
 | `selectedSymbol` | `string` | Ticker principal |
-| `compareSymbols` | `string[]` | Tickers en comparaison (défaut `[]`) |
-
-## Fonctionnement
-
-### Barre devise (currencyBar)
-`div` avec le toggle LOCAL/EUR/USD aligné à droite (`justifyContent: 'flex-end'`). Défini comme constante JSX **avant** les branches `isSolo`, injecté comme premier enfant dans chaque branche de retour (Explorateur solo, Stratège solo, Comparaison). L'indicateur de date de taux s'affiche uniquement si `updatedAt && targetCurrency !== 'LOCAL'`.
-
-### Mode Solo — Explorateur
-Vue simplifiée : currencyBar + ScoreDashboard + 5 métriques clés + MomentumDashboard. États financiers masqués.
-
-### Mode Solo — Stratège
-Vue complète : currencyBar + description entreprise (tronquée 3 lignes mobile, toggle "Voir plus") + ScoreDashboard + toutes les catégories de métriques (6) + FinancialStatement (3 tableaux) + MomentumDashboard.
-
-### Mode Comparaison
-currencyBar + RadarChart 6 axes (masqué mobile < 768px) + CompareTable multi-colonnes triable avec coloration meilleur/pire + ScoreCompareCard par actif.
-
-### CompareTable
-Composant défini au niveau module (non inline) pour pouvoir avoir ses propres hooks (`useState` pour l'ombre scroll sticky). Première colonne `position: sticky; left: 0`.
-
-### Conversion devise
-`fmt(val, unit)` → `formatFinancialValue(val, unit, sourceCurrency, targetCurrency, rates)`. `sourceCurrency` = `company.currency` (EUR pour CAC 40, USD pour Mag7).
-
-### getAssetType
-Priorité : `company.asset_class` (API). Fallback : pattern ticker (`-USD` → crypto, `^` → index, `=F` → commodity, sinon stock).
+| `compareSymbols` | `string[]` | Tickers supplémentaires (défaut `[]`) |
 
 ## Points d'attention
-- `useSectorHistory` reçoit `null` si profil Explorateur — requête coûteuse évitée.
-- `currencyBar` est défini avant le `if (isSolo)` pour être partagé sans duplication dans toutes les branches.
-- Vue **pleine largeur** depuis 2026-05-03 : App.jsx utilise `{ width: '100%' }` au lieu de `{ maxWidth: '1600px', margin: '0 auto' }` pour cette vue.
-- `fmt` et `fmtRaw` sont deux helpers distincts : `fmt` convertit et retourne du JSX, `fmtRaw` retourne une string formatée sans conversion devise.
-- `Fundamentals.jsx` dépasse 700 lignes — dette technique identifiée, refactoring en `SoloView`/`ComparisonView` planifié.
+- `useSectorHistory` reçoit `null` si profil Explorateur — évite un appel API superflu.
+- La logique de rendu (métriques, tableaux financiers, comparaison) est désormais dans `SoloView.jsx` et `ComparisonView.jsx`.
+- Vue **pleine largeur** : App.jsx utilise `{ width: '90%', margin: '0 auto' }` pour `viewMode === 'fundamentals'`.

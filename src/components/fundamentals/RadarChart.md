@@ -1,5 +1,7 @@
 # fundamentals/RadarChart.jsx
 
+**Dernière mise à jour :** 2026-05-04
+
 ## Rôle
 Graphique radar SVG pur (sans librairie) affichant les 6 scores fondamentaux (Santé, Valorisation, Croissance, Efficacité, Dividende, Momentum) pour un ou plusieurs actifs en mode Comparaison.
 
@@ -22,6 +24,6 @@ Graphique radar SVG pur (sans librairie) affichant les 6 scores fondamentaux (Sa
 - `anchor(a)` : fonction qui retourne `'middle'|'start'|'end'` selon l'angle pour aligner les labels SVG.
 
 ## Points d'attention
-- Masqué sur mobile dans `Fundamentals.jsx` (`!isMobile` via `useBreakpoint`) — illisible en dessous de 768px.
+- Masqué sur mobile dans `ComparisonView.jsx` (`display: isMobile ? 'none' : 'flex'`) — illisible en dessous de 768px.
 - Enveloppé dans `memo()` — pas de re-render si `allSymbols` et `dataMap` ne changent pas.
 - `ASSET_COLORS` importé depuis `CompareBar.jsx` — source unique de vérité pour les couleurs par position de comparaison.

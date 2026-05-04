@@ -1,5 +1,7 @@
 # ScoreDashboard.jsx
 
+**Dernière mise à jour :** 2026-05-04
+
 ## Rôle
 Dashboard de scores Boursicot en layout "Orbit" : 6 jauges circulaires SVG (3 piliers financiers + 3 piliers stratégiques), une Master Gauge centrale (note globale), verdict, complexité, modales détaillées au clic.
 
@@ -37,7 +39,7 @@ Portal sur `document.body`. Titre, score, et liste des indicateurs du pilier (de
 `{ health: 0.25, valuation: 0.20, growth: 0.20, efficiency: 0.15, dividend: 0.10, momentum: 0.10 }` — miroir du backend.
 
 ## Utilisé par
-`Fundamentals.jsx` (vue solo uniquement)
+`SoloView.jsx` (vue solo uniquement — les deux profils Explorateur et Stratège)
 
 ## Props / API
 | Prop | Type | Description |
