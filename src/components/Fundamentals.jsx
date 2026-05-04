@@ -182,6 +182,21 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
     };
 
     const identityItems = [
+      d.close_price != null && {
+        icon: '💰', label: 'Prix Actuel', value: '',
+        renderValue: (
+          <span style={{ textAlign: 'right' }}>
+            <span style={{ color: 'var(--text2)', fontSize: '14px', fontWeight: '600' }}>
+              {d.close_price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {d.currency || '$'}
+            </span>
+            {d.daily_change_pct != null && (
+              <span style={{ fontSize: '12px', fontWeight: '600', marginLeft: '6px', color: d.daily_change_pct >= 0 ? '#26a69a' : '#ef5350' }}>
+                {d.daily_change_pct >= 0 ? '+' : ''}{d.daily_change_pct.toFixed(2)}%
+              </span>
+            )}
+          </span>
+        ),
+      },
       d.industry    && { icon: '🏭', label: 'Industrie',       value: d.industry },
       d.country     && { icon: '📍', label: 'Siège',           value: [d.city, d.country].filter(Boolean).join(', ') },
       d.ipo_date    && { icon: '📅', label: 'Introduction',    value: new Date(d.ipo_date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) },
@@ -428,7 +443,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                 Informations générales
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                {identityItems.map(({ icon, label, value, isLink }) => (
+                {identityItems.map(({ icon, label, value, isLink, renderValue }) => (
                   <div key={label} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '13px 18px', borderBottom: '1px solid var(--border)',
@@ -442,7 +457,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
                           style={{ color: '#2962FF', fontSize: '14px', fontWeight: '500', textDecoration: 'none', textAlign: 'right', wordBreak: 'break-all' }}>
                           {value.replace(/^https?:\/\/(www\.)?/, '')}
                         </a>
-                      : <span style={{ color: 'var(--text2)', fontSize: '14px', fontWeight: '600', textAlign: 'right' }}>{value}</span>
+                      : renderValue ?? <span style={{ color: 'var(--text2)', fontSize: '14px', fontWeight: '600', textAlign: 'right' }}>{value}</span>
                     }
                   </div>
                 ))}
@@ -505,7 +520,7 @@ function Fundamentals({ selectedSymbol, compareSymbols = [] }) {
               {renderCategory('1. Analyse de Marché',               d.market_analysis,    'market_analysis',    'section-market')}
               {renderCategory('2. Santé Financière',                d.financial_health,   'financial_health',   'section-health')}
               {renderCategory('3. Valorisation Avancée',            d.advanced_valuation, 'advanced_valuation', 'section-valuation')}
-              {renderCategory('4. Risque & Marché',                 d.risk_market,        'risk_market',        'section-risk')}
+              {renderCategory('4. Risque & Marché',                 ['Beta', 'Plus Haut 52W', 'Plus Bas 52W', 'Performance 1an'].map(n => d.risk_market?.find(m => m.name === n)).filter(Boolean),        'risk_market',        'section-risk')}
               {renderCategory('5. Bilan & Liquidité',               d.balance_cash,       'balance_cash',       'section-balance')}
               {renderCategory('6. Compte de Résultat & Croissance', d.income_growth,      'income_growth',      'section-growth')}
             </div>
