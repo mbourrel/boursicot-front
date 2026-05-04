@@ -225,11 +225,11 @@ const NOTE_G_EXPLICIT = 'g = croissance annuelle du FCF sur 5 ans. Ordres : déc
 const NOTE_WACC       = 'WACC : 6-8% défensif (utilities, telecom) · 8-10% industriel · 10-15% tech · 15-20% startup ou entreprise risquée';
 const NOTE_GT         = 'g∞ = croissance perpétuelle après la période explicite. PIB réel (~1.5-2%) + inflation (~1.5%) = PIB nominal ~3%. Dépasser 3% revient à supposer que l\'entreprise croît plus vite que l\'économie mondiale à l\'infini — hérésie académique (Damodaran).';
 const NOTE_KE         = 'Kₑ = coût des capitaux propres (CAPM : rf + β × prime). Initialisé sur le WACC calculé par le backend (rf + β × 5.5%).';
-const NOTE_G_DDM      = 'g = taux de croissance annuel durable des dividendes. Ordres : grandes capitalisations 2-5% · utilities 1-3% · banques 2-4%. g doit impérativement rester inférieur à Kₑ, sinon la formule diverge.';
+const NOTE_G_DDM      = 'g = taux de croissance annualisé durable des dividendes (CAGR). Ordres : grandes capitalisations 2-5% · utilities 1-3% · banques 2-4%. g doit impérativement rester inférieur à Kₑ, sinon la formule diverge.';
 
 // ── Composant principal ────────────────────────────────────────────────────
 
-export default function ValuationLab({ data }) {
+export default function ValuationLab({ data, defaultDivGrowth }) {
   const { isMobile } = useBreakpoint();
 
   // ── Extraction données ─────────────────────────────────────────────────
@@ -257,11 +257,14 @@ export default function ValuationLab({ data }) {
   const dGrowth   = apiDef.default_growth   ?? 0.05;
   const dPE       = apiDef.default_pe       ?? (per != null ? Math.min(50, Math.max(5, Math.round(per))) : 15);
   const dEvEbitda = apiDef.sector_ev_ebitda ?? 10;
+  const dDivGrowth = defaultDivGrowth != null
+    ? Math.min(0.08, Math.max(0, defaultDivGrowth / 100))
+    : 0.03;
 
   // ── État UI ─────────────────────────────────────────────────────────────
   const [showLab, setShowLab] = useState(false);
   const [dcf,  setDcf]  = useState({ g: dGrowth, wacc: dWacc, gT: 0.025 });
-  const [ddm,  setDdm]  = useState({ ke: dWacc, g: 0.03 });
+  const [ddm,  setDdm]  = useState({ ke: dWacc, g: dDivGrowth });
   const [ev,   setEv]   = useState({ multiple: dEvEbitda });
   const [pe,   setPe]   = useState({ pe: dPE });
   const [ancc, setAncc] = useState({ adj: 0 });
@@ -299,7 +302,7 @@ export default function ValuationLab({ data }) {
 
   // ── isDirty par méthode ───────────────────────────────────────────────────
   const dirtyDCF  = dcf.g !== dGrowth || dcf.wacc !== dWacc || dcf.gT !== 0.025;
-  const dirtyDDM  = ddm.ke !== dWacc || ddm.g !== 0.03;
+  const dirtyDDM  = ddm.ke !== dWacc || ddm.g !== dDivGrowth;
   const dirtyEV   = ev.multiple !== dEvEbitda;
   const dirtyPE   = pe.pe !== dPE;
   const dirtyANCC = ancc.adj !== 0;
@@ -421,7 +424,7 @@ export default function ValuationLab({ data }) {
               title="DDM — Dividend Discount Model"
               verdict={!unavDDM ? vDDM : null} unavailable={unavDDM}
               isOpen={open.has('ddm')} onToggle={() => toggle('ddm')}
-              isDirty={dirtyDDM} onReset={() => setDdm({ ke: dWacc, g: 0.03 })}
+              isDirty={dirtyDDM} onReset={() => setDdm({ ke: dWacc, g: dDivGrowth })}
               formulaNode={FORMULA_DDM}
               usageText="Conçu pour les entreprises versant un dividende stable et croissant : banques, assurances, utilities. Inadapté aux entreprises en hypercroissance qui ne distribuent pas."
             >
@@ -437,12 +440,15 @@ export default function ValuationLab({ data }) {
                     note={NOTE_KE}
                   />
                   <SliderInput
-                    label="g — croissance des dividendes"
+                    label="g — croissance annualisée des dividendes"
                     value={ddm.g} min={0} max={0.08} step={0.005}
                     onChange={v => setDdm(s => ({ ...s, g: v }))}
                     format={v => `${(v * 100).toFixed(1)}%`}
                     infoName="g Dividendes"
-                    note={NOTE_G_DDM}
+                    note={defaultDivGrowth != null
+                      ? `Pré-rempli depuis le CAGR 3 ans annualisé (${defaultDivGrowth.toFixed(1)}%). ${NOTE_G_DDM}`
+                      : NOTE_G_DDM
+                    }
                   />
                   {ddm.ke <= ddm.g && (
                     <div style={{ fontSize: '11px', color: '#ef5350', marginBottom: '6px' }}>

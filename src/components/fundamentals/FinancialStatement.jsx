@@ -13,7 +13,7 @@ const h3Style = {
   margin: '0 0 14px', color: '#2962FF', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em',
 };
 
-function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, companyName, maxCols = 4 }) {
+function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, companyName, maxCols = 4, sidePanel }) {
   const [modal, setModal] = useState(null); // { item } | null
 
   if (!stmtData?.items?.length) return null;
@@ -23,7 +23,7 @@ function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, com
 
   return (
     <>
-      <div style={{ marginBottom: '36px' }}>
+      <div style={{ marginBottom: '36px', position: sidePanel ? 'relative' : undefined }}>
         <h3 style={h3Style}>{title}</h3>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: `${Math.max(560, 300 + cols.length * 75)}px` }}>
@@ -107,6 +107,11 @@ function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, com
             </tbody>
           </table>
         </div>
+        {sidePanel && (
+          <div style={{ position: 'absolute', top: '108px', right: '10px', zIndex: 1, pointerEvents: 'none' }}>
+            <div style={{ pointerEvents: 'auto' }}>{sidePanel}</div>
+          </div>
+        )}
       </div>
 
       {modal && (

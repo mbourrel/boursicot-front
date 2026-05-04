@@ -115,6 +115,18 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
   const dd = d.dividends_data || {};
   const divSectorAvg = sectorAvg?.dividends_data || {};
 
+  const _divVals  = dd.annual?.items?.find(i => i.name === 'Dividende Annuel')?.vals ?? [];
+  const _divYears = dd.annual?.years ?? [];
+  const _calcDivCAGR = (idx) => {
+    if (_divVals.length <= idx || _divVals[idx] == null || _divVals[idx] === 0 || _divVals[0] == null) return null;
+    const span = parseInt(_divYears[0]) - parseInt(_divYears[idx]);
+    if (isNaN(span) || span <= 0) return null;
+    return (Math.pow(_divVals[0] / _divVals[idx], 1 / span) - 1) * 100;
+  };
+  const cagr3Div  = _calcDivCAGR(3);
+  const cagr5Div  = _calcDivCAGR(5);
+  const cagr10Div = _calcDivCAGR(9);
+
   const fmtEmployees = (n) => {
     if (!n) return null;
     if (n >= 1000) return `${(n / 1000).toFixed(0)} k`;
@@ -405,7 +417,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
         />
       )}
 
-      {assetType === 'stock' && <ValuationLab key={d.ticker} data={d} />}
+      {assetType === 'stock' && <ValuationLab key={d.ticker} data={d} defaultDivGrowth={cagr3Div} />}
 
       {assetType !== 'stock' ? (
         <>
@@ -472,19 +484,29 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
           'Rend. Moy. 5 ans':   divSectorAvg.five_year_avg_yield,
         };
 
-        const divVals  = dd.annual.items.find(i => i.name === 'Dividende Annuel')?.vals ?? [];
-        const divYears = dd.annual.years;
-        const calcCAGR = (idx) => {
-          if (divVals.length <= idx || divVals[idx] == null || divVals[idx] === 0 || divVals[0] == null) return null;
-          const span = parseInt(divYears[0]) - parseInt(divYears[idx]);
-          if (span <= 0) return null;
-          return (Math.pow(divVals[0] / divVals[idx], 1 / span) - 1) * 100;
-        };
         const cagrItems = [
-          { label: 'CAGR 3 ans',  val: calcCAGR(3) },
-          { label: 'CAGR 5 ans',  val: calcCAGR(5) },
-          { label: 'CAGR 10 ans', val: calcCAGR(9) },
+          { label: 'CAGR 3 ans',  val: cagr3Div },
+          { label: 'CAGR 5 ans',  val: cagr5Div },
+          { label: 'CAGR 10 ans', val: cagr10Div },
         ].filter(x => x.val != null);
+
+        const cagrPanel = cagrItems.length > 0 ? (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {cagrItems.map(({ label, val }) => (
+              <div key={label} style={{
+                padding: '6px 14px', borderRadius: '6px', textAlign: 'center',
+                backgroundColor: 'var(--bg2)', border: '1px solid var(--border)',
+                display: 'flex', flexDirection: 'column', gap: '2px',
+              }}>
+                <span style={{ fontSize: '10px', color: 'var(--text3)', letterSpacing: '0.03em' }}>{label}</span>
+                <span style={{ fontSize: '15px', fontWeight: 'bold', color: val >= 0 ? '#26a69a' : '#ef5350' }}>
+                  {val >= 0 ? '+' : ''}{val.toFixed(1)}%
+                </span>
+                <span style={{ fontSize: '9px', color: 'var(--text3)', fontStyle: 'italic' }}>annualisé</span>
+              </div>
+            ))}
+          </div>
+        ) : null;
 
         return (
           <>
@@ -496,28 +518,8 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
               stmtAvgHistory={{ 'Dividende Annuel': sectorHistory?.dividends_data?.annual_dividend }}
               companyName={d.name}
               maxCols={10}
+              sidePanel={cagrPanel}
             />
-            {cagrItems.length > 0 && (
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ margin: '0 0 12px', color: '#2962FF', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em' }}>
-                  Croissance du Dividende
-                </h3>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  {cagrItems.map(({ label, val }) => (
-                    <div key={label} style={{
-                      padding: '10px 20px', borderRadius: '6px', textAlign: 'center',
-                      backgroundColor: 'var(--bg2)', border: '1px solid var(--border)',
-                      display: 'flex', flexDirection: 'column', gap: '4px',
-                    }}>
-                      <span style={{ fontSize: '11px', color: 'var(--text3)', letterSpacing: '0.04em' }}>{label}</span>
-                      <span style={{ fontSize: '17px', fontWeight: 'bold', color: val >= 0 ? '#26a69a' : '#ef5350' }}>
-                        {val >= 0 ? '+' : ''}{val.toFixed(1)}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
             {dd.stock_splits?.length > 0 && (
               <div style={{ marginBottom: '32px' }}>
                 <h3 style={{ margin: '0 0 10px', color: '#2962FF', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em' }}>
