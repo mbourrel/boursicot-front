@@ -5,10 +5,37 @@ import { useTheme, SEMANTIC_COLORS } from '../context/ThemeContext';
 import { API_URL, authFetch } from '../api/config';
 import SourceTag from './SourceTag';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useCurrency } from '../context/CurrencyContext';
+import CurrencyBar from './fundamentals/CurrencyBar';
+
+// Dérive la devise source depuis le suffixe du ticker
+function currencyFromTicker(ticker) {
+  if (!ticker) return 'USD';
+  const parts = ticker.split('.');
+  if (parts.length < 2) return 'USD';
+  const s = parts[parts.length - 1].toUpperCase();
+  if (['PA', 'AS', 'BR', 'LS', 'MC', 'MI', 'DE', 'BE', 'VI', 'PR', 'NX', 'AMS'].includes(s)) return 'EUR';
+  if (['L', 'IL'].includes(s)) return 'GBP';
+  if (['T'].includes(s)) return 'JPY';
+  if (['SW', 'VX'].includes(s)) return 'CHF';
+  if (['AX'].includes(s)) return 'AUD';
+  return 'USD';
+}
+
+// Retourne le multiplicateur numérique pour convertir src → target
+function getMultiplier(sourceCurrency, targetCurrency, rates) {
+  if (!rates || targetCurrency === 'LOCAL' || !sourceCurrency) return 1;
+  if (sourceCurrency === targetCurrency) return 1;
+  const toUSD = sourceCurrency === 'USD' ? 1 : (rates[`${sourceCurrency}USD`] ?? 1);
+  if (targetCurrency === 'USD') return toUSD;
+  if (targetCurrency === 'EUR') return toUSD / (rates['EURUSD'] ?? 1);
+  return 1;
+}
 
 function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   const { theme, isDark } = useTheme();
   const { isMobile } = useBreakpoint();
+  const { targetCurrency, rates } = useCurrency();
   const CHART_HEIGHT = isMobile ? 300 : 500;
   const getName = (ticker) => allAssets.find(a => a.ticker === ticker)?.name || ticker;
   const chartContainerRef = useRef();
@@ -158,19 +185,20 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             allSymbols.forEach((sym) => {
               const d = allDataRef.current[sym];
               if (!d || d.length === 0) return;
-              // Toujours afficher les prix réels (jamais de normalisation en %)
-              seriesMap[sym].setData(d.map(p => ({ time: p.time, value: p.value })));
+              const m = getMultiplier(currencyFromTicker(sym), targetCurrency, rates);
+              seriesMap[sym].setData(d.map(p => ({ time: p.time, value: p.value * m })));
             });
 
             if (!isComparing) {
               const pd = allDataRef.current[selectedSymbol];
               if (pd) {
+                const m = getMultiplier(currencyFromTicker(selectedSymbol), targetCurrency, rates);
                 ma10sRef.current  = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 1.5, crosshairMarkerVisible: false, visible: showMa10 });
                 ma100sRef.current = chart.addSeries(LineSeries, { color: SEMANTIC_COLORS.warning, lineWidth: 1.5, crosshairMarkerVisible: false, visible: showMa100 });
                 ma200sRef.current = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 1.5, crosshairMarkerVisible: false, visible: showMa200 });
-                ma10sRef.current.setData(pd.filter(d => d.ma10   != null).map(d => ({ time: d.time, value: d.ma10 })));
-                ma100sRef.current.setData(pd.filter(d => d.ma100 != null).map(d => ({ time: d.time, value: d.ma100 })));
-                ma200sRef.current.setData(pd.filter(d => d.ma200 != null).map(d => ({ time: d.time, value: d.ma200 })));
+                ma10sRef.current.setData(pd.filter(d => d.ma10   != null).map(d => ({ time: d.time, value: d.ma10  * m })));
+                ma100sRef.current.setData(pd.filter(d => d.ma100 != null).map(d => ({ time: d.time, value: d.ma100 * m })));
+                ma200sRef.current.setData(pd.filter(d => d.ma200 != null).map(d => ({ time: d.time, value: d.ma200 * m })));
               }
             }
 
@@ -179,18 +207,18 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             allSymbols.forEach(sym => {
               const d = allDataRef.current[sym];
               if (!d || d.length === 0) return;
+              const m = getMultiplier(currencyFromTicker(sym), targetCurrency, rates);
               stats[sym] = {
-                price: d[d.length - 1].value,
+                price: d[d.length - 1].value * m,
                 change: ((d[d.length - 1].value - d[0].value) / d[0].value) * 100,
               };
             });
             setAssetStats(stats);
             applyTimeRange(timeRange, chart);
 
-            // % dynamique sur la fenêtre visible + auto-upgrade d'intervalle
+            // Prix dynamique sur la fenêtre visible + auto-upgrade d'intervalle
             chart.timeScale().subscribeVisibleLogicalRangeChange((lr) => {
               if (!lr) return;
-              // Si le dézoom dépasse le début des données, passer à l'intervalle supérieur
               if (lr.from < -0.5 && !upgradeScheduled) {
                 const curr = candleIntervalRef.current;
                 if (curr === '15m') { upgradeScheduled = true; setTimeRange('ALL'); setCandleInterval('1h'); }
@@ -205,8 +233,9 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
                   const from = Math.max(0, Math.floor(lr.from));
                   const to = Math.min(d.length - 1, Math.ceil(lr.to));
                   if (from >= to) return;
+                  const m = getMultiplier(currencyFromTicker(sym), targetCurrency, rates);
                   newStats[sym] = {
-                    price: d[to].value,
+                    price: d[to].value * m,
                     change: ((d[to].value - d[from].value) / d[from].value) * 100,
                   };
                 });
@@ -242,7 +271,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [selectedSymbol, compareSymbols.join(','), candleInterval, individualScales, isDark, API_URL]);
+  }, [selectedSymbol, compareSymbols.join(','), candleInterval, individualScales, isDark, API_URL, targetCurrency, rates?.EURUSD, rates?.GBPUSD, rates?.JPYUSD, rates?.CHFUSD]);
 
   // Toggles MA sans recréer le chart
   useEffect(() => { ma10sRef.current?.applyOptions({ visible: showMa10 }); },  [showMa10]);
@@ -257,12 +286,17 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
 
   const formatPrice = (val) => {
     if (val === null || val === undefined) return '—';
-    if (val >= 1000) return val.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
-    return val.toFixed(2);
+    const prefix = targetCurrency === 'EUR' ? '€' : targetCurrency === 'USD' ? '$' : '';
+    const formatted = Math.abs(val) >= 1000
+      ? val.toLocaleString('fr-FR', { maximumFractionDigits: 2 })
+      : val.toFixed(2);
+    return prefix ? `${prefix}${formatted}` : formatted;
   };
 
   return (
     <div style={{ backgroundColor: 'var(--bg1)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden', maxWidth: '100%' }}>
+
+      <CurrencyBar />
 
       {/* BARRE DE CONTRÔLE */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '15px' }}>
