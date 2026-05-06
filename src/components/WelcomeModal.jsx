@@ -65,7 +65,7 @@ export default function WelcomeModal({ onProfileSelected = () => {} }) {
               'Graphique de prix simple',
               'Cycle économique mondial',
             ]}
-            color="#26a69a"
+            color="var(--positive)"
             onClick={() => handleSelect('explorateur')}
           />
           <ProfileCard
@@ -78,7 +78,7 @@ export default function WelcomeModal({ onProfileSelected = () => {} }) {
               'Graphique Trading (indicateurs)',
               'Analyse macro complète',
             ]}
-            color="#2962FF"
+            color="var(--brand)"
             onClick={() => handleSelect('stratege')}
           />
         </div>

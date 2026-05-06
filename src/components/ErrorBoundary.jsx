@@ -33,7 +33,7 @@ class ErrorBoundary extends Component {
         color: 'var(--text3)', fontSize: '13px',
       }}>
         <div style={{ fontSize: '22px', marginBottom: '8px' }}>⚠</div>
-        <div style={{ color: '#ef5350', fontWeight: 'bold', marginBottom: '6px' }}>
+        <div style={{ color: 'var(--negative)', fontWeight: 'bold', marginBottom: '6px' }}>
           {this.props.label ? `Erreur dans "${this.props.label}"` : 'Une erreur est survenue'}
         </div>
         <div style={{ fontSize: '11px', opacity: 0.7 }}>{this.state.message}</div>

@@ -65,7 +65,7 @@ function SliderInput({ label, value, min, max, step, onChange, format, infoName 
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
         <span style={{ fontSize: '11px', color: 'var(--text3)', fontWeight: '600' }}>{label}</span>
         <MetricInfo name={infoName} />
-        <span style={{ marginLeft: 'auto', fontSize: '13px', fontWeight: 'bold', color: '#2962FF' }}>
+        <span style={{ marginLeft: 'auto', fontSize: '13px', fontWeight: 'bold', color: 'var(--brand)' }}>
           {format(value)}
         </span>
       </div>
@@ -73,7 +73,7 @@ function SliderInput({ label, value, min, max, step, onChange, format, infoName 
         type="range"
         min={min} max={max} step={step} value={value}
         onChange={e => onChange(parseFloat(e.target.value))}
-        style={{ width: '100%', accentColor: '#2962FF', cursor: 'pointer', height: '4px' }}
+        style={{ width: '100%', accentColor: 'var(--brand)', cursor: 'pointer', height: '4px' }}
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--text3)', marginTop: '2px' }}>
         <span>{format(min)}</span>
@@ -86,7 +86,7 @@ function SliderInput({ label, value, min, max, step, onChange, format, infoName 
 function PriceResult({ theoreticalPrice, currentPrice, currency, unavailableReason }) {
   if (unavailableReason) {
     return (
-      <div style={{ fontSize: '11px', color: '#ff9800', fontStyle: 'italic', marginTop: '10px' }}>
+      <div style={{ fontSize: '11px', color: 'var(--warning)', fontStyle: 'italic', marginTop: '10px' }}>
         {unavailableReason}
       </div>
     );
@@ -94,7 +94,8 @@ function PriceResult({ theoreticalPrice, currentPrice, currency, unavailableReas
   if (theoreticalPrice === null) return null;
 
   const diff  = ((theoreticalPrice - currentPrice) / currentPrice) * 100;
-  const color = diff > 0 ? '#26a69a' : '#ef5350';
+  const color   = diff > 0 ? 'var(--positive)' : 'var(--negative)';
+  const colorBg = diff > 0 ? 'var(--pos-alpha)' : 'var(--neg-alpha)';
 
   return (
     <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
@@ -105,7 +106,7 @@ function PriceResult({ theoreticalPrice, currentPrice, currency, unavailableReas
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span style={{
           fontSize: '12px', fontWeight: 'bold', color,
-          backgroundColor: color + '1a', padding: '3px 8px', borderRadius: '4px',
+          backgroundColor: colorBg, padding: '3px 8px', borderRadius: '4px',
         }}>
           {diff > 0 ? '+' : ''}{diff.toFixed(1)}%
         </span>

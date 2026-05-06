@@ -34,16 +34,16 @@ const PHASE_MATRIX = {
 };
 
 const STATUS = {
-  strong:  { color: '#26a69a', bg: '#26a69a1a', border: '#26a69a40', label: 'Favorable',   icon: '↑' },
-  weak:    { color: '#ef5350', bg: '#ef53501a', border: '#ef535040', label: 'Défavorable',  icon: '↓' },
-  neutral: { color: '#f59e0b', bg: '#f59e0b1a', border: '#f59e0b40', label: 'Neutre',       icon: '→' },
+  strong:  { color: 'var(--positive)', bg: 'var(--pos-alpha)', border: '#26a69a40', label: 'Favorable',   icon: '↑' },
+  weak:    { color: 'var(--negative)', bg: 'var(--neg-alpha)', border: '#ef535040', label: 'Défavorable',  icon: '↓' },
+  neutral: { color: 'var(--warning)',  bg: 'var(--warn-alpha)', border: '#f59e0b40', label: 'Neutre',      icon: '→' },
 };
 
 const PHASE_COLORS = {
-  Expansion:   '#26a69a',
-  Surchauffe:  '#ff9800',
-  Contraction: '#ef5350',
-  Récession:   '#2962FF',
+  Expansion:   'var(--positive)',
+  Surchauffe:  'var(--warning)',
+  Contraction: 'var(--negative)',
+  Récession:   'var(--brand)',
 };
 
 const PHASE_CONTEXT = {
@@ -71,9 +71,9 @@ function AssetWindMatrix({ phase, loading }) {
           onClick={() => setShowInfo(v => !v)}
           title="Comment lire cette matrice ?"
           style={{
-            background: showInfo ? '#2962FF22' : 'transparent',
-            border: `1px solid ${showInfo ? '#2962FF' : 'var(--border)'}`,
-            color: showInfo ? '#2962FF' : 'var(--text3)',
+            background: showInfo ? 'var(--brand-alpha)' : 'transparent',
+            border: `1px solid ${showInfo ? 'var(--brand)' : 'var(--border)'}`,
+            color: showInfo ? 'var(--brand)' : 'var(--text3)',
             borderRadius: '50%', width: '22px', height: '22px',
             cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
             display: 'flex', alignItems: 'center', justifyContent: 'center',

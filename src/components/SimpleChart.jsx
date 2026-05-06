@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createChart, AreaSeries, LineSeries } from 'lightweight-charts';
 import { ASSET_COLORS } from './CompareBar';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, SEMANTIC_COLORS } from '../context/ThemeContext';
 import { API_URL, authFetch } from '../api/config';
 import SourceTag from './SourceTag';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -166,7 +166,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
               const pd = allDataRef.current[selectedSymbol];
               if (pd) {
                 ma10sRef.current  = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 1.5, crosshairMarkerVisible: false, visible: showMa10 });
-                ma100sRef.current = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 1.5, crosshairMarkerVisible: false, visible: showMa100 });
+                ma100sRef.current = chart.addSeries(LineSeries, { color: SEMANTIC_COLORS.warning, lineWidth: 1.5, crosshairMarkerVisible: false, visible: showMa100 });
                 ma200sRef.current = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 1.5, crosshairMarkerVisible: false, visible: showMa200 });
                 ma10sRef.current.setData(pd.filter(d => d.ma10   != null).map(d => ({ time: d.time, value: d.ma10 })));
                 ma100sRef.current.setData(pd.filter(d => d.ma100 != null).map(d => ({ time: d.time, value: d.ma100 })));
@@ -249,7 +249,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
   useEffect(() => { ma100sRef.current?.applyOptions({ visible: showMa100 }); }, [showMa100]);
   useEffect(() => { ma200sRef.current?.applyOptions({ visible: showMa200 }); }, [showMa200]);
 
-  const btnStyle = (active, activeColor = '#2962FF') => ({
+  const btnStyle = (active, activeColor = 'var(--brand)') => ({
     padding: '6px 10px', background: active ? activeColor : 'transparent',
     color: active ? 'white' : 'var(--text3)', border: `1px solid ${active ? activeColor : 'var(--border)'}`,
     borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', transition: 'all 0.2s',
@@ -291,7 +291,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center', fontSize: '12px' }}>
               {[
                 { label: 'MM10',  color: '#00bcd4', active: showMa10,  toggle: () => setShowMa10(v  => !v) },
-                { label: 'MM100', color: '#ff9800', active: showMa100, toggle: () => setShowMa100(v => !v) },
+                { label: 'MM100', color: 'var(--warning)', active: showMa100, toggle: () => setShowMa100(v => !v) },
                 { label: 'MM200', color: '#9c27b0', active: showMa200, toggle: () => setShowMa200(v => !v) },
               ].map(({ label, color, active, toggle }) => (
                 <button
@@ -315,7 +315,7 @@ function SimpleChart({ selectedSymbol, compareSymbols = [], allAssets = [] }) {
             const s = assetStats[sym];
             if (!s) return null;
             const color = ASSET_COLORS[i];
-            const changeColor = s.change >= 0 ? '#26a69a' : '#ef5350';
+            const changeColor = s.change >= 0 ? 'var(--positive)' : 'var(--negative)';
             return (
               <div key={sym} style={{ display: 'flex', gap: '6px', alignItems: 'baseline', backgroundColor: 'var(--bg3)', padding: '5px 10px', borderRadius: '6px', border: `1px solid ${color}40` }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color, display: 'inline-block', flexShrink: 0, alignSelf: 'center' }} />

@@ -21,7 +21,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
   const { isMobile } = useBreakpoint();
   const [isDescExpanded, setIsDescExpanded] = useState(false);
 
-  if (error) return <p style={{ color: '#ef5350' }}>Aucune donnée disponible pour {selectedSymbol}</p>;
+  if (error) return <p style={{ color: 'var(--negative)' }}>Aucune donnée disponible pour {selectedSymbol}</p>;
   if (!data)  return <p style={{ color: 'var(--text3)' }}>Aucune donnée disponible.</p>;
 
   const d = data;
@@ -142,7 +142,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
             {d.close_price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {d.currency || '$'}
           </span>
           {d.daily_change_pct != null && (
-            <span style={{ fontSize: '12px', fontWeight: '600', marginLeft: '6px', color: d.daily_change_pct >= 0 ? '#26a69a' : '#ef5350' }}>
+            <span style={{ fontSize: '12px', fontWeight: '600', marginLeft: '6px', color: d.daily_change_pct >= 0 ? 'var(--positive)' : 'var(--negative)' }}>
               {d.daily_change_pct >= 0 ? '+' : ''}{d.daily_change_pct.toFixed(2)}%
             </span>
           )}
@@ -160,8 +160,8 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
 
   const scores = d.scores ?? null;
   const complexityLabel = scores?.complexity >= 6.5 ? 'Avancé' : scores?.complexity >= 4.0 ? 'Modéré' : 'Simple';
-  const complexityColor = scores?.complexity >= 6.5 ? '#ef5350' : scores?.complexity >= 4.0 ? '#ff9800' : '#26a69a';
-  const verdictColor = { 'Profil Fort': '#26a69a', 'Profil Solide': '#26a69a', 'Profil Neutre': '#ff9800', 'Profil Prudent': '#ef5350', 'Profil Fragile': '#ef5350' }[scores?.verdict] ?? 'var(--text1)';
+  const complexityColor = scores?.complexity >= 6.5 ? '#ef5350' : scores?.complexity >= 4.0 ? '#f59e0b' : '#26a69a';
+  const verdictColor = { 'Profil Fort': '#26a69a', 'Profil Solide': '#26a69a', 'Profil Neutre': '#f59e0b', 'Profil Prudent': '#ef5350', 'Profil Fragile': '#ef5350' }[scores?.verdict] ?? 'var(--text1)';
   const assetType = getAssetType();
 
   // ── VUE EXPLORATEUR ────────────────────────────────────────────────────────
@@ -180,7 +180,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
               }}>{scores.verdict}</span>
             )}
           </div>
-          <div style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '13px', marginBottom: '10px' }}>
+          <div style={{ color: 'var(--brand)', fontWeight: 'bold', fontSize: '13px', marginBottom: '10px' }}>
             {d.sector}{d.industry && d.industry !== d.sector ? ` — ${d.industry}` : ''}
           </div>
           <div>
@@ -196,7 +196,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
                 onClick={() => setIsDescExpanded(v => !v)}
                 style={{
                   marginTop: '6px', background: 'none', border: 'none', cursor: 'pointer',
-                  color: '#2962FF', fontSize: '12px', fontWeight: '600', padding: 0,
+                  color: 'var(--brand)', fontSize: '12px', fontWeight: '600', padding: 0,
                   display: 'flex', alignItems: 'center', gap: '4px',
                 }}
               >
@@ -287,7 +287,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
             onClick={() => setProfile('stratege')}
             style={{
               padding: '9px 18px', borderRadius: '6px', cursor: 'pointer',
-              border: '1px solid #2962FF', backgroundColor: '#2962FF',
+              border: '1px solid var(--brand)', backgroundColor: 'var(--brand)',
               color: 'white', fontSize: '13px', fontWeight: 'bold',
               whiteSpace: 'nowrap', transition: 'opacity 0.2s',
               flexShrink: 0,
@@ -331,7 +331,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
             </span>
           )}
         </div>
-        <div style={{ color: '#2962FF', fontWeight: 'bold', marginBottom: '18px', fontSize: '13px' }}>
+        <div style={{ color: 'var(--brand)', fontWeight: 'bold', marginBottom: '18px', fontSize: '13px' }}>
           {d.sector}{d.industry && d.industry !== d.sector ? ` — ${d.industry}` : ''}
         </div>
 
@@ -353,7 +353,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
                 onClick={() => setIsDescExpanded(v => !v)}
                 style={{
                   marginTop: '6px', background: 'none', border: 'none', cursor: 'pointer',
-                  color: '#2962FF', fontSize: '12px', fontWeight: '600', padding: 0,
+                  color: 'var(--brand)', fontSize: '12px', fontWeight: '600', padding: 0,
                   display: 'flex', alignItems: 'center', gap: '4px',
                 }}
               >
@@ -386,7 +386,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
                   </span>
                   {isLink
                     ? <a href={value} target="_blank" rel="noopener noreferrer"
-                        style={{ color: '#2962FF', fontSize: '14px', fontWeight: '500', textDecoration: 'none', textAlign: 'right', wordBreak: 'break-all' }}>
+                        style={{ color: 'var(--brand)', fontSize: '14px', fontWeight: '500', textDecoration: 'none', textAlign: 'right', wordBreak: 'break-all' }}>
                         {value.replace(/^https?:\/\/(www\.)?/, '')}
                       </a>
                     : renderValue ?? <span style={{ color: 'var(--text2)', fontSize: '14px', fontWeight: '600', textAlign: 'right' }}>{value}</span>
@@ -499,7 +499,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
                 display: 'flex', flexDirection: 'column', gap: '2px',
               }}>
                 <span style={{ fontSize: '10px', color: 'var(--text3)', letterSpacing: '0.03em' }}>{label}</span>
-                <span style={{ fontSize: '15px', fontWeight: 'bold', color: val >= 0 ? '#26a69a' : '#ef5350' }}>
+                <span style={{ fontSize: '15px', fontWeight: 'bold', color: val >= 0 ? 'var(--positive)' : 'var(--negative)' }}>
                   {val >= 0 ? '+' : ''}{val.toFixed(1)}%
                 </span>
                 <span style={{ fontSize: '9px', color: 'var(--text3)', fontStyle: 'italic' }}>annualisé</span>
@@ -522,7 +522,7 @@ export default function SoloView({ selectedSymbol, data, error, sectorAvg, secto
             />
             {dd.stock_splits?.length > 0 && (
               <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ margin: '0 0 10px', color: '#2962FF', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                <h3 style={{ margin: '0 0 10px', color: 'var(--brand)', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em' }}>
                   Historique des Splits
                 </h3>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>

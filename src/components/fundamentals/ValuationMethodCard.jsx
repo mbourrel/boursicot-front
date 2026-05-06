@@ -16,7 +16,10 @@ export default function ValuationMethodCard({
   children,
 }) {
   const verdictColor = verdict
-    ? (verdict.diff > 0 ? '#26a69a' : '#ef5350')
+    ? (verdict.diff > 0 ? 'var(--positive)' : 'var(--negative)')
+    : null;
+  const verdictBg = verdict
+    ? (verdict.diff > 0 ? 'var(--pos-alpha)' : 'var(--neg-alpha)')
     : null;
 
   return (
@@ -42,7 +45,7 @@ export default function ValuationMethodCard({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontSize: '9px', fontWeight: '700', letterSpacing: '0.08em',
-            color: categoryColor ?? '#2962FF',
+            color: categoryColor ?? 'var(--brand)',
             textTransform: 'uppercase', marginBottom: '2px',
           }}>
             {categoryLabel}
@@ -61,7 +64,7 @@ export default function ValuationMethodCard({
             <div style={{ fontSize: '9px', color: 'var(--text3)', marginBottom: '3px' }}>Écart théorique</div>
             <span style={{
               fontSize: '12px', fontWeight: 'bold', color: verdictColor,
-              backgroundColor: verdictColor + '1a', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap',
+              backgroundColor: verdictBg, padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap',
             }}>
               {verdict.diff > 0 ? '+' : ''}{verdict.diff.toFixed(1)}%
             </span>
@@ -97,13 +100,13 @@ export default function ValuationMethodCard({
           )}
 
           {warningText && (
-            <div style={{ fontSize: '11px', color: '#ff9800', fontStyle: 'italic', lineHeight: '1.6', marginBottom: '12px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--warning)', fontStyle: 'italic', lineHeight: '1.6', marginBottom: '12px' }}>
               ⚠ {warningText}
             </div>
           )}
 
           {unavailable ? (
-            <div style={{ fontSize: '11px', color: '#ff9800', fontStyle: 'italic' }}>{unavailable}</div>
+            <div style={{ fontSize: '11px', color: 'var(--warning)', fontStyle: 'italic' }}>{unavailable}</div>
           ) : (
             <>
               {children}
@@ -117,7 +120,7 @@ export default function ValuationMethodCard({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <span style={{
                       fontSize: '12px', fontWeight: 'bold', color: verdictColor,
-                      backgroundColor: verdictColor + '1a', padding: '3px 8px', borderRadius: '4px',
+                      backgroundColor: verdictBg, padding: '3px 8px', borderRadius: '4px',
                     }}>
                       {verdict.diff > 0 ? '+' : ''}{verdict.diff.toFixed(1)}%
                     </span>

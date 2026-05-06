@@ -7,10 +7,10 @@ const OUTER_R = 145, INNER_R = 82;
 
 // 4 quadrants : chacun couvre 45° de l'arc semi-circulaire (0° = droite, 180° = gauche)
 const PHASES = [
-  { id: 'Contraction', color: '#ef5350', start: 0,   end: 45,  needle: 22.5  },
-  { id: 'Surchauffe',  color: '#ff9800', start: 45,  end: 90,  needle: 67.5  },
-  { id: 'Expansion',   color: '#26a69a', start: 90,  end: 135, needle: 112.5 },
-  { id: 'Récession',   color: '#2962FF', start: 135, end: 180, needle: 157.5 },
+  { id: 'Contraction', color: SEMANTIC_COLORS.negative, start: 0,   end: 45,  needle: 22.5  },
+  { id: 'Surchauffe',  color: SEMANTIC_COLORS.warning,  start: 45,  end: 90,  needle: 67.5  },
+  { id: 'Expansion',   color: SEMANTIC_COLORS.positive, start: 90,  end: 135, needle: 112.5 },
+  { id: 'Récession',   color: SEMANTIC_COLORS.brand,    start: 135, end: 180, needle: 157.5 },
 ];
 
 const toRad = (d) => (d * Math.PI) / 180;
@@ -31,36 +31,37 @@ const arcPath = (cx, cy, outerR, innerR, startDeg, endDeg) => {
 };
 
 const PHASE_COLORS = {
-  Expansion:   '#26a69a',
-  Surchauffe:  '#ff9800',
-  Contraction: '#ef5350',
-  Récession:   '#2962FF',
+  Expansion:   'var(--positive)',
+  Surchauffe:  'var(--warning)',
+  Contraction: 'var(--negative)',
+  Récession:   'var(--brand)',
 };
 
 const PHASE_EXPLANATIONS = {
   Expansion: {
-    color: '#26a69a',
+    color: 'var(--positive)', colorHex: '#26a69a',
     summary: 'Croissance accélère · Inflation contenue',
     detail: 'C\'est la phase de reprise idéale : l\'économie produit davantage sans générer d\'inflation excessive. Les banques centrales maintiennent des taux accommodants. Les actifs risqués (actions tech, crypto) surperforment historiquement car les investisseurs cherchent du rendement. Le dollar s\'affaiblit car les capitaux fuient vers des marchés plus dynamiques.',
   },
   Surchauffe: {
-    color: '#ff9800',
+    color: 'var(--warning)', colorHex: '#f59e0b',
     summary: 'Croissance forte · Inflation monte',
     detail: 'La croissance reste robuste mais l\'inflation s\'emballe, forçant les banques centrales à resserrer leur politique monétaire (hausse des taux). Les matières premières et l\'énergie servent de couverture contre l\'inflation. Les obligations souffrent de la hausse des rendements. C\'est souvent la fin du cycle haussier.',
   },
   Contraction: {
-    color: '#ef5350',
+    color: 'var(--negative)', colorHex: '#ef5350',
     summary: 'Croissance ralentit · Inflation persistante',
     detail: 'Phase de stagflation : la croissance recule mais l\'inflation reste élevée, laissant les banques centrales dans une impasse (elles ne peuvent pas baisser les taux sans relancer l\'inflation). C\'est la phase la plus difficile pour les portefeuilles. Le cash et l\'or jouent leur rôle de valeur refuge.',
   },
   Récession: {
-    color: '#2962FF',
+    color: 'var(--brand)', colorHex: '#2962FF',
     summary: 'Croissance négative · Inflation recule',
     detail: 'La demande s\'effondre et entraîne l\'inflation avec elle. Les banques centrales coupent les taux pour relancer l\'économie, ce qui booste les obligations d\'État (leurs prix montent quand les taux baissent). C\'est souvent le point bas avant une nouvelle phase d\'expansion.',
   },
 };
 
 import SourceTag from './SourceTag';
+import { SEMANTIC_COLORS } from '../context/ThemeContext';
 
 function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflation_trend, loading, error, history, historyLoading }) {
   const [showInfo, setShowInfo] = useState(false);
@@ -81,7 +82,7 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
   const phaseExpl = PHASE_EXPLANATIONS[phase];
 
   if (loading) return <Placeholder>Chargement du cycle économique…</Placeholder>;
-  if (error)   return <Placeholder color="#ef5350">{error}</Placeholder>;
+  if (error)   return <Placeholder color="var(--negative)">{error}</Placeholder>;
 
   return (
     <div style={cardStyle}>
@@ -94,9 +95,9 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
           onClick={() => setShowInfo(v => !v)}
           title="Comment interpréter cet indicateur ?"
           style={{
-            background: showInfo ? '#2962FF22' : 'transparent',
-            border: `1px solid ${showInfo ? '#2962FF' : 'var(--border)'}`,
-            color: showInfo ? '#2962FF' : 'var(--text3)',
+            background: showInfo ? 'var(--brand-alpha)' : 'transparent',
+            border: `1px solid ${showInfo ? 'var(--brand)' : 'var(--border)'}`,
+            color: showInfo ? 'var(--brand)' : 'var(--text3)',
             borderRadius: '50%', width: '22px', height: '22px',
             cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -118,8 +119,8 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
               L'horloge s'inspire du modèle de cycle économique de <strong style={{ color: 'var(--text2)' }}>Fidelity Investments</strong> et
               de la théorie du portefeuille <strong style={{ color: 'var(--text2)' }}>All Weather de Ray Dalio</strong>. Elle positionne
               l'économie dans un <strong style={{ color: 'var(--text2)' }}>cycle en 4 phases</strong> en croisant deux variables macroéconomiques
-              clés : la <strong style={{ color: '#26a69a' }}>croissance réelle</strong> (INDPRO) et
-              l'<strong style={{ color: '#ef5350' }}>inflation</strong> (CPI). Pour chaque variable, on regarde
+              clés : la <strong style={{ color: 'var(--positive)' }}>croissance réelle</strong> (INDPRO) et
+              l'<strong style={{ color: 'var(--negative)' }}>inflation</strong> (CPI). Pour chaque variable, on regarde
               non pas le niveau absolu, mais la <strong style={{ color: 'var(--text2)' }}>tendance</strong> : est-ce que le taux de
               variation annuel accélère ou ralentit par rapport au mois précédent ? C'est ce croisement de tendances
               qui détermine la phase et, in fine, quels actifs sont historiquement favorisés ou pénalisés.
@@ -127,19 +128,19 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px' }}>
               <div style={matrixCellStyle}>
                 <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '4px' }}>Croissance ↑ · Inflation ↓</div>
-                <div style={{ color: '#26a69a', fontWeight: 'bold', fontSize: '12px' }}>→ Expansion</div>
+                <div style={{ color: 'var(--positive)', fontWeight: 'bold', fontSize: '12px' }}>→ Expansion</div>
               </div>
               <div style={matrixCellStyle}>
                 <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '4px' }}>Croissance ↑ · Inflation ↑</div>
-                <div style={{ color: '#ff9800', fontWeight: 'bold', fontSize: '12px' }}>→ Surchauffe</div>
+                <div style={{ color: 'var(--warning)', fontWeight: 'bold', fontSize: '12px' }}>→ Surchauffe</div>
               </div>
               <div style={matrixCellStyle}>
                 <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '4px' }}>Croissance ↓ · Inflation ↑</div>
-                <div style={{ color: '#ef5350', fontWeight: 'bold', fontSize: '12px' }}>→ Contraction</div>
+                <div style={{ color: 'var(--negative)', fontWeight: 'bold', fontSize: '12px' }}>→ Contraction</div>
               </div>
               <div style={matrixCellStyle}>
                 <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '4px' }}>Croissance ↓ · Inflation ↓</div>
-                <div style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '12px' }}>→ Récession</div>
+                <div style={{ color: 'var(--brand)', fontWeight: 'bold', fontSize: '12px' }}>→ Récession</div>
               </div>
             </div>
           </div>
@@ -152,7 +153,7 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
                 <div key={name} style={{
                   padding: '10px 12px', borderRadius: '8px',
                   border: `1px solid ${name === phase ? expl.color : 'var(--border)'}`,
-                  backgroundColor: name === phase ? `${expl.color}15` : 'var(--bg0)',
+                  backgroundColor: name === phase ? expl.colorHex + '15' : 'var(--bg0)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: expl.color, flexShrink: 0 }} />
@@ -162,7 +163,7 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
                     {name === phase && <span style={{ fontSize: '10px', color: expl.color, opacity: 0.8 }}>← actuel</span>}
                   </div>
                   <div style={{ color: 'var(--text3)', fontSize: '11px', marginBottom: '5px', fontStyle: 'italic' }}>{expl.summary}</div>
-                  <div style={{ color: '#b0b8c4', fontSize: '11px', lineHeight: '1.55' }}>{expl.detail}</div>
+                  <div style={{ color: 'var(--text3)', fontSize: '11px', lineHeight: '1.55' }}>{expl.detail}</div>
                 </div>
               ))}
             </div>
@@ -173,7 +174,7 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
             <div style={infoTitleStyle}>Les indicateurs macroéconomiques utilisés</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <div style={indicatorExplStyle}>
-                <div style={{ color: '#26a69a', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
+                <div style={{ color: 'var(--positive)', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
                   INDPRO — Production industrielle (Fed)
                 </div>
                 <p style={infoTextStyle}>
@@ -186,7 +187,7 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
                 </p>
               </div>
               <div style={indicatorExplStyle}>
-                <div style={{ color: '#ef5350', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
+                <div style={{ color: 'var(--negative)', fontWeight: 'bold', fontSize: '12px', marginBottom: '6px' }}>
                   CPIAUCSL — Indice des prix à la consommation (BLS)
                 </div>
                 <p style={infoTextStyle}>
@@ -219,8 +220,8 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
                 </div>
                 <p style={infoTextStyle}>
                   Variation en % de l'INDPRO par rapport au même mois un an plus tôt.
-                  Une valeur <strong style={{ color: '#26a69a' }}>positive</strong> signifie que la production industrielle est plus élevée qu'il y a un an (l'économie croît).
-                  Une valeur <strong style={{ color: '#ef5350' }}>négative</strong> indique une contraction.
+                  Une valeur <strong style={{ color: 'var(--positive)' }}>positive</strong> signifie que la production industrielle est plus élevée qu'il y a un an (l'économie croît).
+                  Une valeur <strong style={{ color: 'var(--negative)' }}>négative</strong> indique une contraction.
                   La <strong style={{ color: 'var(--text2)' }}>ligne pointillée à 0 %</strong> sert de référence neutre.
                 </p>
               </div>
@@ -320,9 +321,9 @@ function EconomicClock({ phase, growth_yoy, inflation_yoy, growth_trend, inflati
 
           {/* Indicateurs YoY empilés */}
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '6px', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
-            <YoYBlock label="Croissance (INDPRO)" value={growth_yoy} trend={growth_trend} positiveColor="#26a69a" />
+            <YoYBlock label="Croissance (INDPRO)" value={growth_yoy} trend={growth_trend} positiveColor="var(--positive)" />
             <div style={{ height: '1px', backgroundColor: 'var(--border)' }} />
-            <YoYBlock label="Inflation (CPI)" value={inflation_yoy} trend={inflation_trend} positiveColor="#ef5350" />
+            <YoYBlock label="Inflation (CPI)" value={inflation_yoy} trend={inflation_trend} positiveColor="var(--negative)" negativeColor="var(--positive)" />
           </div>
         </div>
 
@@ -470,8 +471,8 @@ function CycleHistoryChart({ history, height = 280 }) {
   );
 }
 
-function YoYBlock({ label, value, trend, positiveColor }) {
-  const trendColor = trend === 'up' ? positiveColor : (positiveColor === '#ef5350' ? '#26a69a' : '#ef5350');
+function YoYBlock({ label, value, trend, positiveColor, negativeColor = 'var(--negative)' }) {
+  const trendColor = trend === 'up' ? positiveColor : negativeColor;
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontSize: '11px', color: 'var(--text3)', marginBottom: '5px' }}>{label}</div>

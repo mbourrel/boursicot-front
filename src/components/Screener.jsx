@@ -111,7 +111,7 @@ function TabButton({ active, onClick, children }) {
         border: 'none', cursor: 'pointer',
         backgroundColor: 'transparent',
         color: active ? 'var(--text1)' : 'var(--text3)',
-        borderBottom: active ? '3px solid #2962FF' : '3px solid transparent',
+        borderBottom: active ? '3px solid var(--brand)' : '3px solid transparent',
         marginBottom: '-2px',
         fontWeight: active ? '700' : '500',
         fontSize: '14px',
@@ -135,7 +135,7 @@ function InlineSelect({ value, options, onChange }) {
         display: 'inline-block',
         margin: '0 4px',
         padding: '3px 26px 3px 10px',
-        backgroundColor: '#2962FF1a',
+        backgroundColor: 'var(--brand-alpha)',
         border: '1px solid #2962FF55',
         borderRadius: '20px',
         color: '#60a5fa',
@@ -446,7 +446,7 @@ function AdvancedFilters({ filters, onChange, sectors }) {
             </label>
             <input type="range" min={0} max={10} step={0.5} value={filters[dim]}
               onChange={e => onChange({ ...filters, [dim]: parseFloat(e.target.value) })}
-              style={{ width: '100%', accentColor: '#2962FF', cursor: 'pointer' }} />
+              style={{ width: '100%', accentColor: 'var(--brand)', cursor: 'pointer' }} />
           </div>
         ))}
       </div>
@@ -571,7 +571,7 @@ export default function Screener({ onSelectTicker }) {
                 style={{
                   padding: '7px 15px', border: 'none', cursor: 'pointer',
                   borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
-                  backgroundColor: mode === value ? '#2962FF' : 'transparent',
+                  backgroundColor: mode === value ? 'var(--brand)' : 'transparent',
                   color: mode === value ? 'white' : 'var(--text3)',
                   fontSize: '12px', fontWeight: 'bold', transition: 'all 0.15s', whiteSpace: 'nowrap',
                 }}
@@ -720,7 +720,7 @@ export default function Screener({ onSelectTicker }) {
         border: '1px solid rgba(245,158,11,0.15)',
         borderRadius: '6px', fontSize: '11px', color: 'var(--text3)', lineHeight: 1.65,
       }}>
-        <strong style={{ color: '#f59e0b' }}>Avertissement réglementaire (MIF2) :</strong>{' '}
+        <strong style={{ color: 'var(--warning)' }}>Avertissement réglementaire (MIF2) :</strong>{' '}
         Les scores sont calculés à partir de métriques fondamentales relatives à des données historiques
         et <strong>ne constituent pas un conseil en investissement</strong>.
         Les performances passées ne présagent pas des performances futures.
@@ -789,7 +789,7 @@ export default function Screener({ onSelectTicker }) {
               onClick={dismissOnboarding}
               style={{
                 width: '100%',
-                backgroundColor: '#2962FF',
+                backgroundColor: 'var(--brand)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '10px',
@@ -801,7 +801,7 @@ export default function Screener({ onSelectTicker }) {
                 transition: 'background-color 0.15s, transform 0.12s',
               }}
               onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#1e4fd8'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#2962FF'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'var(--brand)'; e.currentTarget.style.transform = 'translateY(0)'; }}
             >
               Trouver ma première action →
             </button>

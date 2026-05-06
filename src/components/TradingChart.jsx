@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, CandlestickSeries, LineSeries, HistogramSeries } from 'lightweight-charts';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, SEMANTIC_COLORS } from '../context/ThemeContext';
 import { fetchPrices } from '../api/prices';
 import ChartControls from './chart/ChartControls';
 import DrawingToolbar from './chart/DrawingToolbar';
@@ -210,13 +210,13 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
     chart.timeScale().subscribeVisibleLogicalRangeChange(onScroll);
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#26a69a', downColor: '#ef5350',
-      borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350',
+      upColor: SEMANTIC_COLORS.positive, downColor: SEMANTIC_COLORS.negative,
+      borderVisible: false, wickUpColor: SEMANTIC_COLORS.positive, wickDownColor: SEMANTIC_COLORS.negative,
     });
     mainSeriesRef.current = candleSeries;
 
     ma10SeriesRef.current    = chart.addSeries(LineSeries, { color: '#00bcd4', lineWidth: 2, crosshairMarkerVisible: false, visible: indicators.ma10 });
-    ma100SeriesRef.current   = chart.addSeries(LineSeries, { color: '#ff9800', lineWidth: 2, crosshairMarkerVisible: false, visible: indicators.ma100 });
+    ma100SeriesRef.current   = chart.addSeries(LineSeries, { color: SEMANTIC_COLORS.warning, lineWidth: 2, crosshairMarkerVisible: false, visible: indicators.ma100 });
     ma200SeriesRef.current   = chart.addSeries(LineSeries, { color: '#9c27b0', lineWidth: 2, crosshairMarkerVisible: false, visible: indicators.ma200 });
     bbUpperSeriesRef.current = chart.addSeries(LineSeries, { color: 'rgba(41, 98, 255, 0.5)', lineWidth: 1, crosshairMarkerVisible: false, visible: indicators.bb });
     bbLowerSeriesRef.current = chart.addSeries(LineSeries, { color: 'rgba(41, 98, 255, 0.5)', lineWidth: 1, crosshairMarkerVisible: false, visible: indicators.bb });
@@ -455,7 +455,7 @@ function TradingChart({ selectedSymbol, allAssets = [] }) {
           <span style={{ color: 'var(--text2)' }}>{getName(selectedSymbol)} {legendData.close && `$${legendData.close}`}</span>
           {indicators.volume && legendData.volume !== undefined && <span style={{ color: 'var(--text3)' }}>Vol: {formatVal(legendData.volume)}</span>}
           {indicators.ma10   && legendData.ma10    && <span style={{ color: '#00bcd4' }}>MM10: {legendData.ma10}</span>}
-          {indicators.ma100  && legendData.ma100   && <span style={{ color: '#ff9800' }}>MM100: {legendData.ma100}</span>}
+          {indicators.ma100  && legendData.ma100   && <span style={{ color: 'var(--warning)' }}>MM100: {legendData.ma100}</span>}
           {indicators.ma200  && legendData.ma200   && <span style={{ color: '#9c27b0' }}>MM200: {legendData.ma200}</span>}
           {indicators.bb && legendData.bbUpper && legendData.bbLower && <span style={{ color: '#448aff' }}>BB: {legendData.bbLower} - {legendData.bbUpper}</span>}
           {indicators.atr && legendData.atr && <span style={{ color: '#e91e63' }}>ATR: {legendData.atr}</span>}

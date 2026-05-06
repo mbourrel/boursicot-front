@@ -1,13 +1,15 @@
 import { memo } from 'react';
 
-const scoreColor = s => s >= 7 ? '#26a69a' : s >= 4 ? '#ff9800' : '#ef5350';
+const scoreColor  = s => s >= 7 ? 'var(--positive)' : s >= 4 ? 'var(--warning)' : 'var(--negative)';
+const scoreBg     = s => s >= 7 ? '#26a69a18' : s >= 4 ? '#f59e0b18' : '#ef535018';
+const scoreBorder = s => s >= 7 ? '#26a69a44' : s >= 4 ? '#f59e0b44' : '#ef535044';
 
 const VERDICT_COLORS = {
-  'Profil Fort':    '#26a69a',
-  'Profil Solide':  '#26a69a',
-  'Profil Neutre':  '#ff9800',
-  'Profil Prudent': '#ef5350',
-  'Profil Fragile': '#ef5350',
+  'Profil Fort':    'var(--positive)',
+  'Profil Solide':  'var(--positive)',
+  'Profil Neutre':  'var(--warning)',
+  'Profil Prudent': 'var(--negative)',
+  'Profil Fragile': 'var(--negative)',
 };
 
 const SCORE_METRICS = [
@@ -42,8 +44,8 @@ function ScoreCompareCard({ sym, color, name, scores }) {
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '8px 10px', marginBottom: '10px',
-              background: scoreColor(globalScore) + '18',
-              border: `1px solid ${scoreColor(globalScore)}44`,
+              background: scoreBg(globalScore),
+              border: `1px solid ${scoreBorder(globalScore)}`,
               borderRadius: '7px',
             }}>
               <span style={{ fontSize: '11px', color: 'var(--text3)', fontWeight: 'bold' }}>Note Globale</span>

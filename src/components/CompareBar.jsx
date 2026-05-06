@@ -69,7 +69,7 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
               color: 'var(--text3)', fontSize: '12px', fontWeight: 'bold',
               transition: 'all 0.2s',
             }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = '#2962FF'}
+            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--brand)'}
             onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
           >
             + Comparer
@@ -103,7 +103,7 @@ function CompareBar({ primarySymbol, compareSymbols, setCompareSymbols, allAsset
                     key={a.ticker}
                     onClick={() => handleAdd(a.ticker)}
                     style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', gap: '8px', alignItems: 'baseline' }}
-                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2962FF'}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--brand)'}
                     onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <span style={{ color: 'var(--text1)', fontWeight: 'bold', fontSize: '13px' }}>{a.name || a.ticker}</span>
@@ -145,7 +145,7 @@ function Chip({ label, color, isPrimary, onRemove }) {
         <button
           onClick={onRemove}
           style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: '0', fontSize: '14px', lineHeight: 1, marginLeft: '2px' }}
-          onMouseEnter={e => e.currentTarget.style.color = '#ef5350'}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--negative)'}
           onMouseLeave={e => e.currentTarget.style.color = 'var(--text3)'}
         >
           ×

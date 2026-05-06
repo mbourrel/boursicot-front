@@ -13,9 +13,9 @@ import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 
-const COLOR_UP      = '#26a69a';
-const COLOR_DOWN    = '#ef5350';
-const COLOR_NEUTRAL = '#ff9800';
+const COLOR_UP      = 'var(--positive)';
+const COLOR_DOWN    = 'var(--negative)';
+const COLOR_NEUTRAL = 'var(--warning)';
 
 function scoreColor(s) {
   if (s >= 7) return COLOR_UP;
@@ -86,9 +86,9 @@ function TipButton({ id }) {
         ref={btnRef}
         onClick={handleClick}
         style={{
-          background: open ? '#2962FF22' : 'transparent',
+          background: open ? 'var(--brand-alpha)' : 'transparent',
           border: `1px solid ${open ? '#2962FF88' : 'var(--border)'}`,
-          color: open ? '#2962FF' : 'var(--text3)',
+          color: open ? 'var(--brand)' : 'var(--text3)',
           borderRadius: '50%', width: '14px', height: '14px',
           fontSize: '9px', fontWeight: 'bold', cursor: 'pointer',
           padding: 0, lineHeight: 1, flexShrink: 0,
@@ -106,12 +106,12 @@ function TipButton({ id }) {
             position: 'fixed', top: pos.top, left: pos.left, zIndex: 999,
             transform: 'translateY(-50%)',
             width: '280px', backgroundColor: 'var(--bg2)',
-            border: '1px solid #2962FF44', borderRadius: '8px',
+            border: '1px solid var(--brand-alpha)', borderRadius: '8px',
             padding: '10px 12px', boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
             fontSize: '11px', lineHeight: '1.65',
           }}>
             <div style={{ color: 'var(--text2)', fontWeight: 'bold', marginBottom: '8px' }}>{tip.title}</div>
-            <div style={{ color: '#b0b8c4' }}>{tip.text}</div>
+            <div style={{ color: 'var(--text3)' }}>{tip.text}</div>
           </div>
         </>,
         document.body
@@ -198,12 +198,12 @@ export default function MomentumDashboard({ price, mm50, mm200, perf1y, assetTyp
       <div style={{
         display: 'flex', alignItems: 'center', gap: '10px',
         padding: '12px 20px', borderBottom: '1px solid var(--border)',
-        backgroundColor: '#2962FF0e',
+        backgroundColor: 'var(--brand-alpha)',
       }}>
         <span style={{ fontSize: '16px', flexShrink: 0 }}>📊</span>
         <p style={{ margin: 0, fontSize: '12px', color: 'var(--text3)', lineHeight: '1.55' }}>
           <strong style={{ color: 'var(--text2)' }}>{assetLabel}</strong> — L'analyse fondamentale classique (bilan, chiffre d'affaires) ne s'applique pas à cet actif.
-          Nous analysons ici sa <strong style={{ color: '#2962FF' }}>dynamique de prix (Momentum)</strong>.
+          Nous analysons ici sa <strong style={{ color: 'var(--brand)' }}>dynamique de prix (Momentum)</strong>.
         </p>
       </div>
 

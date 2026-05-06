@@ -43,7 +43,7 @@ function MacroEnvironment() {
               color: 'var(--text3)', fontSize: '12px', fontWeight: 'bold',
               transition: 'all 0.2s', whiteSpace: 'nowrap',
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#2962FF'; e.currentTarget.style.color = '#2962FF'; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; e.currentTarget.style.color = 'var(--brand)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text3)'; }}
           >
             📈 Vue complète (Stratège)

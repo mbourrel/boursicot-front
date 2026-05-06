@@ -14,7 +14,7 @@ export default function CurrencyBar() {
               padding: '6px 10px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold',
               borderRadius: i === 0 ? '5px 0 0 5px' : i === 2 ? '0 5px 5px 0' : '0',
               borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
-              backgroundColor: targetCurrency === cur ? '#2962FF' : 'transparent',
+              backgroundColor: targetCurrency === cur ? 'var(--brand)' : 'transparent',
               color: targetCurrency === cur ? 'white' : 'var(--text3)',
               transition: 'all 0.15s',
             }}

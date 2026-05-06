@@ -1,8 +1,8 @@
 import { createPortal } from 'react-dom';
 import { PILLARS } from '../../constants/pillars';
 
-const COLOR_UP      = '#26a69a';
-const COLOR_NEUTRAL = '#ff9800';
+const COLOR_UP      = 'var(--positive)';
+const COLOR_NEUTRAL = 'var(--warning)';
 
 export default function MethodologyModal({ onClose, sector }) {
   return createPortal(

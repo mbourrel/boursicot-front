@@ -106,9 +106,9 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
             onClick={() => setShowInfo(v => !v)}
             title="Comment interpréter ce graphique ?"
             style={{
-              background: showInfo ? '#2962FF22' : 'transparent',
-              border: `1px solid ${showInfo ? '#2962FF' : 'var(--border)'}`,
-              color: showInfo ? '#2962FF' : 'var(--text3)',
+              background: showInfo ? 'var(--brand-alpha)' : 'transparent',
+              border: `1px solid ${showInfo ? 'var(--brand)' : 'var(--border)'}`,
+              color: showInfo ? 'var(--brand)' : 'var(--text3)',
               borderRadius: '50%', width: '22px', height: '22px',
               cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -175,7 +175,7 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
             </div>
           </div>
           <div style={{ padding: '10px 12px', borderRadius: '6px', backgroundColor: 'var(--bg2)', border: '1px solid #2962FF40' }}>
-            <span style={{ color: '#2962FF', fontWeight: 'bold', fontSize: '11px' }}>Observation historique : </span>
+            <span style={{ color: 'var(--brand)', fontWeight: 'bold', fontSize: '11px' }}>Observation historique : </span>
             <span style={{ color: 'var(--text3)', fontSize: '11px' }}>
               Les cycles d'expansion de M2 ont souvent coïncidé avec des périodes d'appréciation des actifs risqués,
               dont les crypto-actifs. Une divergence marquée entre BTC et la tendance M2 illustre une prime de risque
@@ -193,7 +193,7 @@ function LiquidityMonitor({ dates, m2_normalized, btc_normalized, loading, error
         </div>
       )}
       {error && (
-        <div style={{ color: '#ef5350', fontSize: '13px', padding: '12px 0' }}>Erreur : {error}</div>
+        <div style={{ color: 'var(--negative)', fontSize: '13px', padding: '12px 0' }}>Erreur : {error}</div>
       )}
 
       {/* ── Canvas ── */}

@@ -17,14 +17,23 @@ import { PILLARS } from '../../constants/pillars';
 import SwipeableContainer from '../SwipeableContainer';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 
-const COLOR_UP      = '#26a69a';
-const COLOR_DOWN    = '#ef5350';
-const COLOR_NEUTRAL = '#ff9800';
+const COLOR_UP      = 'var(--positive)';
+const COLOR_DOWN    = 'var(--negative)';
+const COLOR_NEUTRAL = 'var(--warning)';
+const HEX_UP      = '#26a69a';
+const HEX_DOWN    = '#ef5350';
+const HEX_NEUTRAL = '#f59e0b';
 
 function scoreColor(s) {
   if (s >= 7) return COLOR_UP;
   if (s >= 4) return COLOR_NEUTRAL;
   return COLOR_DOWN;
+}
+
+function scoreColorHex(s) {
+  if (s >= 7) return HEX_UP;
+  if (s >= 4) return HEX_NEUTRAL;
+  return HEX_DOWN;
 }
 
 // ── Pondérations (miroir backend) ─────────────────────────────────────────────
@@ -157,7 +166,7 @@ function GlobalScoreModal({ scores, globalScore, verdictColor, onClose }) {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '18px 22px', borderBottom: '1px solid var(--border)',
-          background: color + '12',
+          background: scoreColorHex(globalScore) + '12',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '26px' }}>🏆</span>
@@ -223,7 +232,7 @@ function GlobalScoreModal({ scores, globalScore, verdictColor, onClose }) {
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             padding: '10px 14px',
-            background: color + '18', border: `1px solid ${color}44`, borderRadius: '8px',
+            background: scoreColorHex(globalScore) + '18', border: `1px solid ${scoreColorHex(globalScore)}44`, borderRadius: '8px',
           }}>
             <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text2)' }}>Note Globale (Σ pondéré)</span>
             <span style={{ fontSize: '22px', fontWeight: '900', color }}>{globalScore.toFixed(1)} / 10</span>
@@ -267,7 +276,7 @@ function GaugePillarModal({ pillar, score, onClose }) {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '18px 22px', borderBottom: '1px solid var(--border)',
-          background: pillar.color + '12',
+          background: pillar.colorHex + '12',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '26px' }}>{pillar.icon}</span>
@@ -354,8 +363,9 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
           .toFixed(2)
       );
 
-  const complexityLabel = scores.complexity >= 6.5 ? 'Avancé' : scores.complexity >= 4.0 ? 'Modéré' : 'Simple';
-  const complexityColor = scores.complexity >= 6.5 ? COLOR_DOWN : scores.complexity >= 4.0 ? COLOR_NEUTRAL : COLOR_UP;
+  const complexityLabel    = scores.complexity >= 6.5 ? 'Avancé' : scores.complexity >= 4.0 ? 'Modéré' : 'Simple';
+  const complexityColor    = scores.complexity >= 6.5 ? COLOR_DOWN    : scores.complexity >= 4.0 ? COLOR_NEUTRAL    : COLOR_UP;
+  const complexityColorHex = scores.complexity >= 6.5 ? HEX_DOWN      : scores.complexity >= 4.0 ? HEX_NEUTRAL      : HEX_UP;
   const verdictColor    = {
     'Profil Fort': COLOR_UP, 'Profil Solide': COLOR_UP,
     'Profil Neutre': COLOR_NEUTRAL,
@@ -459,9 +469,9 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
             transition: 'all 0.2s', whiteSpace: 'nowrap',
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.borderColor = '#2962FF';
-            e.currentTarget.style.color = '#2962FF';
-            e.currentTarget.style.backgroundColor = '#2962FF11';
+            e.currentTarget.style.borderColor = 'var(--brand)';
+            e.currentTarget.style.color = 'var(--brand)';
+            e.currentTarget.style.backgroundColor = 'var(--brand-alpha)';
           }}
           onMouseLeave={e => {
             e.currentTarget.style.borderColor = 'var(--border)';
@@ -655,8 +665,8 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
           <span style={{
             display: 'inline-block', padding: '3px 10px', borderRadius: '4px',
             fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.04em',
-            backgroundColor: complexityColor + '22', color: complexityColor,
-            border: `1px solid ${complexityColor}55`,
+            backgroundColor: complexityColorHex + '22', color: complexityColor,
+            border: `1px solid ${complexityColorHex}55`,
           }}>
             {complexityLabel}
           </span>
@@ -681,9 +691,9 @@ export default function ScoreDashboard({ scores, sector, companyCount, beta, mar
               transition: 'all 0.2s', whiteSpace: 'nowrap',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.borderColor = '#2962FF';
-              e.currentTarget.style.color = '#2962FF';
-              e.currentTarget.style.backgroundColor = '#2962FF11';
+              e.currentTarget.style.borderColor = 'var(--brand)';
+              e.currentTarget.style.color = 'var(--brand)';
+              e.currentTarget.style.backgroundColor = 'var(--brand-alpha)';
             }}
             onMouseLeave={e => {
               e.currentTarget.style.borderColor = 'var(--border)';

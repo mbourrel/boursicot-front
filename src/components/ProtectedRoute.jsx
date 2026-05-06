@@ -22,7 +22,7 @@ function GuestBanner({ timeLeft }) {
       style={{
         position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999,
         backgroundColor: urgent ? '#1a0a00' : 'var(--bg3)',
-        border: `1px solid ${urgent ? '#f59e0b' : hovered ? '#2962FF' : 'var(--border)'}`,
+        border: `1px solid ${urgent ? 'var(--warning)' : hovered ? 'var(--brand)' : 'var(--border)'}`,
         borderRadius: '8px',
         fontSize: '12px',
         boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
@@ -34,7 +34,7 @@ function GuestBanner({ timeLeft }) {
       <div style={{
         padding: '10px 16px',
         display: 'flex', alignItems: 'center', gap: '10px',
-        color: urgent ? '#f59e0b' : 'var(--text3)',
+        color: urgent ? 'var(--warning)' : 'var(--text3)',
       }}>
         <span>{urgent ? '⚠' : '👤'}</span>
         <span>Session invité — expire dans <strong>{formatTime(timeLeft)}</strong></span>
@@ -46,13 +46,13 @@ function GuestBanner({ timeLeft }) {
           style={{
             padding: '8px 16px',
             borderTop: '1px solid var(--border)',
-            color: '#2962FF',
+            color: 'var(--brand)',
             fontWeight: '600',
             cursor: 'pointer',
             transition: 'background 0.15s',
             textAlign: 'center',
           }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2962FF15'}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--brand-alpha)'}
           onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
         >
           Se connecter pour une session illimitée →

@@ -242,13 +242,13 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
               {spreadUsDe && (
                 <span style={{
                   fontSize: '11px', padding: '2px 9px', borderRadius: '10px', fontWeight: '600',
-                  backgroundColor: '#2962FF15', color: '#2962FF', border: '1px solid #2962FF44',
+                  backgroundColor: 'var(--brand-alpha)', color: 'var(--brand)', border: '1px solid #2962FF44',
                 }}>US–DE : +{spreadUsDe}%</span>
               )}
               {spreadFrDe && (
                 <span style={{
                   fontSize: '11px', padding: '2px 9px', borderRadius: '10px', fontWeight: '600',
-                  backgroundColor: '#26a69a15', color: '#26a69a', border: '1px solid #26a69a44',
+                  backgroundColor: 'var(--pos-alpha)', color: 'var(--positive)', border: '1px solid #26a69a44',
                 }}>FR–DE : +{spreadFrDe}%</span>
               )}
             </div>
@@ -345,8 +345,8 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
         <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
           {range !== 'Max' && (
             <button onClick={() => setRange('Max')} style={{
-              background: '#ef535022', border: '1px solid #ef535044', borderRadius: '4px',
-              padding: '2px 7px', fontSize: '10px', color: '#ef5350', cursor: 'pointer', marginRight: '4px',
+              background: 'var(--neg-alpha)', border: '1px solid #ef535044', borderRadius: '4px',
+              padding: '2px 7px', fontSize: '10px', color: 'var(--negative)', cursor: 'pointer', marginRight: '4px',
             }}>↺ Reset</button>
           )}
           {RANGES.map(r => (
@@ -366,7 +366,7 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
       </div>
 
       {loading && <div style={{ color: 'var(--text3)', fontSize: '13px', padding: '30px 0', textAlign: 'center' }}>Chargement…</div>}
-      {error   && <div style={{ color: '#ef5350', fontSize: '13px', padding: '12px 0' }}>Erreur : {error}</div>}
+      {error   && <div style={{ color: 'var(--negative)', fontSize: '13px', padding: '12px 0' }}>Erreur : {error}</div>}
 
       {!loading && !error && aligned && (
         <div style={{ position: 'relative' }}>
@@ -399,8 +399,8 @@ export default function SovereignSpreadsChart({ history, bondYields, loading, er
                 if (!sUsDe && !sFrDe) return null;
                 return (
                   <div style={{ borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
-                    {sUsDe && <div style={{ color: '#2962FF', fontSize: '10px' }}>US–DE : +{sUsDe}%</div>}
-                    {sFrDe && <div style={{ color: '#26a69a', fontSize: '10px' }}>FR–DE : +{sFrDe}%</div>}
+                    {sUsDe && <div style={{ color: 'var(--brand)', fontSize: '10px' }}>US–DE : +{sUsDe}%</div>}
+                    {sFrDe && <div style={{ color: 'var(--positive)', fontSize: '10px' }}>FR–DE : +{sFrDe}%</div>}
                   </div>
                 );
               })()}

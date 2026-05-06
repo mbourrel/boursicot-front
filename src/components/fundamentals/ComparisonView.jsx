@@ -108,7 +108,7 @@ export default function ComparisonView({ allSymbols, dataMap }) {
                       }
                     </span>
                     {d.daily_change_pct != null && (
-                      <span style={{ fontSize: '11px', fontWeight: '600', color: d.daily_change_pct >= 0 ? '#26a69a' : '#ef5350' }}>
+                      <span style={{ fontSize: '11px', fontWeight: '600', color: d.daily_change_pct >= 0 ? 'var(--positive)' : 'var(--negative)' }}>
                         {d.daily_change_pct >= 0 ? '+' : ''}{d.daily_change_pct.toFixed(2)} %
                       </span>
                     )}
@@ -116,7 +116,7 @@ export default function ComparisonView({ allSymbols, dataMap }) {
                   <div style={{ color, fontSize: '11px' }}>{d.sector}</div>
                 </>
               ) : (
-                <div style={{ color: '#ef5350', fontSize: '12px' }}>Données indisponibles</div>
+                <div style={{ color: 'var(--negative)', fontSize: '12px' }}>Données indisponibles</div>
               )}
             </div>
           );
@@ -207,8 +207,8 @@ export default function ComparisonView({ allSymbols, dataMap }) {
                     const val = metric?.val ?? null;
                     let color = 'white';
                     if (!isNeutral && bestVal !== null && val !== null && val !== 0) {
-                      if (val === bestVal)       color = '#26a69a';
-                      else if (val === worstVal) color = '#ef5350';
+                      if (val === bestVal)       color = 'var(--positive)';
+                      else if (val === worstVal) color = 'var(--negative)';
                     }
                     const symCurrency = dataMap[sym]?.currency || 'USD';
                     return (
@@ -258,8 +258,8 @@ export default function ComparisonView({ allSymbols, dataMap }) {
                     const val = m?.val ?? null;
                     let valueColor = 'white';
                     if (maxVal !== null && val !== null && val !== 0) {
-                      if (val === maxVal) valueColor = '#26a69a';
-                      else if (val === minVal) valueColor = '#ef5350';
+                      if (val === maxVal) valueColor = 'var(--positive)';
+                      else if (val === minVal) valueColor = 'var(--negative)';
                     }
                     let yoy = null;
                     if (m && m.val !== null && m.prev !== null && m.prev !== 0) {
@@ -272,7 +272,7 @@ export default function ComparisonView({ allSymbols, dataMap }) {
                           ? formatFinancialValue(val, '$', symCurrency, targetCurrency, rates)
                           : <span style={{ color: 'var(--text3)' }}>—</span>}
                         {yoy !== null && (
-                          <span style={{ display: 'block', fontSize: '10px', fontWeight: 'normal', color: yoy >= 0 ? '#26a69a' : '#ef5350' }}>
+                          <span style={{ display: 'block', fontSize: '10px', fontWeight: 'normal', color: yoy >= 0 ? 'var(--positive)' : 'var(--negative)' }}>
                             {yoy >= 0 ? '▲' : '▼'} {Math.abs(yoy).toFixed(1)}% vs N-1
                           </span>
                         )}

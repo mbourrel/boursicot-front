@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { createChart, BaselineSeries } from 'lightweight-charts';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, SEMANTIC_COLORS } from '../context/ThemeContext';
 import SourceTag from './SourceTag';
 
 const RANGES = ['3M', '6M', '1Y', '2Y', '5Y', '10Y', 'Max'];
@@ -43,7 +43,7 @@ function CurveSnapshot({ bondYields }) {
       </div>
       {spread2Y10Y && (
         <div style={{ textAlign: 'center', fontSize: '10px', marginBottom: '6px' }}>
-          <span style={{ color: isInverted ? '#ef5350' : '#26a69a', fontWeight: '600' }}>
+          <span style={{ color: isInverted ? 'var(--negative)' : 'var(--positive)', fontWeight: '600' }}>
             Spread 10Y–2Y : {spread2Y10Y > 0 ? '+' : ''}{spread2Y10Y}%
           </span>
         </div>
@@ -57,12 +57,12 @@ function CurveSnapshot({ bondYields }) {
         ))}
         <polyline
           points={`${xS(0).toFixed(1)},${(10 + ph).toFixed(1)} ${polyline} ${xS(points.length - 1).toFixed(1)},${(10 + ph).toFixed(1)}`}
-          fill={isInverted ? '#ef535018' : '#2962FF18'} stroke="none"
+          fill={isInverted ? SEMANTIC_COLORS.negative + '18' : SEMANTIC_COLORS.brand + '18'} stroke="none"
         />
-        <polyline points={polyline} fill="none" stroke={isInverted ? '#ef5350' : '#2962FF'} strokeWidth="2" strokeLinejoin="round" />
+        <polyline points={polyline} fill="none" stroke={isInverted ? SEMANTIC_COLORS.negative : SEMANTIC_COLORS.brand} strokeWidth="2" strokeLinejoin="round" />
         {points.map((p, i) => (
           <g key={p.name}>
-            <circle cx={xS(i)} cy={yS(p.rate ?? 0)} r="4" fill={isInverted ? '#ef5350' : '#2962FF'} />
+            <circle cx={xS(i)} cy={yS(p.rate ?? 0)} r="4" fill={isInverted ? SEMANTIC_COLORS.negative : SEMANTIC_COLORS.brand} />
             <text x={xS(i)} y={H - mb + 14} textAnchor="middle" fill="var(--text3)" fontSize="9">{p.name}</text>
             <text x={xS(i)} y={yS(p.rate ?? 0) - 8} textAnchor="middle" fill="var(--text2)" fontSize="10" fontWeight="bold">
               {(p.rate ?? 0).toFixed(2)}%
@@ -115,12 +115,12 @@ function SpreadHistory({ allDates, allValues, range, onRangeChange }) {
 
     const series = chart.addSeries(BaselineSeries, {
       baseValue: { type: 'price', price: 0 },
-      topLineColor: '#2962FF',
-      topFillColor1: 'rgba(41,98,255,0.22)',
-      topFillColor2: 'rgba(41,98,255,0.04)',
-      bottomLineColor: '#ef5350',
-      bottomFillColor1: 'rgba(239,83,80,0.04)',
-      bottomFillColor2: 'rgba(239,83,80,0.22)',
+      topLineColor: SEMANTIC_COLORS.brand,
+      topFillColor1: SEMANTIC_COLORS.brand + '38',
+      topFillColor2: SEMANTIC_COLORS.brand + '0a',
+      bottomLineColor: SEMANTIC_COLORS.negative,
+      bottomFillColor1: SEMANTIC_COLORS.negative + '0a',
+      bottomFillColor2: SEMANTIC_COLORS.negative + '38',
       lineWidth: 2,
       priceFormat: { type: 'custom', formatter: v => v.toFixed(2) + '%' },
     });
@@ -188,13 +188,13 @@ function SpreadHistory({ allDates, allValues, range, onRangeChange }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
         <div style={{ fontSize: '11px', color: 'var(--text3)' }}>
           Historique spread 10Y–2Y
-          <span style={{ marginLeft: '8px', color: '#ef535099', fontSize: '10px' }}>zone rouge = inversion</span>
+          <span style={{ marginLeft: '8px', color: 'var(--negative)', fontSize: '10px', opacity: 0.6 }}>zone rouge = inversion</span>
         </div>
         <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
           {range !== 'Max' && (
             <button onClick={() => onRangeChange('Max')} style={{
-              background: '#ef535022', border: '1px solid #ef535044', borderRadius: '4px',
-              padding: '2px 7px', fontSize: '10px', color: '#ef5350', cursor: 'pointer', marginRight: '4px',
+              background: 'var(--neg-alpha)', border: '1px solid #ef535044', borderRadius: '4px',
+              padding: '2px 7px', fontSize: '10px', color: 'var(--negative)', cursor: 'pointer', marginRight: '4px',
             }}>↺ Reset</button>
           )}
           {RANGES.map(r => (
@@ -213,9 +213,9 @@ function SpreadHistory({ allDates, allValues, range, onRangeChange }) {
       {stats && (
         <div style={{ display: 'flex', gap: '16px', marginBottom: '4px' }}>
           {[
-            { label: 'Min période',       value: `${stats.min}%`, color: parseFloat(stats.min) < 0 ? '#ef5350' : 'var(--text2)' },
+            { label: 'Min période',       value: `${stats.min}%`, color: parseFloat(stats.min) < 0 ? 'var(--negative)' : 'var(--text2)' },
             { label: 'Max période',       value: `${stats.max}%`, color: 'var(--text2)' },
-            { label: 'Mois en inversion', value: `${stats.inversionDays}`, color: stats.inversionDays > 0 ? '#ef5350' : '#26a69a' },
+            { label: 'Mois en inversion', value: `${stats.inversionDays}`, color: stats.inversionDays > 0 ? 'var(--negative)' : 'var(--positive)' },
           ].map(s => (
             <div key={s.label} style={{ fontSize: '10px', color: 'var(--text3)' }}>
               {s.label} : <span style={{ color: s.color, fontWeight: '600' }}>{s.value}</span>
@@ -257,8 +257,8 @@ export default function YieldCurveChart({ yieldCurve, bondYields, loading, error
               {!loading && currentSpread !== null && (
                 <span style={{
                   fontSize: '11px', padding: '2px 9px', borderRadius: '10px', fontWeight: '700',
-                  backgroundColor: isInverted ? '#ef535022' : '#26a69a22',
-                  color: isInverted ? '#ef5350' : '#26a69a',
+                  backgroundColor: isInverted ? 'var(--neg-alpha)' : 'var(--pos-alpha)',
+                  color: isInverted ? 'var(--negative)' : 'var(--positive)',
                   border: `1px solid ${isInverted ? '#ef535055' : '#26a69a55'}`,
                 }}>
                   {isInverted ? '⚠ Courbe Inversée' : '✓ Courbe Normale'}
@@ -284,7 +284,7 @@ export default function YieldCurveChart({ yieldCurve, bondYields, loading, error
       {showInfo && (
         <div style={{
           backgroundColor: 'var(--bg3)', borderRadius: '8px', padding: '14px 16px',
-          marginBottom: '14px', borderLeft: `3px solid ${isInverted ? '#ef5350' : '#2962FF'}`,
+          marginBottom: '14px', borderLeft: `3px solid ${isInverted ? 'var(--negative)' : 'var(--brand)'}`,
           fontSize: '12px', color: 'var(--text3)', lineHeight: '1.7',
         }}>
           <div style={{ color: 'var(--text2)', fontWeight: '700', marginBottom: '8px', fontSize: '13px' }}>
@@ -293,7 +293,7 @@ export default function YieldCurveChart({ yieldCurve, bondYields, loading, error
           <p style={{ margin: '0 0 10px' }}>
             Normalement, prêter sur <strong style={{ color: 'var(--text2)' }}>10 ans</strong> rapporte
             plus que sur <strong style={{ color: 'var(--text2)' }}>2 ans</strong>. Quand la courbe
-            <strong style={{ color: '#ef5350' }}> s'inverse</strong> (10Y &lt; 2Y), les investisseurs
+            <strong style={{ color: 'var(--negative)' }}> s'inverse</strong> (10Y &lt; 2Y), les investisseurs
             anticipent une récession et une baisse des taux à venir.
           </p>
           <div style={{ backgroundColor: 'var(--bg2)', borderRadius: '6px', padding: '10px 12px', marginBottom: '10px' }}>
@@ -309,7 +309,7 @@ export default function YieldCurveChart({ yieldCurve, bondYields, loading, error
               ['2022–23', 'Inversion prolongée → à surveiller sur 12–24 mois'],
             ].map(([year, desc]) => (
               <div key={year} style={{ display: 'flex', gap: '8px', fontSize: '11px', marginBottom: '3px' }}>
-                <span style={{ color: '#ef5350', fontWeight: '600', minWidth: '52px' }}>{year}</span>
+                <span style={{ color: 'var(--negative)', fontWeight: '600', minWidth: '52px' }}>{year}</span>
                 <span>{desc}</span>
               </div>
             ))}
@@ -323,7 +323,7 @@ export default function YieldCurveChart({ yieldCurve, bondYields, loading, error
       )}
 
       {loading && <div style={{ color: 'var(--text3)', fontSize: '13px', padding: '30px 0', textAlign: 'center' }}>Chargement…</div>}
-      {error   && <div style={{ color: '#ef5350', fontSize: '13px', padding: '12px 0' }}>Erreur : {error}</div>}
+      {error   && <div style={{ color: 'var(--negative)', fontSize: '13px', padding: '12px 0' }}>Erreur : {error}</div>}
 
       {!loading && !error && (
         <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>

@@ -52,7 +52,7 @@ function Dashboard() {
         <div style={{
           backgroundColor: '#1a1400', border: '1px solid #f59e0b40',
           borderRadius: '6px', padding: '6px 14px', marginBottom: '10px',
-          fontSize: '12px', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '8px',
+          fontSize: '12px', color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '8px',
         }}>
           <span>⚠</span>
           <span>Version bêta gratuite — si les données ne s'affichent pas, patientez environ une minute le temps que le serveur démarre.</span>
@@ -120,7 +120,7 @@ function ChartWithToggle({ selectedSymbol, compareSymbols, fundamentalsData }) {
   const toggleBtnStyle = (active) => ({
     padding: '7px 16px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
     border: '1px solid var(--border)', transition: 'all 0.2s',
-    background: active ? '#2962FF' : 'var(--bg3)',
+    background: active ? 'var(--brand)' : 'var(--bg3)',
     color: active ? 'white' : 'var(--text3)',
   });
 

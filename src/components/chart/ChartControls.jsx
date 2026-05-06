@@ -5,7 +5,7 @@ import { captureEvent } from '../../utils/analytics';
  * sélection d'intervalle de bougies, zoom temporel, et toggle des indicateurs.
  */
 function ChartControls({ candleInterval, setCandleInterval, timeRange, onTimeRangeChange, indicators, toggleIndicator, showDrawTools, onToggleDrawTools }) {
-  const filterBtnStyle = (isActive, activeColor = '#2962FF') => ({
+  const filterBtnStyle = (isActive, activeColor = 'var(--brand)') => ({
     padding: '6px 10px', background: isActive ? activeColor : 'transparent',
     color: isActive ? 'white' : 'var(--text3)',
     border: `1px solid ${isActive ? activeColor : 'var(--border)'}`,
@@ -45,7 +45,7 @@ function ChartControls({ candleInterval, setCandleInterval, timeRange, onTimeRan
           <button style={filterBtnStyle(indicators.bb)}                 onClick={() => { captureEvent('indicator_toggled', { indicator: 'bb',      enabled: !indicators.bb      }); toggleIndicator('bb');      }}>Bollinger</button>
           <button style={filterBtnStyle(indicators.atr, '#e91e63')}    onClick={() => { captureEvent('indicator_toggled', { indicator: 'atr',     enabled: !indicators.atr     }); toggleIndicator('atr');     }}>Volatilité (ATR)</button>
           <button style={filterBtnStyle(indicators.ma10, '#00bcd4')}   onClick={() => { captureEvent('indicator_toggled', { indicator: 'ma10',    enabled: !indicators.ma10    }); toggleIndicator('ma10');    }}>MM 10</button>
-          <button style={filterBtnStyle(indicators.ma100, '#ff9800')}  onClick={() => { captureEvent('indicator_toggled', { indicator: 'ma100',   enabled: !indicators.ma100   }); toggleIndicator('ma100');   }}>MM 100</button>
+          <button style={filterBtnStyle(indicators.ma100, 'var(--warning)')}  onClick={() => { captureEvent('indicator_toggled', { indicator: 'ma100',   enabled: !indicators.ma100   }); toggleIndicator('ma100');   }}>MM 100</button>
           <button style={filterBtnStyle(indicators.ma200, '#9c27b0')}  onClick={() => { captureEvent('indicator_toggled', { indicator: 'ma200',   enabled: !indicators.ma200   }); toggleIndicator('ma200');   }}>MM 200</button>
         </div>
         <button

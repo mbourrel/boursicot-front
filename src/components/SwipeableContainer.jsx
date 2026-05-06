@@ -85,7 +85,7 @@ export default function SwipeableContainer({ children, gap = 12, style = {} }) {
                 height: '6px',
                 borderRadius: '3px',
                 border: 'none', cursor: 'pointer', padding: 0,
-                backgroundColor: i === active ? '#2962FF' : 'var(--border)',
+                backgroundColor: i === active ? 'var(--brand)' : 'var(--border)',
                 transition: 'all 0.25s ease',
               }}
             />

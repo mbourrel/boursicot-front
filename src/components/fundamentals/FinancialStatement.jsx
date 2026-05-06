@@ -10,7 +10,7 @@ const tdStyle = {
   padding: '9px 12px', fontSize: '12px', borderBottom: '1px solid var(--border)',
 };
 const h3Style = {
-  margin: '0 0 14px', color: '#2962FF', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em',
+  margin: '0 0 14px', color: 'var(--brand)', fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.05em',
 };
 
 function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, companyName, maxCols = 4, sidePanel }) {
@@ -33,11 +33,11 @@ function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, com
                 {cols.map((y, i) => (
                   <th key={i} style={{ ...thStyle, textAlign: 'right' }}>
                     {y.slice(0, 4)}
-                    {i === 0 && <span style={{ marginLeft: '4px', fontSize: '9px', color: '#2962FF', fontWeight: 'normal' }}>↑ récent</span>}
+                    {i === 0 && <span style={{ marginLeft: '4px', fontSize: '9px', color: 'var(--brand)', fontWeight: 'normal' }}>↑ récent</span>}
                   </th>
                 ))}
                 {hasAvg && (
-                  <th style={{ ...thStyle, textAlign: 'right', color: '#8c7ae6', borderLeft: '1px solid var(--border)' }}>
+                  <th style={{ ...thStyle, textAlign: 'right', color: 'var(--sector)', borderLeft: '1px solid var(--border)' }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                       Moy. Secteur
                       <MetricInfo name="Moy. Secteur" />
@@ -72,7 +72,7 @@ function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, com
                         <td key={colIdx} style={{ ...tdStyle, textAlign: 'right', fontWeight: colIdx === 0 ? 'bold' : 'normal', color: colIdx === 0 ? 'var(--text1)' : 'var(--text3)' }}>
                           {fmt(val, item.unit)}
                           {trend && (
-                            <span style={{ marginLeft: '6px', fontSize: '10px', color: trend.up ? '#26a69a' : '#ef5350' }}>
+                            <span style={{ marginLeft: '6px', fontSize: '10px', color: trend.up ? 'var(--positive)' : 'var(--negative)' }}>
                               {trend.up ? '▲' : '▼'} {Math.abs(trend.pct).toFixed(1)}%
                             </span>
                           )}
@@ -80,7 +80,7 @@ function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, com
                       );
                     })}
                     {hasAvg && (
-                      <td style={{ ...tdStyle, textAlign: 'right', borderLeft: '1px solid var(--border)', color: avgVal !== null ? (mostRecentVal !== null && mostRecentVal >= avgVal ? '#26a69a' : '#ef5350') : 'var(--text3)', fontStyle: avgVal === null ? 'italic' : 'normal' }}>
+                      <td style={{ ...tdStyle, textAlign: 'right', borderLeft: '1px solid var(--border)', color: avgVal !== null ? (mostRecentVal !== null && mostRecentVal >= avgVal ? 'var(--positive)' : 'var(--negative)') : 'var(--text3)', fontStyle: avgVal === null ? 'italic' : 'normal' }}>
                         {avgVal !== null ? fmt(avgVal, item.unit) : <span style={{ color: 'var(--text3)' }}>—</span>}
                       </td>
                     )}
@@ -92,7 +92,7 @@ function FinancialStatement({ title, stmtData, fmt, stmtAvg, stmtAvgHistory, com
                           title="Voir l'évolution historique"
                           style={{
                             background: 'none', border: '1px solid var(--border)',
-                            borderRadius: '4px', cursor: 'pointer', color: '#2962FF',
+                            borderRadius: '4px', cursor: 'pointer', color: 'var(--brand)',
                             padding: '2px 6px', fontSize: '11px', fontWeight: 'bold',
                             lineHeight: 1, whiteSpace: 'nowrap',
                           }}

@@ -4,11 +4,11 @@ import SourceTag from './SourceTag';
 const MAX_RATE = 8;
 
 function rateColor(rate) {
-  if (rate === null || rate === undefined) return '#555';
-  if (rate < 1)  return '#2962FF';
-  if (rate < 3)  return '#26a69a';
-  if (rate < 5)  return '#f59e0b';
-  return '#ef5350';
+  if (rate === null || rate === undefined) return 'var(--text3)';
+  if (rate < 1)  return 'var(--brand)';
+  if (rate < 3)  return 'var(--positive)';
+  if (rate < 5)  return 'var(--warning)';
+  return 'var(--negative)';
 }
 
 function rateLabel(rate) {
@@ -120,14 +120,14 @@ export default function CentralBanksThermometer({ centralBanks, loading, error }
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
             {[
-              { color: '#2962FF', range: '< 1%', label: 'Accommodant', desc: 'Politique ultra-stimulante. Typique des crises (2008–2015, COVID). Favorise actions, immobilier, crypto.' },
-              { color: '#26a69a', range: '1–3%', label: 'Neutre', desc: 'Zone d\'équilibre théorique. La Fed estime le taux neutre à ~2,5%. Ni frein ni accélérateur.' },
-              { color: '#f59e0b', range: '3–5%', label: 'Restrictif', desc: 'Frein délibéré à l\'économie. Entreprises endettées et immobilier sous pression. Réduire l\'inflation.' },
-              { color: '#ef5350', range: '> 5%', label: 'Très restrictif', desc: 'Territoire rare depuis les années 80. Risque de récession élevé à 12–18 mois.' },
+              { color: 'var(--brand)',    colorHex: '#2962FF', range: '< 1%', label: 'Accommodant', desc: 'Politique ultra-stimulante. Typique des crises (2008–2015, COVID). Favorise actions, immobilier, crypto.' },
+              { color: 'var(--positive)', colorHex: '#26a69a', range: '1–3%', label: 'Neutre', desc: 'Zone d\'équilibre théorique. La Fed estime le taux neutre à ~2,5%. Ni frein ni accélérateur.' },
+              { color: 'var(--warning)',  colorHex: '#f59e0b', range: '3–5%', label: 'Restrictif', desc: 'Frein délibéré à l\'économie. Entreprises endettées et immobilier sous pression. Réduire l\'inflation.' },
+              { color: 'var(--negative)', colorHex: '#ef5350', range: '> 5%', label: 'Très restrictif', desc: 'Territoire rare depuis les années 80. Risque de récession élevé à 12–18 mois.' },
             ].map(z => (
               <div key={z.label} style={{
-                backgroundColor: `${z.color}0D`, borderRadius: '6px',
-                padding: '8px 10px', border: `1px solid ${z.color}33`,
+                backgroundColor: `${z.colorHex}0D`, borderRadius: '6px',
+                padding: '8px 10px', border: `1px solid ${z.colorHex}33`,
               }}>
                 <div style={{ color: z.color, fontWeight: '700', fontSize: '11px', marginBottom: '3px' }}>
                   {z.range} — {z.label}
@@ -149,7 +149,7 @@ export default function CentralBanksThermometer({ centralBanks, loading, error }
 
       {/* ── Légende jauge ── */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '10px', justifyContent: 'flex-end' }}>
-        {[['< 1%', '#2962FF', 'Accommodant'], ['1–3%', '#26a69a', 'Neutre'], ['3–5%', '#f59e0b', 'Restrictif'], ['> 5%', '#ef5350', 'Très restrictif']].map(([range, color, label]) => (
+        {[['< 1%', 'var(--brand)', 'Accommodant'], ['1–3%', 'var(--positive)', 'Neutre'], ['3–5%', 'var(--warning)', 'Restrictif'], ['> 5%', 'var(--negative)', 'Très restrictif']].map(([range, color, label]) => (
           <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: 'var(--text3)' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: color, display: 'inline-block' }} />
             {range}
@@ -164,7 +164,7 @@ export default function CentralBanksThermometer({ centralBanks, loading, error }
         </div>
       )}
       {error && (
-        <div style={{ color: '#ef5350', fontSize: '13px', padding: '12px 0' }}>Erreur : {error}</div>
+        <div style={{ color: 'var(--negative)', fontSize: '13px', padding: '12px 0' }}>Erreur : {error}</div>
       )}
       {!loading && !error && centralBanks?.map(cb => (
         <BankRow key={cb.name} {...cb} />

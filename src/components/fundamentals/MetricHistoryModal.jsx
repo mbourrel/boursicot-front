@@ -21,8 +21,8 @@ const W = 560, H = 240;
 const PAD = { top: 20, right: 20, bottom: 36, left: 68 };
 const INNER_W = W - PAD.left - PAD.right;
 const INNER_H = H - PAD.top - PAD.bottom;
-const COMPANY_COLOR = '#2962FF';
-const SECTOR_COLOR  = '#8c7ae6';
+const COMPANY_COLOR = 'var(--brand)';
+const SECTOR_COLOR  = 'var(--sector)';
 
 function LineChart({ years, companyVals, sectorVals, unit, companyName }) {
   const [hover, setHover] = useState(null);

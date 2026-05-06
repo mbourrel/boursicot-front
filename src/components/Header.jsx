@@ -16,7 +16,7 @@ function ThemeToggle({ isDark, onToggle }) {
         position: 'relative',
         width: '44px',
         height: '24px',
-        backgroundColor: isDark ? '#2962FF' : '#d0d5e3',
+        backgroundColor: isDark ? 'var(--brand)' : '#d0d5e3',
         borderRadius: '12px',
         cursor: 'pointer',
         flexShrink: 0,
@@ -79,7 +79,7 @@ function FilterDropdown({ label, items, filters, onChange, onSelectAll, onSelect
         style={{
           display: 'flex', alignItems: 'center', gap: '8px',
           padding: '8px 12px', backgroundColor: 'var(--bg3)',
-          border: `1px solid ${open ? '#2962FF' : 'var(--border)'}`,
+          border: `1px solid ${open ? 'var(--brand)' : 'var(--border)'}`,
           borderRadius: '6px', cursor: 'pointer', color: 'var(--text1)',
           fontSize: '12px', whiteSpace: 'nowrap',
         }}
@@ -122,7 +122,7 @@ function FilterDropdown({ label, items, filters, onChange, onSelectAll, onSelect
                 type="checkbox"
                 checked={!!filters?.[key]}
                 onChange={() => onChange(key)}
-                style={{ accentColor: '#2962FF', cursor: 'pointer', width: '14px', height: '14px' }}
+                style={{ accentColor: 'var(--brand)', cursor: 'pointer', width: '14px', height: '14px' }}
               />
               {fl}
             </label>
@@ -305,7 +305,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
                 display: 'flex', alignItems: 'center', gap: '5px',
                 padding: '6px 11px', border: 'none', cursor: 'pointer',
                 borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
-                backgroundColor: profile === value ? '#2962FF' : 'transparent',
+                backgroundColor: profile === value ? 'var(--brand)' : 'transparent',
                 color: profile === value ? 'white' : 'var(--text3)',
                 fontSize: '11px', fontWeight: 'bold', transition: 'all 0.15s',
                 whiteSpace: 'nowrap',
@@ -320,14 +320,14 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
             onClick={() => setShowCoachMark(false)}
             style={{
               position: 'absolute', top: 'calc(100% + 10px)', right: 0,
-              backgroundColor: '#2962FF', color: 'white',
+              backgroundColor: 'var(--brand)', color: 'white',
               borderRadius: '8px', padding: '10px 14px',
               fontSize: '12px', whiteSpace: 'nowrap',
               boxShadow: '0 4px 16px rgba(41,98,255,0.45)',
               cursor: 'pointer', zIndex: 200,
             }}
           >
-            <div style={{ position: 'absolute', top: '-6px', right: '20px', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '6px solid #2962FF' }} />
+            <div style={{ position: 'absolute', top: '-6px', right: '20px', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '6px solid var(--brand)' }} />
             ✓ Mode {profile === 'explorateur' ? 'Explorateur' : 'Stratège'} activé
           </div>
         )}
@@ -392,7 +392,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
                 onClick={() => { captureEvent('view_changed', { view: mode }); setViewMode(mode); }}
                 style={{
                   padding: '8px 11px', border: 'none', cursor: 'pointer', fontSize: '16px',
-                  backgroundColor: viewMode === mode ? (mode === 'screener' ? '#7c3aed' : mode === 'macro' ? '#26a69a' : '#2962FF') : 'transparent',
+                  backgroundColor: viewMode === mode ? (mode === 'screener' ? '#7c3aed' : mode === 'macro' ? 'var(--positive)' : 'var(--brand)') : 'transparent',
                   color: viewMode === mode ? 'white' : 'var(--text3)',
                   borderRadius: '6px', transition: 'background-color 0.2s',
                 }}
@@ -427,7 +427,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
               }}>
                 {filteredData.length > 0 ? filteredData.map((company) => (
                   <li key={company.ticker} onClick={() => handleSelect(company.ticker)}
-                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2962FF'}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--brand)'}
                     onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                     style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'baseline', transition: 'background-color 0.2s' }}>
                     <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text1)', marginRight: '8px' }}>{company.name || company.ticker}</span>
@@ -445,7 +445,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
             onClick={() => setMenuOpen(v => !v)}
             style={{
               flexShrink: 0, padding: '8px 10px', border: '1px solid var(--border)',
-              borderRadius: '6px', backgroundColor: menuOpen ? '#2962FF' : 'var(--bg3)',
+              borderRadius: '6px', backgroundColor: menuOpen ? 'var(--brand)' : 'var(--bg3)',
               color: menuOpen ? 'white' : 'var(--text1)', cursor: 'pointer', fontSize: '18px',
               lineHeight: 1,
             }}
@@ -524,7 +524,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
                   <li
                     key={company.ticker}
                     onClick={() => handleSelect(company.ticker)}
-                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2962FF'}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--brand)'}
                     onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                     style={{
                       padding: '10px 12px', cursor: 'pointer',
@@ -552,10 +552,10 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
 
         {/* BOUTONS DE NAVIGATION */}
         <div style={{ display: 'flex', backgroundColor: 'var(--bg3)', borderRadius: '6px' }}>
-          <button onClick={() => { captureEvent('view_changed', { view: 'chart' }); setViewMode('chart'); }} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'chart' ? '#2962FF' : 'transparent', color: 'var(--text1)', borderRadius: '6px 0 0 6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Cours de bourse</button>
-          <button onClick={() => { captureEvent('view_changed', { view: 'fundamentals' }); setViewMode('fundamentals'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'fundamentals' ? '#2962FF' : 'transparent', color: 'var(--text1)', borderRadius: '0', cursor: 'pointer', transition: 'background-color 0.2s' }}>Analyse Fondamentale</button>
+          <button onClick={() => { captureEvent('view_changed', { view: 'chart' }); setViewMode('chart'); }} style={{ padding: '8px 16px', border: 'none', backgroundColor: viewMode === 'chart' ? 'var(--brand)' : 'transparent', color: 'var(--text1)', borderRadius: '6px 0 0 6px', cursor: 'pointer', transition: 'background-color 0.2s' }}>Cours de bourse</button>
+          <button onClick={() => { captureEvent('view_changed', { view: 'fundamentals' }); setViewMode('fundamentals'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'fundamentals' ? 'var(--brand)' : 'transparent', color: 'var(--text1)', borderRadius: '0', cursor: 'pointer', transition: 'background-color 0.2s' }}>Analyse Fondamentale</button>
           <button onClick={() => { captureEvent('view_changed', { view: 'screener' }); setViewMode('screener'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'screener' ? '#7c3aed' : 'transparent', color: 'var(--text1)', borderRadius: '0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🔍 Screener</button>
-          <button onClick={() => { captureEvent('view_changed', { view: 'macro' }); setViewMode('macro'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'macro' ? '#26a69a' : 'transparent', color: 'var(--text1)', borderRadius: '0 6px 6px 0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🌐 Macro</button>
+          <button onClick={() => { captureEvent('view_changed', { view: 'macro' }); setViewMode('macro'); }} style={{ padding: '8px 16px', border: 'none', borderLeft: '1px solid var(--border)', backgroundColor: viewMode === 'macro' ? 'var(--positive)' : 'transparent', color: 'var(--text1)', borderRadius: '0 6px 6px 0', cursor: 'pointer', transition: 'background-color 0.2s' }}>🌐 Macro</button>
         </div>
 
           <Controls />
@@ -609,7 +609,7 @@ function Header({ selectedSymbol, setSelectedSymbol, fundamentalsData, viewMode,
       {isMobile && showCoachMark && (
         <div onClick={() => setShowCoachMark(false)} style={{
           position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
-          backgroundColor: '#2962FF', color: 'white', borderRadius: '8px', padding: '10px 18px',
+          backgroundColor: 'var(--brand)', color: 'white', borderRadius: '8px', padding: '10px 18px',
           fontSize: '12px', zIndex: 300, boxShadow: '0 4px 16px rgba(41,98,255,0.45)',
           cursor: 'pointer', whiteSpace: 'nowrap',
         }}>

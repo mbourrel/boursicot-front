@@ -44,7 +44,7 @@ function SliderInput({ label, value, min, max, step, onChange, format, infoName,
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
         <span style={{ fontSize: '11px', color: 'var(--text3)', fontWeight: '600' }}>{label}</span>
         {infoName && <MetricInfo name={infoName} />}
-        <span style={{ marginLeft: 'auto', fontSize: '13px', fontWeight: 'bold', color: '#2962FF' }}>
+        <span style={{ marginLeft: 'auto', fontSize: '13px', fontWeight: 'bold', color: 'var(--brand)' }}>
           {format(value)}
         </span>
       </div>
@@ -52,7 +52,7 @@ function SliderInput({ label, value, min, max, step, onChange, format, infoName,
         type="range"
         min={min} max={max} step={step} value={value}
         onChange={e => onChange(parseFloat(e.target.value))}
-        style={{ width: '100%', accentColor: '#2962FF', cursor: 'pointer', height: '4px' }}
+        style={{ width: '100%', accentColor: 'var(--brand)', cursor: 'pointer', height: '4px' }}
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--text3)', marginTop: '2px' }}>
         <span>{format(min)}</span>
@@ -343,7 +343,7 @@ export default function ValuationLab({ data, defaultDivGrowth }) {
         }}
       >
         <h3 style={{ ...h3Style, margin: 0 }}>Laboratoire d'Évaluation (Simulateurs)</h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#2962FF', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--brand)', flexShrink: 0 }}>
           <span style={{ fontSize: '11px', fontWeight: '600' }}>
             {showLab ? 'Réduire' : 'Ouvrir'}
           </span>
@@ -371,14 +371,14 @@ export default function ValuationLab({ data, defaultDivGrowth }) {
           )}
 
           {/* ── Catégorie 1 : Intrinsèque ──────────────────────────────── */}
-          <div style={{ fontSize: '11px', color: '#2962FF', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--brand)', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px' }}>
             Approche Intrinsèque (Flux Futurs)
           </div>
           <div style={gridTwo}>
 
             {/* DCF */}
             <ValuationMethodCard
-              categoryLabel="Intrinsèque" categoryColor="#2962FF"
+              categoryLabel="Intrinsèque" categoryColor="var(--brand)"
               title="DCF — Discounted Cash Flow"
               verdict={!unavDCF ? vDCF : null} unavailable={unavDCF}
               isOpen={open.has('dcf')} onToggle={() => toggle('dcf')}
@@ -420,7 +420,7 @@ export default function ValuationLab({ data, defaultDivGrowth }) {
 
             {/* DDM */}
             <ValuationMethodCard
-              categoryLabel="Intrinsèque" categoryColor="#2962FF"
+              categoryLabel="Intrinsèque" categoryColor="var(--brand)"
               title="DDM — Dividend Discount Model"
               verdict={!unavDDM ? vDDM : null} unavailable={unavDDM}
               isOpen={open.has('ddm')} onToggle={() => toggle('ddm')}
@@ -451,7 +451,7 @@ export default function ValuationLab({ data, defaultDivGrowth }) {
                     }
                   />
                   {ddm.ke <= ddm.g && (
-                    <div style={{ fontSize: '11px', color: '#ef5350', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--negative)', marginBottom: '6px' }}>
                       ⚠ Ke doit être supérieur à g — augmentez Ke ou réduisez g.
                     </div>
                   )}
@@ -515,7 +515,7 @@ export default function ValuationLab({ data, defaultDivGrowth }) {
                   {peg != null && (
                     <div style={{ fontSize: '11px', color: 'var(--text2)', marginTop: '4px' }}>
                       Ratio PEG ={' '}
-                      <strong style={{ color: parseFloat(peg) < 1 ? '#26a69a' : parseFloat(peg) > 2 ? '#ef5350' : 'var(--text1)' }}>
+                      <strong style={{ color: parseFloat(peg) < 1 ? 'var(--positive)' : parseFloat(peg) > 2 ? 'var(--negative)' : 'var(--text1)' }}>
                         {peg}
                       </strong>
                       <span style={{ color: 'var(--text3)', fontSize: '10px' }}> (P/E ÷ g bénéfices {egrowth?.toFixed(1)}%)</span>

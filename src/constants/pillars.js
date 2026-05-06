@@ -1,12 +1,12 @@
-const COLOR_UP      = '#26a69a';
-const COLOR_NEUTRAL = '#ff9800';
+const COLOR_UP      = 'var(--positive)';
+const COLOR_NEUTRAL = 'var(--warning)';
 
 export const PILLARS = [
   {
     key: 'health',
     icon: '❤️',
     title: 'Santé Financière',
-    color: COLOR_UP,
+    color: COLOR_UP, colorHex: '#26a69a',
     metrics: [
       { name: 'Marge Nette',           desc: "Indique la part de profit réel sur chaque euro vendu." },
       { name: 'ROE',                   desc: "Capacité de l'entreprise à générer du profit avec l'argent des actionnaires." },
@@ -18,7 +18,7 @@ export const PILLARS = [
     key: 'valuation',
     icon: '📊',
     title: 'Valorisation',
-    color: '#2962FF',
+    color: 'var(--brand)', colorHex: '#2962FF',
     metrics: [
       { name: 'PER vs secteur', desc: "Compare le prix de l'action aux bénéfices. Un PER bas peut indiquer une action bon marché." },
       { name: 'Forward PE',     desc: "Estimation du prix par rapport aux bénéfices attendus l'année prochaine." },
@@ -28,7 +28,7 @@ export const PILLARS = [
     key: 'growth',
     icon: '📈',
     title: 'Croissance',
-    color: COLOR_NEUTRAL,
+    color: COLOR_NEUTRAL, colorHex: '#f59e0b',
     metrics: [
       { name: "Chiffre d'Affaires", desc: "Évolution de l'activité commerciale sur les 5 dernières années." },
       { name: 'Bénéfices (EPS)',    desc: "Capacité de l'entreprise à faire progresser ses profits réels." },
@@ -38,7 +38,7 @@ export const PILLARS = [
     key: 'dividend',
     icon: '💰',
     title: 'Dividende',
-    color: '#26a69a',
+    color: 'var(--positive)', colorHex: '#26a69a',
     metrics: [
       { name: 'Payout Ratio',           desc: "Ratio optimal entre 40 % et 60 % : l'entreprise rémunère ses actionnaires tout en conservant des ressources pour investir." },
       { name: 'Rendement Div. (yield)', desc: "Mesure la générosité et la sécurité du versement aux actionnaires comparé à la moyenne du secteur." },
@@ -48,7 +48,7 @@ export const PILLARS = [
     key: 'momentum',
     icon: '⚡',
     title: 'Momentum',
-    color: '#ff9800',
+    color: 'var(--warning)', colorHex: '#f59e0b',
     metrics: [
       { name: 'Prix vs MM50',       desc: "Indique si l'action évolue au-dessus de sa moyenne mobile court terme (50 jours) — signal haussier." },
       { name: 'Prix vs MM200',      desc: "Indicateur de tendance long terme. Un prix au-dessus de la MM200 reflète une dynamique structurellement positive." },
@@ -59,7 +59,7 @@ export const PILLARS = [
     key: 'efficiency',
     icon: '⚙️',
     title: 'Efficacité',
-    color: '#ab47bc',
+    color: 'var(--efficiency)', colorHex: '#ab47bc',
     metrics: [
       { name: 'ROE vs secteur',         desc: "Évalue la capacité du management à générer du rendement avec les fonds propres, comparé aux pairs." },
       { name: 'Marge Nette vs secteur', desc: "Mesure la rentabilité commerciale de l'entreprise par rapport à la concurrence." },

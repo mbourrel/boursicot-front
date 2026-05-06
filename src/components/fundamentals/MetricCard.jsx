@@ -13,7 +13,7 @@ function MetricCard({ metric, fmt, fmtRaw, large = false }) {
     const better = LOWER_IS_BETTER.has(metric.name)
       ? metric.val <= metric.avg
       : metric.val >= metric.avg;
-    return better ? '#26a69a' : '#ef5350';
+    return better ? 'var(--positive)' : 'var(--negative)';
   };
 
   // Padding et tailles adaptatifs

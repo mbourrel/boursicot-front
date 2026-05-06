@@ -19,17 +19,17 @@ export default function LoginPage() {
         style={{
           padding: '11px 28px',
           backgroundColor: 'transparent',
-          border: '1px solid #2962FF',
+          border: '1px solid var(--brand)',
           borderRadius: '6px',
-          color: '#2962FF',
+          color: 'var(--brand)',
           fontSize: '13px',
           fontWeight: '600',
           cursor: 'pointer',
           transition: 'all 0.2s',
           letterSpacing: '0.02em',
         }}
-        onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#2962FF20'; e.currentTarget.style.color = '#5b8cff'; }}
-        onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#2962FF'; }}
+        onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--brand-alpha)'; e.currentTarget.style.color = '#5b8cff'; }}
+        onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--brand)'; }}
       >
         Continuer sans compte →
       </button>
